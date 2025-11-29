@@ -9,11 +9,11 @@ const db = require('../database/db');
 const mapStage = (fase) => {
   const stageMap = {
     'Lead': 'Lead',
-    'In contatto': 'Contatto',
-    'Follow Up da fare': 'Proposta',
+    'In contatto': 'In contatto',
+    'Follow Up da fare': 'Follow Up da fare',
     'Chiuso Vinto': 'Chiuso Vinto',
     'Fare fattura': 'Chiuso Vinto',
-    'Stand By': 'Negoziazione',
+    'Stand By': 'Revisionare offerta',
     'Chiuso Perso': 'Chiuso Perso'
   };
   return stageMap[fase] || 'Lead';
@@ -24,6 +24,44 @@ const cleanCompanyName = (cliente) => {
   if (!cliente) return null;
   return cliente.split(',')[0].trim();
 };
+
+// POST /api/import/reset - Cancella e reimporta tutti i dati
+router.post('/reset', async (req, res) => {
+  const secretKey = req.headers['x-import-key'] || req.query.key;
+  const expectedKey = process.env.IMPORT_SECRET_KEY || 'vcrm-import-2024';
+  
+  if (secretKey !== expectedKey) {
+    return res.status(403).json({ error: 'Chiave di importazione non valida' });
+  }
+
+  const isPostgres = db.type === 'postgres';
+  
+  try {
+    // Cancella tutti i dati esistenti (nell'ordine corretto per le foreign keys)
+    if (isPostgres) {
+      await db.pool.query('DELETE FROM tasks');
+      await db.pool.query('DELETE FROM opportunities');
+      await db.pool.query('DELETE FROM contacts');
+    } else {
+      await new Promise((resolve, reject) => {
+        db.run('DELETE FROM tasks', [], (err) => {
+          if (err) return reject(err);
+          db.run('DELETE FROM opportunities', [], (err) => {
+            if (err) return reject(err);
+            db.run('DELETE FROM contacts', [], (err) => {
+              if (err) return reject(err);
+              resolve();
+            });
+          });
+        });
+      });
+    }
+    
+    res.json({ success: true, message: 'Database resettato. Ora chiama /api/import/excel per reimportare i dati.' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // POST /api/import/excel - Importa i dati dal file Excel
 router.post('/excel', async (req, res) => {

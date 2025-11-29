@@ -70,7 +70,7 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
                 <div className="pipeline-stats">
                     {pipelineStages.map((stage, idx) => {
                         const stageOpps = filteredOpportunities.filter(o => o.stage === stage);
-                        const stageValue = stageOpps.reduce((sum, o) => sum + o.value, 0);
+                        const stageValue = stageOpps.reduce((sum, o) => sum + (parseFloat(o.value) || 0), 0);
                         return (
                             <div key={stage} className="stage-stat">
                                 <span className="stage-name">{stage}</span>
@@ -132,7 +132,7 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
                                             </div>
                                             <div className="card-company">{opp.company || 'N/D'}</div>
                                             <div className="card-footer">
-                                                <span className="card-value">€{opp.value.toLocaleString()}</span>
+                                                <span className="card-value">€{(parseFloat(opp.value) || 0).toLocaleString()}</span>
                                                 <span className="card-probability">{opp.probability}%</span>
                                             </div>
                                             {oppTasks.length > 0 && (
