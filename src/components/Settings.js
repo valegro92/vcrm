@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Lock, Bell, Palette, Database, Shield, Save, Check, Download, AlertTriangle, RefreshCw } from 'lucide-react';
+import { User, Lock, Bell, Palette, Database, Shield, Save, Check, Download, AlertTriangle } from 'lucide-react';
 import api from '../api/api';
 
 export default function Settings({ user, contacts, opportunities, tasks, onUserUpdate }) {
@@ -8,7 +8,7 @@ export default function Settings({ user, contacts, opportunities, tasks, onUserU
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
-  
+
   const [profile, setProfile] = useState({
     fullName: user?.fullName || '',
     email: user?.email || '',
@@ -16,31 +16,27 @@ export default function Settings({ user, contacts, opportunities, tasks, onUserU
     company: user?.company || '',
     role: user?.role || 'user'
   });
-  
+
   const [passwords, setPasswords] = useState({
     current: '',
     new: '',
     confirm: ''
   });
-  
+
   const [notifications, setNotifications] = useState({
     emailNotifications: true,
     taskReminders: true,
     dealUpdates: true,
     weeklyReport: false
   });
-  
+
   const [appearance, setAppearance] = useState({
     theme: localStorage.getItem('theme') || 'light',
     compactMode: localStorage.getItem('compactMode') === 'true',
     language: localStorage.getItem('language') || 'it'
   });
 
-  useEffect(() => {
-    loadStats();
-  }, []);
-
-  const loadStats = async () => {
+  const loadStats = React.useCallback(async () => {
     try {
       const data = await api.getStats();
       setStats(data);
@@ -51,7 +47,11 @@ export default function Settings({ user, contacts, opportunities, tasks, onUserU
         tasks: tasks?.length || 0
       });
     }
-  };
+  }, [contacts, opportunities, tasks]);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
 
   const showSuccess = () => {
     setSaved(true);
@@ -462,7 +462,7 @@ export default function Settings({ user, contacts, opportunities, tasks, onUserU
                     <div className="stat-label">Attività</div>
                   </div>
                 </div>
-                
+
                 <div className="form-group">
                   <label className="form-label">Esporta Dati</label>
                   <div className="export-buttons">

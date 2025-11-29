@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Filter, ChevronDown, Plus, Building2, Mail, Phone, Eye, Edit2, Trash2, X, Search, SortAsc, SortDesc, Users } from 'lucide-react';
+import { Filter, Plus, Building2, Mail, Phone, Eye, Edit2, Trash2, X, Search, SortAsc, SortDesc, Users } from 'lucide-react';
 
 export default function Contacts({ contacts, openAddModal, handleDeleteContact }) {
     const [showFilters, setShowFilters] = useState(false);
@@ -31,7 +31,7 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
         result.sort((a, b) => {
             let aVal = a[sortBy] || '';
             let bVal = b[sortBy] || '';
-            
+
             if (sortBy === 'value') {
                 aVal = Number(aVal) || 0;
                 bVal = Number(bVal) || 0;
@@ -555,7 +555,7 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
     return (
         <div className="contacts-view">
             <style>{styles}</style>
-            
+
             <div className="view-toolbar">
                 <div className="toolbar-left">
                     <div className="search-input">
@@ -570,7 +570,7 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
                             <X size={16} style={{ cursor: 'pointer', color: '#94a3b8' }} onClick={() => setSearchTerm('')} />
                         )}
                     </div>
-                    <button 
+                    <button
                         className={`filter-btn ${showFilters ? 'active' : ''}`}
                         onClick={() => setShowFilters(!showFilters)}
                     >

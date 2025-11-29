@@ -1,0 +1,19 @@
+[phases.setup]
+nixPkgs = ["nodejs_24"]
+
+[phases.install]
+cmds = [
+  "npm ci",
+  "cd server && npm ci"
+]
+
+[phases.build]
+cmds = [
+  "GENERATE_SOURCEMAP=false NODE_OPTIONS='--max-old-space-size=2048' npm run build:prod"
+]
+
+[start]
+cmd = "npm run start:prod"
+
+[variables]
+NODE_ENV = "production"

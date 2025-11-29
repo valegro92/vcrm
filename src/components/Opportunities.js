@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Filter, ChevronDown, Plus, Building2, Eye, Edit2, Trash2, Search, X, Check, Euro, TrendingUp, Target, Calendar } from 'lucide-react';
+import { Filter, ChevronDown, Plus, Building2, Edit2, Trash2, Search, Euro, TrendingUp, Target } from 'lucide-react';
 import pipelineStages from '../constants/pipelineStages';
 
 export default function Opportunities({ opportunities, openAddModal, handleDeleteOpportunity }) {
@@ -8,13 +8,12 @@ export default function Opportunities({ opportunities, openAddModal, handleDelet
     const [sortBy, setSortBy] = useState('value');
     const [sortOrder, setSortOrder] = useState('desc');
     const [showFilters, setShowFilters] = useState(false);
-    const [selectedOpp, setSelectedOpp] = useState(null);
 
     // Stats
     const stats = useMemo(() => {
         const active = opportunities.filter(o => !o.stage?.toLowerCase().includes('chiuso'));
         const totalValue = active.reduce((sum, o) => sum + (o.value || 0), 0);
-        const avgProbability = active.length > 0 
+        const avgProbability = active.length > 0
             ? Math.round(active.reduce((sum, o) => sum + (o.probability || 0), 0) / active.length)
             : 0;
         const weighted = active.reduce((sum, o) => sum + ((o.value || 0) * (o.probability || 0) / 100), 0);
@@ -28,7 +27,7 @@ export default function Opportunities({ opportunities, openAddModal, handleDelet
         // Search
         if (searchTerm) {
             const term = searchTerm.toLowerCase();
-            result = result.filter(o => 
+            result = result.filter(o =>
                 o.title?.toLowerCase().includes(term) ||
                 o.company?.toLowerCase().includes(term) ||
                 o.owner?.toLowerCase().includes(term)
@@ -495,7 +494,7 @@ export default function Opportunities({ opportunities, openAddModal, handleDelet
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <button 
+                    <button
                         className={`filter-btn ${showFilters ? 'active' : ''}`}
                         onClick={() => setShowFilters(!showFilters)}
                     >
@@ -582,8 +581,8 @@ export default function Opportunities({ opportunities, openAddModal, handleDelet
                                     <td>
                                         <div className="probability-cell">
                                             <div className="probability-bar">
-                                                <div 
-                                                    className="probability-fill" 
+                                                <div
+                                                    className="probability-fill"
                                                     style={{ width: `${opp.probability || 0}%` }}
                                                 ></div>
                                             </div>
@@ -596,15 +595,15 @@ export default function Opportunities({ opportunities, openAddModal, handleDelet
                                     <td>{opp.owner || '-'}</td>
                                     <td>
                                         <div className="actions-cell">
-                                            <button 
-                                                className="action-btn edit" 
+                                            <button
+                                                className="action-btn edit"
                                                 onClick={() => openAddModal('opportunity', opp)}
                                                 title="Modifica"
                                             >
                                                 <Edit2 size={16} />
                                             </button>
-                                            <button 
-                                                className="action-btn delete" 
+                                            <button
+                                                className="action-btn delete"
                                                 onClick={() => handleDeleteOpportunity(opp.id)}
                                                 title="Elimina"
                                             >

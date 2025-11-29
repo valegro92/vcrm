@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
-import { Euro, Target, TrendingUp, CheckSquare, ArrowUpRight, ArrowDownRight, Users, Calendar, Clock, Zap, Bell, ChevronRight, Plus, Phone, Mail, Video } from 'lucide-react';
+import { Euro, Target, TrendingUp, CheckSquare, ArrowUpRight, ArrowDownRight, Users, Clock, Zap, ChevronRight, Plus, Phone } from 'lucide-react';
 import pipelineStages from '../constants/pipelineStages';
 import COLORS from '../constants/colors';
 
@@ -33,14 +33,10 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
         const now = new Date();
         const currentMonth = now.getMonth();
         const currentYear = now.getFullYear();
-        
+
         // Filtra opportunità per periodo corrente e precedente
-        const currentMonthOpps = opportunities.filter(o => {
-            if (!o.closeDate) return false;
-            const d = new Date(o.closeDate);
-            return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-        });
-        
+        // Filtra opportunità per periodo corrente e precedente
+
         const lastMonthOpps = opportunities.filter(o => {
             if (!o.closeDate) return false;
             const d = new Date(o.closeDate);
@@ -50,35 +46,35 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
         });
 
         // Pipeline totale
-        const totalPipeline = opportunities.filter(o => 
+        const totalPipeline = opportunities.filter(o =>
             !o.stage?.toLowerCase().includes('chiuso')
         ).reduce((sum, o) => sum + (o.value || 0), 0);
-        
+
         const lastMonthPipeline = lastMonthOpps.reduce((sum, o) => sum + (o.value || 0), 0);
-        const pipelineChange = lastMonthPipeline > 0 
+        const pipelineChange = lastMonthPipeline > 0
             ? (((totalPipeline - lastMonthPipeline) / lastMonthPipeline) * 100).toFixed(1)
             : 0;
 
         // Pipeline ponderata
-        const weightedPipeline = opportunities.filter(o => 
+        const weightedPipeline = opportunities.filter(o =>
             !o.stage?.toLowerCase().includes('chiuso')
         ).reduce((sum, o) => sum + ((o.value || 0) * (o.probability || 0) / 100), 0);
 
         // Tasso conversione
-        const wonDeals = opportunities.filter(o => 
-            o.stage?.toLowerCase().includes('vinto') || 
+        const wonDeals = opportunities.filter(o =>
+            o.stage?.toLowerCase().includes('vinto') ||
             o.originalStage?.toLowerCase().includes('vinto')
         ).length;
-        
-        const closedDeals = opportunities.filter(o => 
+
+        const closedDeals = opportunities.filter(o =>
             o.stage?.toLowerCase().includes('chiuso')
         ).length;
-        
+
         const conversionRate = closedDeals > 0 ? ((wonDeals / closedDeals) * 100).toFixed(1) : 0;
 
         // Attività in scadenza oggi
         const today = new Date().toISOString().split('T')[0];
-        const dueTodayCount = tasks.filter(t => 
+        const dueTodayCount = tasks.filter(t =>
             t.dueDate === today && t.status !== 'Completata'
         ).length;
 
@@ -100,12 +96,12 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
     const salesData = useMemo(() => {
         const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
         const currentYear = new Date().getFullYear();
-        
-        const monthlyData = months.map((m, idx) => ({ 
-            month: m, 
-            vendite: 0, 
+
+        const monthlyData = months.map((m, idx) => ({
+            month: m,
+            vendite: 0,
             opportunita: 0,
-            target: 50000 
+            target: 50000
         }));
 
         opportunities.forEach(opp => {
@@ -150,7 +146,7 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
     const upcomingTasks = useMemo(() => {
         const today = new Date();
         const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-        
+
         return tasks
             .filter(t => {
                 if (t.status === 'Completata') return false;
@@ -565,21 +561,21 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
                     <p>Ecco cosa sta succedendo con il tuo CRM oggi</p>
                 </div>
                 <div className="quick-actions">
-                    <QuickAction 
-                        icon={<Phone size={16} />} 
-                        label="Nuova Chiamata" 
+                    <QuickAction
+                        icon={<Phone size={16} />}
+                        label="Nuova Chiamata"
                         color="blue"
                         onClick={() => setActiveView('tasks')}
                     />
-                    <QuickAction 
-                        icon={<Plus size={16} />} 
-                        label="Nuova Opportunità" 
+                    <QuickAction
+                        icon={<Plus size={16} />}
+                        label="Nuova Opportunità"
                         color="green"
                         onClick={() => setActiveView('opportunities')}
                     />
-                    <QuickAction 
-                        icon={<Users size={16} />} 
-                        label="Nuovo Contatto" 
+                    <QuickAction
+                        icon={<Users size={16} />}
+                        label="Nuovo Contatto"
                         color="purple"
                         onClick={() => setActiveView('contacts')}
                     />
@@ -629,8 +625,8 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
                 <div className="chart-card">
                     <div className="chart-header">
                         <h3>📈 Andamento Vendite {new Date().getFullYear()}</h3>
-                        <select 
-                            className="chart-filter" 
+                        <select
+                            className="chart-filter"
                             value={timeRange}
                             onChange={(e) => setTimeRange(e.target.value)}
                         >
@@ -755,7 +751,7 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
                     <div className="insight-item">
                         <div className="insight-icon"><TrendingUp size={18} /></div>
                         <span>
-                            {kpiData.conversionRate > 50 
+                            {kpiData.conversionRate > 50
                                 ? `Ottimo tasso di conversione! Sei sopra la media del settore.`
                                 : `Il tasso di conversione può migliorare. Considera di qualificare meglio i lead.`
                             }
@@ -764,7 +760,7 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
                     <div className="insight-item">
                         <div className="insight-icon"><Clock size={18} /></div>
                         <span>
-                            {kpiData.openTasks > 10 
+                            {kpiData.openTasks > 10
                                 ? `Hai ${kpiData.openTasks} attività aperte. Prioritizza quelle urgenti!`
                                 : `Le tue attività sono sotto controllo. Continua così!`
                             }
@@ -773,7 +769,7 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
                     <div className="insight-item">
                         <div className="insight-icon"><Euro size={18} /></div>
                         <span>
-                            {hotOpportunities.length > 0 
+                            {hotOpportunities.length > 0
                                 ? `Focus su ${hotOpportunities[0]?.company}: opportunità da ${formatCurrency(hotOpportunities[0]?.value || 0)}`
                                 : `Crea nuove opportunità per alimentare la pipeline.`
                             }
