@@ -1,34 +1,36 @@
 const express = require('express');
-const db = require('../database/db');
+const { getAll, getOne, runQuery, getReturningClause } = require('../database/helpers');
 const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
 // Get all tasks
-router.get('/', authMiddleware, (req, res) => {
-  db.all('SELECT * FROM tasks WHERE userId = ? OR userId IS NULL ORDER BY dueDate ASC, createdAt DESC', [req.userId], (err, tasks) => {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
+router.get('/', authMiddleware, async (req, res) => {
+  try {
+    const tasks = await getAll('SELECT * FROM tasks WHERE "userId" = ? OR "userId" IS NULL ORDER BY "dueDate" ASC, "createdAt" DESC', [req.userId]);
     res.json(tasks);
-  });
+  } catch (err) {
+    console.error('Get tasks error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Get single task
-router.get('/:id', authMiddleware, (req, res) => {
-  db.get('SELECT * FROM tasks WHERE id = ? AND (userId = ? OR userId IS NULL)', [req.params.id, req.userId], (err, task) => {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
+router.get('/:id', authMiddleware, async (req, res) => {
+  try {
+    const task = await getOne('SELECT * FROM tasks WHERE id = ? AND ("userId" = ? OR "userId" IS NULL)', [req.params.id, req.userId]);
     if (!task) {
       return res.status(404).json({ error: 'Task not found' });
     }
     res.json(task);
-  });
+  } catch (err) {
+    console.error('Get task error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Create task
-router.post('/', authMiddleware, (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   const { title, type, priority, dueDate, status, contactId, opportunityId, description } = req.body;
 
   if (!title) {
@@ -36,75 +38,70 @@ router.post('/', authMiddleware, (req, res) => {
   }
 
   const query = `
-    INSERT INTO tasks (title, type, priority, dueDate, status, contactId, opportunityId, userId, description)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO tasks (title, type, priority, "dueDate", status, "contactId", "opportunityId", "userId", description)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ${getReturningClause()}
   `;
 
-  db.run(query, [title, type || 'Chiamata', priority || 'Media', dueDate, status || 'Da fare', contactId, opportunityId, req.userId, description], function(err) {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
+  try {
+    const result = await runQuery(query, [title, type || 'Chiamata', priority || 'Media', dueDate, status || 'Da fare', contactId, opportunityId, req.userId, description]);
 
-    db.get('SELECT * FROM tasks WHERE id = ?', [this.lastID], (err, task) => {
-      if (err) {
-        return res.status(500).json({ error: 'Database error' });
-      }
-      res.status(201).json(task);
-    });
-  });
+    const taskId = result.lastID || (result.rows && result.rows[0]?.id);
+    const task = await getOne('SELECT * FROM tasks WHERE id = ?', [taskId]);
+
+    res.status(201).json(task);
+  } catch (err) {
+    console.error('Create task error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Update task
-router.put('/:id', authMiddleware, (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
   const { title, type, priority, dueDate, status, contactId, opportunityId, description } = req.body;
 
   const completedAt = status === 'Completata' ? new Date().toISOString() : null;
 
   const query = `
     UPDATE tasks
-    SET title = ?, type = ?, priority = ?, dueDate = ?, status = ?, contactId = ?, opportunityId = ?, description = ?, completedAt = ?, updatedAt = CURRENT_TIMESTAMP
-    WHERE id = ? AND (userId = ? OR userId IS NULL)
+    SET title = ?, type = ?, priority = ?, "dueDate" = ?, status = ?, "contactId" = ?, "opportunityId" = ?, description = ?, "completedAt" = ?, "updatedAt" = CURRENT_TIMESTAMP
+    WHERE id = ? AND ("userId" = ? OR "userId" IS NULL)
   `;
 
-  db.run(query, [title, type, priority, dueDate, status, contactId, opportunityId, description, completedAt, req.params.id, req.userId], function(err) {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
+  try {
+    const result = await runQuery(query, [title, type, priority, dueDate, status, contactId, opportunityId, description, completedAt, req.params.id, req.userId]);
 
-    if (this.changes === 0) {
+    if (result.changes === 0) {
       return res.status(404).json({ error: 'Task not found' });
     }
 
-    db.get('SELECT * FROM tasks WHERE id = ?', [req.params.id], (err, task) => {
-      if (err) {
-        return res.status(500).json({ error: 'Database error' });
-      }
-      res.json(task);
-    });
-  });
+    const task = await getOne('SELECT * FROM tasks WHERE id = ?', [req.params.id]);
+    res.json(task);
+  } catch (err) {
+    console.error('Update task error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Delete task
-router.delete('/:id', authMiddleware, (req, res) => {
-  db.run('DELETE FROM tasks WHERE id = ? AND (userId = ? OR userId IS NULL)', [req.params.id, req.userId], function(err) {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
+router.delete('/:id', authMiddleware, async (req, res) => {
+  try {
+    const result = await runQuery('DELETE FROM tasks WHERE id = ? AND ("userId" = ? OR "userId" IS NULL)', [req.params.id, req.userId]);
 
-    if (this.changes === 0) {
+    if (result.changes === 0) {
       return res.status(404).json({ error: 'Task not found' });
     }
 
     res.json({ message: 'Task deleted successfully' });
-  });
+  } catch (err) {
+    console.error('Delete task error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Toggle task status
-router.patch('/:id/toggle', authMiddleware, (req, res) => {
-  db.get('SELECT status FROM tasks WHERE id = ? AND (userId = ? OR userId IS NULL)', [req.params.id, req.userId], (err, task) => {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
+router.patch('/:id/toggle', authMiddleware, async (req, res) => {
+  try {
+    const task = await getOne('SELECT status FROM tasks WHERE id = ? AND ("userId" = ? OR "userId" IS NULL)', [req.params.id, req.userId]);
 
     if (!task) {
       return res.status(404).json({ error: 'Task not found' });
@@ -113,23 +110,17 @@ router.patch('/:id/toggle', authMiddleware, (req, res) => {
     const newStatus = task.status === 'Completata' ? 'Da fare' : 'Completata';
     const completedAt = newStatus === 'Completata' ? new Date().toISOString() : null;
 
-    db.run(
-      'UPDATE tasks SET status = ?, completedAt = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?',
-      [newStatus, completedAt, req.params.id],
-      function(err) {
-        if (err) {
-          return res.status(500).json({ error: 'Database error' });
-        }
-
-        db.get('SELECT * FROM tasks WHERE id = ?', [req.params.id], (err, updatedTask) => {
-          if (err) {
-            return res.status(500).json({ error: 'Database error' });
-          }
-          res.json(updatedTask);
-        });
-      }
+    await runQuery(
+      'UPDATE tasks SET status = ?, "completedAt" = ?, "updatedAt" = CURRENT_TIMESTAMP WHERE id = ?',
+      [newStatus, completedAt, req.params.id]
     );
-  });
+
+    const updatedTask = await getOne('SELECT * FROM tasks WHERE id = ?', [req.params.id]);
+    res.json(updatedTask);
+  } catch (err) {
+    console.error('Toggle task status error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 module.exports = router;

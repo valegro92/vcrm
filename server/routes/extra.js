@@ -1,134 +1,80 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
-const db = require('../database/db');
+const { getAll, getOne, runQuery, getReturningClause } = require('../database/helpers');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
 
 // ============== STATS ==============
-router.get('/stats', auth, (req, res) => {
-  const contactsPromise = new Promise((resolve, reject) => {
-    db.get('SELECT COUNT(*) as count FROM contacts', [], (err, row) => {
-      if (err) reject(err);
-      else resolve(row?.count || 0);
-    });
-  });
+router.get('/stats', auth, async (req, res) => {
+  try {
+    const contactsCount = await getOne('SELECT COUNT(*) as count FROM contacts');
+    const opportunitiesCount = await getOne('SELECT COUNT(*) as count FROM opportunities');
+    const tasksCount = await getOne('SELECT COUNT(*) as count FROM tasks');
 
-  const opportunitiesPromise = new Promise((resolve, reject) => {
-    db.get('SELECT COUNT(*) as count FROM opportunities', [], (err, row) => {
-      if (err) reject(err);
-      else resolve(row?.count || 0);
-    });
-  });
+    const pipelineValue = await getOne('SELECT SUM(value) as total FROM opportunities WHERE stage NOT LIKE \'%Chiuso%\'');
+    const wonDeals = await getOne('SELECT COUNT(*) as count, SUM(value) as total FROM opportunities WHERE stage LIKE \'%Vinto%\'');
+    const openTasks = await getOne('SELECT COUNT(*) as count FROM tasks WHERE status != \'Completata\'');
 
-  const tasksPromise = new Promise((resolve, reject) => {
-    db.get('SELECT COUNT(*) as count FROM tasks', [], (err, row) => {
-      if (err) reject(err);
-      else resolve(row?.count || 0);
+    res.json({
+      contacts: parseInt(contactsCount?.count || 0),
+      opportunities: parseInt(opportunitiesCount?.count || 0),
+      tasks: parseInt(tasksCount?.count || 0),
+      pipelineValue: parseFloat(pipelineValue?.total || 0),
+      wonDeals: parseInt(wonDeals?.count || 0),
+      wonValue: parseFloat(wonDeals?.total || 0),
+      openTasks: parseInt(openTasks?.count || 0)
     });
-  });
-
-  const pipelineValuePromise = new Promise((resolve, reject) => {
-    db.get('SELECT SUM(value) as total FROM opportunities WHERE stage NOT LIKE "%Chiuso%"', [], (err, row) => {
-      if (err) reject(err);
-      else resolve(row?.total || 0);
-    });
-  });
-
-  const wonDealsPromise = new Promise((resolve, reject) => {
-    db.get('SELECT COUNT(*) as count, SUM(value) as total FROM opportunities WHERE stage LIKE "%Vinto%"', [], (err, row) => {
-      if (err) reject(err);
-      else resolve({ count: row?.count || 0, total: row?.total || 0 });
-    });
-  });
-
-  const openTasksPromise = new Promise((resolve, reject) => {
-    db.get('SELECT COUNT(*) as count FROM tasks WHERE status != "Completata"', [], (err, row) => {
-      if (err) reject(err);
-      else resolve(row?.count || 0);
-    });
-  });
-
-  Promise.all([contactsPromise, opportunitiesPromise, tasksPromise, pipelineValuePromise, wonDealsPromise, openTasksPromise])
-    .then(([contacts, opportunities, tasks, pipelineValue, wonDeals, openTasks]) => {
-      res.json({
-        contacts,
-        opportunities,
-        tasks,
-        pipelineValue,
-        wonDeals: wonDeals.count,
-        wonValue: wonDeals.total,
-        openTasks
-      });
-    })
-    .catch(err => {
-      res.status(500).json({ error: 'Error fetching stats' });
-    });
+  } catch (err) {
+    console.error('Stats error:', err);
+    res.status(500).json({ error: 'Error fetching stats' });
+  }
 });
 
 // ============== EXPORT ==============
-router.get('/export', auth, (req, res) => {
+router.get('/export', auth, async (req, res) => {
   const format = req.query.format || 'json';
 
-  const contactsPromise = new Promise((resolve, reject) => {
-    db.all('SELECT * FROM contacts', [], (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows || []);
-    });
-  });
+  try {
+    const contacts = await getAll('SELECT * FROM contacts');
+    const opportunities = await getAll('SELECT * FROM opportunities');
+    const tasks = await getAll('SELECT * FROM tasks');
 
-  const opportunitiesPromise = new Promise((resolve, reject) => {
-    db.all('SELECT * FROM opportunities', [], (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows || []);
-    });
-  });
+    if (format === 'csv') {
+      // Generate CSV
+      const contactsCsv = generateCSV(contacts, ['id', 'name', 'company', 'email', 'phone', 'value', 'status', 'lastContact']);
+      const opportunitiesCsv = generateCSV(opportunities, ['id', 'title', 'company', 'value', 'stage', 'probability', 'closeDate', 'owner']);
+      const tasksCsv = generateCSV(tasks, ['id', 'title', 'type', 'priority', 'status', 'dueDate', 'contactId']);
 
-  const tasksPromise = new Promise((resolve, reject) => {
-    db.all('SELECT * FROM tasks', [], (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows || []);
-    });
-  });
-
-  Promise.all([contactsPromise, opportunitiesPromise, tasksPromise])
-    .then(([contacts, opportunities, tasks]) => {
-      if (format === 'csv') {
-        // Generate CSV
-        const contactsCsv = generateCSV(contacts, ['id', 'name', 'company', 'email', 'phone', 'value', 'status', 'lastContact']);
-        const opportunitiesCsv = generateCSV(opportunities, ['id', 'title', 'company', 'value', 'stage', 'probability', 'closeDate', 'owner']);
-        const tasksCsv = generateCSV(tasks, ['id', 'title', 'type', 'priority', 'status', 'dueDate', 'contactId']);
-
-        res.json({
-          format: 'csv',
-          data: {
-            contacts: contactsCsv,
-            opportunities: opportunitiesCsv,
-            tasks: tasksCsv
-          }
-        });
-      } else {
-        res.json({
-          format: 'json',
-          exportDate: new Date().toISOString(),
-          data: {
-            contacts,
-            opportunities,
-            tasks
-          }
-        });
-      }
-    })
-    .catch(err => {
-      res.status(500).json({ error: 'Error exporting data' });
-    });
+      res.json({
+        format: 'csv',
+        data: {
+          contacts: contactsCsv,
+          opportunities: opportunitiesCsv,
+          tasks: tasksCsv
+        }
+      });
+    } else {
+      res.json({
+        format: 'json',
+        exportDate: new Date().toISOString(),
+        data: {
+          contacts,
+          opportunities,
+          tasks
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Export error:', err);
+    res.status(500).json({ error: 'Error exporting data' });
+  }
 });
 
 function generateCSV(data, columns) {
   if (!data || data.length === 0) return '';
-  
+
   const header = columns.join(',');
-  const rows = data.map(item => 
+  const rows = data.map(item =>
     columns.map(col => {
       const value = item[col];
       if (value === null || value === undefined) return '';
@@ -138,211 +84,260 @@ function generateCSV(data, columns) {
       return value;
     }).join(',')
   );
-  
+
   return [header, ...rows].join('\n');
 }
 
 // ============== GLOBAL SEARCH ==============
-router.get('/search', auth, (req, res) => {
+router.get('/search', auth, async (req, res) => {
   const query = req.query.q || '';
-  
+
   if (query.length < 2) {
     return res.json({ contacts: [], opportunities: [], tasks: [] });
   }
 
   const searchTerm = `%${query}%`;
 
-  const contactsPromise = new Promise((resolve, reject) => {
-    db.all(
+  try {
+    const contacts = await getAll(
       'SELECT * FROM contacts WHERE name LIKE ? OR company LIKE ? OR email LIKE ? LIMIT 10',
-      [searchTerm, searchTerm, searchTerm],
-      (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows || []);
-      }
+      [searchTerm, searchTerm, searchTerm]
     );
-  });
 
-  const opportunitiesPromise = new Promise((resolve, reject) => {
-    db.all(
+    const opportunities = await getAll(
       'SELECT * FROM opportunities WHERE title LIKE ? OR company LIKE ? LIMIT 10',
-      [searchTerm, searchTerm],
-      (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows || []);
-      }
+      [searchTerm, searchTerm]
     );
-  });
 
-  const tasksPromise = new Promise((resolve, reject) => {
-    db.all(
+    const tasks = await getAll(
       'SELECT * FROM tasks WHERE title LIKE ? OR description LIKE ? LIMIT 10',
-      [searchTerm, searchTerm],
-      (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows || []);
-      }
+      [searchTerm, searchTerm]
     );
-  });
 
-  Promise.all([contactsPromise, opportunitiesPromise, tasksPromise])
-    .then(([contacts, opportunities, tasks]) => {
-      res.json({ contacts, opportunities, tasks });
-    })
-    .catch(err => {
-      res.status(500).json({ error: 'Search error' });
-    });
+    res.json({ contacts, opportunities, tasks });
+  } catch (err) {
+    console.error('Search error:', err);
+    res.status(500).json({ error: 'Search error' });
+  }
 });
 
 // ============== NOTIFICATIONS ==============
-// Create notifications table if not exists
-db.run(`
-  CREATE TABLE IF NOT EXISTS notifications (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    userId INTEGER,
-    type TEXT NOT NULL,
-    title TEXT NOT NULL,
-    message TEXT,
-    entityType TEXT,
-    entityId INTEGER,
-    isRead INTEGER DEFAULT 0,
-    createdAt TEXT DEFAULT CURRENT_TIMESTAMP
-  )
-`);
+router.get('/notifications', auth, async (req, res) => {
+  try {
+    const notifications = await getAll(
+      'SELECT * FROM notifications WHERE "userId" = ? OR "userId" IS NULL ORDER BY "createdAt" DESC LIMIT 50',
+      [req.user.userId]
+    );
 
-router.get('/notifications', auth, (req, res) => {
-  db.all(
-    'SELECT * FROM notifications WHERE userId = ? OR userId IS NULL ORDER BY createdAt DESC LIMIT 50',
-    [req.user.userId],
-    (err, rows) => {
-      if (err) {
-        return res.status(500).json({ error: 'Error fetching notifications' });
-      }
-      
-      // Also check for tasks due today/overdue
-      const today = new Date().toISOString().split('T')[0];
-      db.all(
-        'SELECT * FROM tasks WHERE status != "Completata" AND dueDate <= ? ORDER BY dueDate LIMIT 10',
-        [today],
-        (err, tasks) => {
-          const taskNotifications = (tasks || []).map(task => ({
-            id: `task-${task.id}`,
-            type: task.dueDate < today ? 'overdue' : 'due_today',
-            title: task.dueDate < today ? 'Attività scaduta' : 'Attività in scadenza oggi',
-            message: task.title,
-            entityType: 'task',
-            entityId: task.id,
-            isRead: 0,
-            createdAt: task.dueDate
-          }));
+    // Also check for tasks due today/overdue
+    const today = new Date().toISOString().split('T')[0];
+    const tasks = await getAll(
+      'SELECT * FROM tasks WHERE status != \'Completata\' AND "dueDate" <= ? ORDER BY "dueDate" LIMIT 10',
+      [today]
+    );
 
-          res.json([...taskNotifications, ...(rows || [])]);
-        }
-      );
-    }
-  );
+    const taskNotifications = (tasks || []).map(task => ({
+      id: `task-${task.id}`,
+      type: task.dueDate < today ? 'overdue' : 'due_today',
+      title: task.dueDate < today ? 'Attività scaduta' : 'Attività in scadenza oggi',
+      message: task.title,
+      entityType: 'task',
+      entityId: task.id,
+      isRead: 0,
+      createdAt: task.dueDate
+    }));
+
+    res.json([...taskNotifications, ...(notifications || [])]);
+  } catch (err) {
+    console.error('Notifications error:', err);
+    res.status(500).json({ error: 'Error fetching notifications' });
+  }
 });
 
-router.patch('/notifications/:id/read', auth, (req, res) => {
+router.patch('/notifications/:id/read', auth, async (req, res) => {
   const { id } = req.params;
-  
+
   // Handle task notifications
   if (id.startsWith('task-')) {
     return res.json({ success: true });
   }
-  
-  db.run(
-    'UPDATE notifications SET isRead = 1 WHERE id = ?',
-    [id],
-    function(err) {
-      if (err) {
-        return res.status(500).json({ error: 'Error updating notification' });
-      }
-      res.json({ success: true });
-    }
-  );
+
+  try {
+    await runQuery('UPDATE notifications SET "isRead" = 1 WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Update notification error:', err);
+    res.status(500).json({ error: 'Error updating notification' });
+  }
 });
 
-router.patch('/notifications/read-all', auth, (req, res) => {
-  db.run(
-    'UPDATE notifications SET isRead = 1 WHERE userId = ? OR userId IS NULL',
-    [req.user.userId],
-    function(err) {
-      if (err) {
-        return res.status(500).json({ error: 'Error updating notifications' });
-      }
-      res.json({ success: true });
-    }
-  );
+router.patch('/notifications/read-all', auth, async (req, res) => {
+  try {
+    await runQuery(
+      'UPDATE notifications SET "isRead" = 1 WHERE "userId" = ? OR "userId" IS NULL',
+      [req.user.userId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Update all notifications error:', err);
+    res.status(500).json({ error: 'Error updating notifications' });
+  }
 });
 
 // ============== NOTES ==============
-// Create notes table if not exists
-db.run(`
-  CREATE TABLE IF NOT EXISTS notes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    entityType TEXT NOT NULL,
-    entityId INTEGER NOT NULL,
-    content TEXT NOT NULL,
-    createdBy INTEGER,
-    createdAt TEXT DEFAULT CURRENT_TIMESTAMP
-  )
-`);
-
-router.get('/notes', auth, (req, res) => {
+router.get('/notes', auth, async (req, res) => {
   const { entityType, entityId } = req.query;
-  
+
   if (!entityType || !entityId) {
     return res.status(400).json({ error: 'entityType and entityId required' });
   }
 
-  db.all(
-    'SELECT * FROM notes WHERE entityType = ? AND entityId = ? ORDER BY createdAt DESC',
-    [entityType, entityId],
-    (err, rows) => {
-      if (err) {
-        return res.status(500).json({ error: 'Error fetching notes' });
-      }
-      res.json(rows || []);
-    }
-  );
+  try {
+    const notes = await getAll(
+      'SELECT * FROM notes WHERE "entityType" = ? AND "entityId" = ? ORDER BY "createdAt" DESC',
+      [entityType, entityId]
+    );
+    res.json(notes || []);
+  } catch (err) {
+    console.error('Get notes error:', err);
+    res.status(500).json({ error: 'Error fetching notes' });
+  }
 });
 
-router.post('/notes', auth, (req, res) => {
+router.post('/notes', auth, async (req, res) => {
   const { entityType, entityId, content } = req.body;
-  
+
   if (!entityType || !entityId || !content) {
     return res.status(400).json({ error: 'entityType, entityId and content required' });
   }
 
-  db.run(
-    'INSERT INTO notes (entityType, entityId, content, createdBy) VALUES (?, ?, ?, ?)',
-    [entityType, entityId, content, req.user.userId],
-    function(err) {
-      if (err) {
-        return res.status(500).json({ error: 'Error creating note' });
-      }
-      res.status(201).json({
-        id: this.lastID,
-        entityType,
-        entityId,
-        content,
-        createdBy: req.user.userId,
-        createdAt: new Date().toISOString()
-      });
-    }
-  );
+  try {
+    const result = await runQuery(
+      `INSERT INTO notes ("entityType", "entityId", content, "createdBy") VALUES (?, ?, ?, ?) ${getReturningClause()}`,
+      [entityType, entityId, content, req.user.userId]
+    );
+
+    const noteId = result.lastID || (result.rows && result.rows[0]?.id);
+
+    res.status(201).json({
+      id: noteId,
+      entityType,
+      entityId,
+      content,
+      createdBy: req.user.userId,
+      createdAt: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error('Create note error:', err);
+    res.status(500).json({ error: 'Error creating note' });
+  }
 });
 
-router.delete('/notes/:id', auth, (req, res) => {
+router.delete('/notes/:id', auth, async (req, res) => {
   const { id } = req.params;
 
-  db.run('DELETE FROM notes WHERE id = ?', [id], function(err) {
-    if (err) {
-      return res.status(500).json({ error: 'Error deleting note' });
-    }
+  try {
+    await runQuery('DELETE FROM notes WHERE id = ?', [id]);
     res.json({ success: true });
-  });
+  } catch (err) {
+    console.error('Delete note error:', err);
+    res.status(500).json({ error: 'Error deleting note' });
+  }
+});
+
+// ============== DATA RESTORE (MIGRATION) ==============
+router.post('/restore-legacy', auth, async (req, res) => {
+  // Only allow admin
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  const fs = require('fs');
+  const path = require('path');
+  const dumpPath = path.join(__dirname, '../data/legacy_dump.json');
+
+  if (!fs.existsSync(dumpPath)) {
+    return res.status(404).json({ error: 'Legacy dump file not found' });
+  }
+
+  try {
+    const data = JSON.parse(fs.readFileSync(dumpPath, 'utf8'));
+    const client = require('../database/db').pool; // Direct access to pool for transactions
+
+    if (!client) {
+      return res.status(500).json({ error: 'Not connected to PostgreSQL' });
+    }
+
+    // Start transaction
+    const clientConn = await client.connect();
+
+    try {
+      await clientConn.query('BEGIN');
+
+      // 1. Users (skip existing admin/users to avoid conflicts, or use ON CONFLICT)
+      if (data.users) {
+        for (const user of data.users) {
+          await clientConn.query(`
+            INSERT INTO users (id, username, email, password, "fullName", avatar, phone, company, role, "createdAt", "updatedAt")
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            ON CONFLICT (id) DO NOTHING
+            ON CONFLICT (username) DO NOTHING
+            ON CONFLICT (email) DO NOTHING
+          `, [user.id, user.username, user.email, user.password, user.fullName, user.avatar, user.phone, user.company, user.role, user.createdAt, user.updatedAt]);
+        }
+        // Reset sequence
+        await clientConn.query("SELECT setval('users_id_seq', (SELECT MAX(id) FROM users))");
+      }
+
+      // 2. Contacts
+      if (data.contacts) {
+        for (const contact of data.contacts) {
+          await clientConn.query(`
+            INSERT INTO contacts (id, name, company, email, phone, value, status, avatar, "lastContact", notes, "userId", "createdAt", "updatedAt")
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            ON CONFLICT (id) DO NOTHING
+          `, [contact.id, contact.name, contact.company, contact.email, contact.phone, contact.value, contact.status, contact.avatar, contact.lastContact, contact.notes, contact.userId, contact.createdAt, contact.updatedAt]);
+        }
+        await clientConn.query("SELECT setval('contacts_id_seq', (SELECT MAX(id) FROM contacts))");
+      }
+
+      // 3. Opportunities
+      if (data.opportunities) {
+        for (const opp of data.opportunities) {
+          await clientConn.query(`
+            INSERT INTO opportunities (id, title, company, value, stage, probability, "openDate", "closeDate", owner, "contactId", "userId", "originalStage", notes, "createdAt", "updatedAt")
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+            ON CONFLICT (id) DO NOTHING
+          `, [opp.id, opp.title, opp.company, opp.value, opp.stage, opp.probability, opp.openDate, opp.closeDate, opp.owner, opp.contactId, opp.userId, opp.originalStage, opp.notes, opp.createdAt, opp.updatedAt]);
+        }
+        await clientConn.query("SELECT setval('opportunities_id_seq', (SELECT MAX(id) FROM opportunities))");
+      }
+
+      // 4. Tasks
+      if (data.tasks) {
+        for (const task of data.tasks) {
+          await clientConn.query(`
+            INSERT INTO tasks (id, title, type, priority, "dueDate", status, "contactId", "opportunityId", "userId", description, "completedAt", "createdAt", "updatedAt")
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            ON CONFLICT (id) DO NOTHING
+          `, [task.id, task.title, task.type, task.priority, task.dueDate, task.status, task.contactId, task.opportunityId, task.userId, task.description, task.completedAt, task.createdAt, task.updatedAt]);
+        }
+        await clientConn.query("SELECT setval('tasks_id_seq', (SELECT MAX(id) FROM tasks))");
+      }
+
+      await clientConn.query('COMMIT');
+      res.json({ message: 'Data restored successfully' });
+    } catch (e) {
+      await clientConn.query('ROLLBACK');
+      throw e;
+    } finally {
+      clientConn.release();
+    }
+
+  } catch (err) {
+    console.error('Restore error:', err);
+    res.status(500).json({ error: 'Error restoring data: ' + err.message });
+  }
 });
 
 module.exports = router;

@@ -1,34 +1,36 @@
 const express = require('express');
-const db = require('../database/db');
+const { getAll, getOne, runQuery, getReturningClause } = require('../database/helpers');
 const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
 // Get all contacts
-router.get('/', authMiddleware, (req, res) => {
-  db.all('SELECT * FROM contacts WHERE userId = ? OR userId IS NULL ORDER BY createdAt DESC', [req.userId], (err, contacts) => {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
+router.get('/', authMiddleware, async (req, res) => {
+  try {
+    const contacts = await getAll('SELECT * FROM contacts WHERE "userId" = ? OR "userId" IS NULL ORDER BY "createdAt" DESC', [req.userId]);
     res.json(contacts);
-  });
+  } catch (err) {
+    console.error('Get contacts error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Get single contact
-router.get('/:id', authMiddleware, (req, res) => {
-  db.get('SELECT * FROM contacts WHERE id = ? AND (userId = ? OR userId IS NULL)', [req.params.id, req.userId], (err, contact) => {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
+router.get('/:id', authMiddleware, async (req, res) => {
+  try {
+    const contact = await getOne('SELECT * FROM contacts WHERE id = ? AND ("userId" = ? OR "userId" IS NULL)', [req.params.id, req.userId]);
     if (!contact) {
       return res.status(404).json({ error: 'Contact not found' });
     }
     res.json(contact);
-  });
+  } catch (err) {
+    console.error('Get contact error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Create contact
-router.post('/', authMiddleware, (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   const { name, company, email, phone, value, status, avatar, lastContact, notes } = req.body;
 
   if (!name) {
@@ -36,65 +38,62 @@ router.post('/', authMiddleware, (req, res) => {
   }
 
   const query = `
-    INSERT INTO contacts (name, company, email, phone, value, status, avatar, lastContact, notes, userId)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO contacts (name, company, email, phone, value, status, avatar, "lastContact", notes, "userId")
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ${getReturningClause()}
   `;
 
-  db.run(query, [name, company, email, phone, value || 0, status || 'Lead', avatar, lastContact, notes, req.userId], function(err) {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
+  try {
+    const result = await runQuery(query, [name, company, email, phone, value || 0, status || 'Lead', avatar, lastContact, notes, req.userId]);
 
-    db.get('SELECT * FROM contacts WHERE id = ?', [this.lastID], (err, contact) => {
-      if (err) {
-        return res.status(500).json({ error: 'Database error' });
-      }
-      res.status(201).json(contact);
-    });
-  });
+    const contactId = result.lastID || (result.rows && result.rows[0]?.id);
+    const contact = await getOne('SELECT * FROM contacts WHERE id = ?', [contactId]);
+
+    res.status(201).json(contact);
+  } catch (err) {
+    console.error('Create contact error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Update contact
-router.put('/:id', authMiddleware, (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
   const { name, company, email, phone, value, status, avatar, lastContact, notes } = req.body;
 
   const query = `
     UPDATE contacts
-    SET name = ?, company = ?, email = ?, phone = ?, value = ?, status = ?, avatar = ?, lastContact = ?, notes = ?, updatedAt = CURRENT_TIMESTAMP
-    WHERE id = ? AND (userId = ? OR userId IS NULL)
+    SET name = ?, company = ?, email = ?, phone = ?, value = ?, status = ?, avatar = ?, "lastContact" = ?, notes = ?, "updatedAt" = CURRENT_TIMESTAMP
+    WHERE id = ? AND ("userId" = ? OR "userId" IS NULL)
   `;
 
-  db.run(query, [name, company, email, phone, value, status, avatar, lastContact, notes, req.params.id, req.userId], function(err) {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
+  try {
+    const result = await runQuery(query, [name, company, email, phone, value, status, avatar, lastContact, notes, req.params.id, req.userId]);
 
-    if (this.changes === 0) {
+    if (result.changes === 0) {
       return res.status(404).json({ error: 'Contact not found' });
     }
 
-    db.get('SELECT * FROM contacts WHERE id = ?', [req.params.id], (err, contact) => {
-      if (err) {
-        return res.status(500).json({ error: 'Database error' });
-      }
-      res.json(contact);
-    });
-  });
+    const contact = await getOne('SELECT * FROM contacts WHERE id = ?', [req.params.id]);
+    res.json(contact);
+  } catch (err) {
+    console.error('Update contact error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Delete contact
-router.delete('/:id', authMiddleware, (req, res) => {
-  db.run('DELETE FROM contacts WHERE id = ? AND (userId = ? OR userId IS NULL)', [req.params.id, req.userId], function(err) {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
+router.delete('/:id', authMiddleware, async (req, res) => {
+  try {
+    const result = await runQuery('DELETE FROM contacts WHERE id = ? AND ("userId" = ? OR "userId" IS NULL)', [req.params.id, req.userId]);
 
-    if (this.changes === 0) {
+    if (result.changes === 0) {
       return res.status(404).json({ error: 'Contact not found' });
     }
 
     res.json({ message: 'Contact deleted successfully' });
-  });
+  } catch (err) {
+    console.error('Delete contact error:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
 module.exports = router;

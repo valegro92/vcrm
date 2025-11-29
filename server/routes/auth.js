@@ -1,23 +1,21 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const db = require('../database/db');
+const { runQuery, getOne, getReturningClause } = require('../database/helpers');
 const auth = require('../middleware/auth');
 
 const router = express.Router();
 
 // Login
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required' });
   }
 
-  db.get('SELECT * FROM users WHERE username = ? OR email = ?', [username, username], async (err, user) => {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
+  try {
+    const user = await getOne('SELECT * FROM users WHERE username = ? OR email = ?', [username, username]);
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -45,7 +43,10 @@ router.post('/login', (req, res) => {
         role: user.role
       }
     });
-  });
+  } catch (err) {
+    console.error('Login error:', err);
+    return res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Register
@@ -60,75 +61,69 @@ router.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const avatar = fullName ? fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : username.substring(0, 2).toUpperCase();
 
-    db.run(
-      'INSERT INTO users (username, email, password, fullName, avatar) VALUES (?, ?, ?, ?, ?)',
-      [username, email, hashedPassword, fullName, avatar],
-      function(err) {
-        if (err) {
-          if (err.message.includes('UNIQUE')) {
-            return res.status(400).json({ error: 'Username or email already exists' });
-          }
-          return res.status(500).json({ error: 'Database error' });
-        }
-
-        const token = jwt.sign(
-          { userId: this.lastID, username, role: 'user' },
-          process.env.JWT_SECRET,
-          { expiresIn: '24h' }
-        );
-
-        res.status(201).json({
-          token,
-          user: {
-            id: this.lastID,
-            username,
-            email,
-            fullName,
-            avatar,
-            role: 'user'
-          }
-        });
-      }
+    const result = await runQuery(
+      `INSERT INTO users (username, email, password, fullName, avatar) VALUES (?, ?, ?, ?, ?) ${getReturningClause()}`,
+      [username, email, hashedPassword, fullName, avatar]
     );
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+
+    const userId = result.lastID || (result.rows && result.rows[0]?.id);
+
+    const token = jwt.sign(
+      { userId: userId, username, role: 'user' },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.status(201).json({
+      token,
+      user: {
+        id: userId,
+        username,
+        email,
+        fullName,
+        avatar,
+        role: 'user'
+      }
+    });
+  } catch (err) {
+    if (err.message.includes('UNIQUE') || err.message.includes('duplicate key')) {
+      return res.status(400).json({ error: 'Username or email already exists' });
+    }
+    console.error('Register error:', err);
+    return res.status(500).json({ error: 'Database error' });
   }
 });
 
 // Update Profile
-router.put('/profile', auth, (req, res) => {
+router.put('/profile', auth, async (req, res) => {
   const { fullName, email, phone, company } = req.body;
   const userId = req.user.userId;
 
   // Update avatar based on new name
-  const avatar = fullName 
-    ? fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) 
+  const avatar = fullName
+    ? fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
     : null;
 
-  db.run(
-    'UPDATE users SET fullName = ?, email = ?, phone = ?, company = ?, avatar = COALESCE(?, avatar) WHERE id = ?',
-    [fullName, email, phone, company, avatar, userId],
-    function(err) {
-      if (err) {
-        if (err.message.includes('UNIQUE')) {
-          return res.status(400).json({ error: 'Email already in use' });
-        }
-        return res.status(500).json({ error: 'Database error' });
-      }
+  try {
+    const result = await runQuery(
+      'UPDATE users SET "fullName" = ?, email = ?, phone = ?, company = ?, avatar = COALESCE(?, avatar) WHERE id = ?',
+      [fullName, email, phone, company, avatar, userId]
+    );
 
-      if (this.changes === 0) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-
-      // Get updated user
-      db.get('SELECT id, username, email, fullName, avatar, role, phone, company FROM users WHERE id = ?', [userId], (err, user) => {
-        if (err) {
-          return res.status(500).json({ error: 'Database error' });
-        }
-        res.json(user);
-      });
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'User not found' });
     }
-  );
+
+    // Get updated user
+    const user = await getOne('SELECT id, username, email, "fullName", avatar, role, phone, company FROM users WHERE id = ?', [userId]);
+    res.json(user);
+  } catch (err) {
+    if (err.message.includes('UNIQUE') || err.message.includes('duplicate key')) {
+      return res.status(400).json({ error: 'Email already in use' });
+    }
+    console.error('Update profile error:', err);
+    return res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Change Password
@@ -144,10 +139,8 @@ router.post('/change-password', auth, async (req, res) => {
     return res.status(400).json({ error: 'New password must be at least 6 characters' });
   }
 
-  db.get('SELECT password FROM users WHERE id = ?', [userId], async (err, user) => {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
+  try {
+    const user = await getOne('SELECT password FROM users WHERE id = ?', [userId]);
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -160,30 +153,30 @@ router.post('/change-password', auth, async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    db.run('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId], function(err) {
-      if (err) {
-        return res.status(500).json({ error: 'Database error' });
-      }
-      res.json({ message: 'Password updated successfully' });
-    });
-  });
+    await runQuery('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    return res.status(500).json({ error: 'Database error' });
+  }
 });
 
 // Get current user profile
-router.get('/me', auth, (req, res) => {
+router.get('/me', auth, async (req, res) => {
   const userId = req.user.userId;
 
-  db.get('SELECT id, username, email, fullName, avatar, role, phone, company, createdAt FROM users WHERE id = ?', [userId], (err, user) => {
-    if (err) {
-      return res.status(500).json({ error: 'Database error' });
-    }
+  try {
+    const user = await getOne('SELECT id, username, email, "fullName", avatar, role, phone, company, "createdAt" FROM users WHERE id = ?', [userId]);
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
     res.json(user);
-  });
+  } catch (err) {
+    console.error('Get profile error:', err);
+    return res.status(500).json({ error: 'Database error' });
+  }
 });
 
 module.exports = router;

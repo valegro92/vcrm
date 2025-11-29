@@ -175,43 +175,54 @@ process.on('SIGINT', () => {
 });
 
 // Auto-initialize database on first run
-const db = require('./database/db');
 const { createTables } = require('./database/schema');
+const { getOne, runQuery, db } = require('./database/helpers');
 const bcrypt = require('bcryptjs');
 
-const initializeDatabaseIfNeeded = () => {
-  return new Promise((resolve) => {
-    // Check if users table exists
-    db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='users'", async (err, row) => {
-      if (err || !row) {
-        console.log('Database not initialized. Creating tables...');
-        try {
-          await createTables();
+const initializeDatabaseIfNeeded = async () => {
+  try {
+    let tableExists = false;
 
-          // Create default admin user
-          const hashedPassword = await bcrypt.hash('admin123', 10);
-          db.run(`
+    if (db.type === 'postgres') {
+      const result = await getOne("SELECT to_regclass('public.users') as exists");
+      tableExists = !!result?.exists;
+    } else {
+      const result = await getOne("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
+      tableExists = !!result;
+    }
+
+    if (!tableExists) {
+      console.log('Database not initialized. Creating tables...');
+      await createTables();
+
+      // Create default admin user
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+
+      try {
+        if (db.type === 'postgres') {
+          await runQuery(`
+            INSERT INTO users (username, email, password, "fullName", avatar, role)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            ON CONFLICT (username) DO NOTHING
+          `, ['admin', 'admin@vcrm.it', hashedPassword, 'Amministratore', 'AD', 'admin']);
+        } else {
+          await runQuery(`
             INSERT OR IGNORE INTO users (username, email, password, fullName, avatar, role)
             VALUES (?, ?, ?, ?, ?, ?)
-          `, ['admin', 'admin@vcrm.it', hashedPassword, 'Amministratore', 'AD', 'admin'], (err) => {
-            if (err) {
-              console.error('Error creating default user:', err);
-            } else {
-              console.log('✓ Database initialized successfully');
-              console.log('  Default credentials: admin / admin123');
-            }
-            resolve();
-          });
-        } catch (error) {
-          console.error('Error initializing database:', error);
-          resolve(); // Continue anyway
+          `, ['admin', 'admin@vcrm.it', hashedPassword, 'Amministratore', 'AD', 'admin']);
         }
-      } else {
-        console.log('✓ Database already initialized');
-        resolve();
+
+        console.log('✓ Database initialized successfully');
+        console.log('  Default credentials: admin / admin123');
+      } catch (err) {
+        console.error('Error creating default user:', err);
       }
-    });
-  });
+    } else {
+      console.log('✓ Database already initialized');
+    }
+  } catch (error) {
+    console.error('Error initializing database:', error);
+  }
 };
 
 // Start Server
