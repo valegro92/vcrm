@@ -42,6 +42,7 @@ const corsOptions = {
     const allowedOrigins = NODE_ENV === 'production'
       ? [
         'https://v-crm-sigma.vercel.app',
+        'https://vcrm-x1crx.sevalla.app',
         ...(process.env.ALLOWED_ORIGINS?.split(',') || [])
       ]
       : ['http://localhost:3000', 'http://127.0.0.1:3000'];
