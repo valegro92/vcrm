@@ -14,10 +14,9 @@ if (usePostgres) {
   // PostgreSQL Configuration
   const { Pool } = require('pg');
 
-  const poolConfig = process.env.DATABASE_URL
+  const baseConfig = process.env.DATABASE_URL
     ? {
       connectionString: process.env.DATABASE_URL,
-      ssl: false // Try disabling SSL for internal connection
     }
     : {
       host: process.env.DB_HOST,
@@ -25,8 +24,19 @@ if (usePostgres) {
       database: process.env.DB_NAME,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      ssl: false // Try disabling SSL for internal connection
     };
+
+  // Per Sevalla internal connection, non serve SSL
+  const poolConfig = {
+    ...baseConfig,
+    ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: false } : false,
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+  };
+
+  console.log('📡 Connecting to PostgreSQL...');
+  console.log(`  Connection: ${process.env.DATABASE_URL ? 'Using DATABASE_URL' : 'Using individual vars'}`);
 
   const pool = new Pool(poolConfig);
 
