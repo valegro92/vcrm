@@ -11,6 +11,7 @@ const contactsRoutes = require('./routes/contacts');
 const opportunitiesRoutes = require('./routes/opportunities');
 const tasksRoutes = require('./routes/tasks');
 const extraRoutes = require('./routes/extra');
+const importRoutes = require('./routes/import');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -86,6 +87,7 @@ app.use('/api/contacts', contactsRoutes);
 app.use('/api/opportunities', opportunitiesRoutes);
 app.use('/api/tasks', tasksRoutes);
 app.use('/api', extraRoutes);
+app.use('/api/import', importRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

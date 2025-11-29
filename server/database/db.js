@@ -17,7 +17,7 @@ if (usePostgres) {
   const poolConfig = process.env.DATABASE_URL
     ? {
       connectionString: process.env.DATABASE_URL,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+      ssl: false // Try disabling SSL for internal connection
     }
     : {
       host: process.env.DB_HOST,
@@ -25,7 +25,7 @@ if (usePostgres) {
       database: process.env.DB_NAME,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+      ssl: false // Try disabling SSL for internal connection
     };
 
   const pool = new Pool(poolConfig);
