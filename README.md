@@ -1,17 +1,6 @@
-# vCRM - CRM Completo con Database Reale
+# vCRM - CRM Valentino
 
 Un CRM completamente funzionante ispirato a YDEA CRM, con backend Node.js/Express e database SQLite.
-
-## 🚀 Caratteristiche
-
-- ✅ **Autenticazione completa** con JWT
-- ✅ **Database reale** SQLite con API REST
-- ✅ **Dashboard interattiva** con KPI e grafici
-- ✅ **Pipeline Vendite** con drag & drop
-- ✅ **Gestione Contatti** (CRUD completo)
-- ✅ **Gestione Opportunità** (CRUD completo)
-- ✅ **Gestione Attività** (CRUD completo)
-- ✅ **UI moderna** ispirata a YDEA CRM
 
 ## 📦 Installazione
 
