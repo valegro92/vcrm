@@ -164,14 +164,56 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
+// Auto-initialize database on first run
+const db = require('./database/db');
+const { createTables } = require('./database/schema');
+const bcrypt = require('bcryptjs');
+
+const initializeDatabaseIfNeeded = () => {
+  return new Promise((resolve) => {
+    // Check if users table exists
+    db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='users'", async (err, row) => {
+      if (err || !row) {
+        console.log('Database not initialized. Creating tables...');
+        try {
+          await createTables();
+
+          // Create default admin user
+          const hashedPassword = await bcrypt.hash('admin123', 10);
+          db.run(`
+            INSERT OR IGNORE INTO users (username, email, password, fullName, avatar, role)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `, ['admin', 'admin@vcrm.it', hashedPassword, 'Amministratore', 'AD', 'admin'], (err) => {
+            if (err) {
+              console.error('Error creating default user:', err);
+            } else {
+              console.log('✓ Database initialized successfully');
+              console.log('  Default credentials: admin / admin123');
+            }
+            resolve();
+          });
+        } catch (error) {
+          console.error('Error initializing database:', error);
+          resolve(); // Continue anyway
+        }
+      } else {
+        console.log('✓ Database already initialized');
+        resolve();
+      }
+    });
+  });
+};
+
 // Start Server
-app.listen(PORT, () => {
-  console.log('═══════════════════════════════════════════════════════');
-  console.log(`  vCRM Server v2.0.0`);
-  console.log(`  Environment: ${NODE_ENV}`);
-  console.log(`  Server running on http://localhost:${PORT}`);
-  console.log(`  API docs: http://localhost:${PORT}/api`);
-  console.log('═══════════════════════════════════════════════════════');
+initializeDatabaseIfNeeded().then(() => {
+  app.listen(PORT, () => {
+    console.log('═══════════════════════════════════════════════════════');
+    console.log(`  vCRM Server v2.0.0`);
+    console.log(`  Environment: ${NODE_ENV}`);
+    console.log(`  Server running on http://localhost:${PORT}`);
+    console.log(`  API docs: http://localhost:${PORT}/api`);
+    console.log('═══════════════════════════════════════════════════════');
+  });
 });
 
 module.exports = app;
