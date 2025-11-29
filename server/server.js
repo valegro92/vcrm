@@ -36,27 +36,9 @@ app.use(helmet({
 // Compression
 app.use(compression());
 
-// CORS Configuration
+// CORS Configuration - Temporarily permissive for debugging
 const corsOptions = {
-  origin: function (origin, callback) {
-    const allowedOrigins = NODE_ENV === 'production'
-      ? [
-        'https://v-crm-sigma.vercel.app',
-        'https://vcrm-x1crx.sevalla.app',
-        ...(process.env.ALLOWED_ORIGINS?.split(',') || [])
-      ]
-      : ['http://localhost:3000', 'http://127.0.0.1:3000'];
-
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log(`CORS blocked origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: true, // Allow all origins temporarily
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
