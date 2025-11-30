@@ -415,6 +415,48 @@ export default function Login({ onLoginSuccess }) {
               )}
             </button>
           </form>
+
+          <div style={{ 
+            marginTop: '24px', 
+            paddingTop: '24px', 
+            borderTop: '1px solid #e2e8f0',
+            textAlign: 'center'
+          }}>
+            <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '12px' }}>
+              Vuoi provare il CRM con dati di esempio?
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setUsername('demo');
+                setPassword('demo123');
+              }}
+              style={{
+                background: 'linear-gradient(135deg, #f1f5f9, #e2e8f0)',
+                border: '2px solid #e2e8f0',
+                borderRadius: '12px',
+                padding: '12px 24px',
+                fontSize: '14px',
+                fontWeight: 600,
+                color: '#475569',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#3b82f6';
+                e.currentTarget.style.color = '#3b82f6';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = '#e2e8f0';
+                e.currentTarget.style.color = '#475569';
+              }}
+            >
+              🎮 Usa credenziali Demo
+            </button>
+          </div>
         </div>
       </div>
     </div>
