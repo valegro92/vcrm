@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Bell, X, User, Briefcase, CheckSquare, Clock, AlertCircle, Check, Menu } from 'lucide-react';
+import { Search, Bell, X, User, Briefcase, CheckSquare, Clock, AlertCircle, Check, Menu, Plus } from 'lucide-react';
 import api from '../api/api';
 
-export default function Header({ activeView, searchQuery, setSearchQuery, user, setActiveView, onMenuClick }) {
+export default function Header({ activeView, searchQuery, setSearchQuery, user, setActiveView, onMenuClick, openAddModal }) {
     const [showSearchResults, setShowSearchResults] = useState(false);
     const [searchResults, setSearchResults] = useState({ contacts: [], opportunities: [], tasks: [] });
     const [searching, setSearching] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [showQuickAdd, setShowQuickAdd] = useState(false);
     const searchRef = useRef(null);
     const notifRef = useRef(null);
+    const quickAddRef = useRef(null);
 
     // Load notifications
     useEffect(() => {
@@ -27,6 +29,9 @@ export default function Header({ activeView, searchQuery, setSearchQuery, user, 
             }
             if (notifRef.current && !notifRef.current.contains(e.target)) {
                 setShowNotifications(false);
+            }
+            if (quickAddRef.current && !quickAddRef.current.contains(e.target)) {
+                setShowQuickAdd(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -86,7 +91,7 @@ export default function Header({ activeView, searchQuery, setSearchQuery, user, 
             try {
                 await api.markNotificationRead(notif.id);
                 loadNotifications();
-            } catch (err) {}
+            } catch (err) { }
         }
         if (notif.entityType === 'task') {
             setActiveView('tasks');
@@ -98,7 +103,7 @@ export default function Header({ activeView, searchQuery, setSearchQuery, user, 
         try {
             await api.markAllNotificationsRead();
             loadNotifications();
-        } catch (err) {}
+        } catch (err) { }
     };
 
     const totalResults = searchResults.contacts.length + searchResults.opportunities.length + searchResults.tasks.length;
@@ -211,6 +216,62 @@ export default function Header({ activeView, searchQuery, setSearchQuery, user, 
             </div>
 
             <div className="header-right">
+                {/* Quick Add Button */}
+                <div className="quick-add-container" ref={quickAddRef} style={{ position: 'relative' }}>
+                    <button
+                        className="primary-btn"
+                        onClick={() => setShowQuickAdd(!showQuickAdd)}
+                        style={{ padding: '0 16px', height: '44px', borderRadius: '12px', gap: '8px' }}
+                    >
+                        <Plus size={20} />
+                        <span className="hide-mobile">Nuovo</span>
+                    </button>
+
+                    {showQuickAdd && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '100%',
+                            right: 0,
+                            width: '200px',
+                            background: 'white',
+                            borderRadius: '12px',
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+                            marginTop: '8px',
+                            zIndex: 1000,
+                            overflow: 'hidden',
+                            padding: '8px'
+                        }}>
+                            <button
+                                onClick={() => { openAddModal('opportunity'); setShowQuickAdd(false); }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', color: '#1e293b', textAlign: 'left', transition: 'background 0.2s' }}
+                                onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                            >
+                                <Briefcase size={16} color="#6366f1" />
+                                Opportunità
+                            </button>
+                            <button
+                                onClick={() => { openAddModal('contact'); setShowQuickAdd(false); }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', color: '#1e293b', textAlign: 'left', transition: 'background 0.2s' }}
+                                onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                            >
+                                <User size={16} color="#2563eb" />
+                                Contatto
+                            </button>
+                            <button
+                                onClick={() => { openAddModal('task'); setShowQuickAdd(false); }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', color: '#1e293b', textAlign: 'left', transition: 'background 0.2s' }}
+                                onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                            >
+                                <CheckSquare size={16} color="#d97706" />
+                                Attività
+                            </button>
+                        </div>
+                    )}
+                </div>
+
                 <div className="notif-container" ref={notifRef} style={{ position: 'relative' }}>
                     <button className="icon-btn" onClick={() => setShowNotifications(!showNotifications)}>
                         <Bell size={20} />
@@ -245,8 +306,8 @@ export default function Header({ activeView, searchQuery, setSearchQuery, user, 
                                     </div>
                                 ) : (
                                     notifications.map(notif => (
-                                        <div 
-                                            key={notif.id} 
+                                        <div
+                                            key={notif.id}
                                             onClick={() => handleNotificationClick(notif)}
                                             style={{
                                                 display: 'flex',
@@ -288,7 +349,7 @@ export default function Header({ activeView, searchQuery, setSearchQuery, user, 
                     )}
                 </div>
                 <div className="user-avatar" title={user?.fullName || user?.username}>
-                    {user?.avatar || (user?.fullName ? user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0,2) : 'U')}
+                    {user?.avatar || (user?.fullName ? user.fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : 'U')}
                 </div>
             </div>
         </header>

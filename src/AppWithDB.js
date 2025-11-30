@@ -31,7 +31,7 @@ export default function YdeaCRM() {
   const [newItem, setNewItem] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   // Mobile sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -232,7 +232,7 @@ export default function YdeaCRM() {
   return (
     <div className="crm-app">
       {/* Mobile Sidebar Overlay */}
-      <div 
+      <div
         className={`sidebar-overlay ${sidebarOpen ? 'visible' : ''}`}
         onClick={() => setSidebarOpen(false)}
       />
@@ -255,6 +255,7 @@ export default function YdeaCRM() {
           user={user}
           setActiveView={setActiveView}
           onMenuClick={() => setSidebarOpen(true)}
+          openAddModal={openAddModal}
         />
 
         <div className="content">
@@ -311,8 +312,8 @@ export default function YdeaCRM() {
           )}
 
           {!loading && activeView === 'settings' && (
-            <Settings 
-              user={user} 
+            <Settings
+              user={user}
               contacts={contacts}
               opportunities={opportunities}
               tasks={tasks}
