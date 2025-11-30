@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Plus, FileText, Calendar, Euro, Check, AlertTriangle, 
+import {
+  Plus, FileText, Calendar, Euro, Check, AlertTriangle,
   Clock, Edit2, Trash2, Building, Filter, TrendingUp,
   ChevronDown, X, Receipt
 } from 'lucide-react';
@@ -54,6 +54,7 @@ export default function Invoices({ opportunities }) {
       if (editingInvoice) {
         await api.updateInvoice(editingInvoice.id, formData);
       } else {
+        console.log('Creating invoice with data:', formData); // Debug
         await api.createInvoice(formData);
       }
       setShowModal(false);
@@ -61,7 +62,8 @@ export default function Invoices({ opportunities }) {
       resetForm();
       loadData();
     } catch (error) {
-      alert('Errore: ' + error.message);
+      console.error('Invoice error:', error);
+      alert(`Errore durante la ${editingInvoice ? 'modifica' : 'creazione'} della fattura:\n${error.message}`);
     }
   };
 
@@ -164,7 +166,7 @@ export default function Invoices({ opportunities }) {
             <div className="kpi-value">€{parseFloat(stats.totalAmount || 0).toLocaleString()}</div>
             <span className="kpi-change neutral">{stats.total || 0} fatture</span>
           </div>
-          
+
           <div className="kpi-card">
             <div className="kpi-header">
               <span className="kpi-title">Incassato</span>
@@ -173,7 +175,7 @@ export default function Invoices({ opportunities }) {
             <div className="kpi-value">€{parseFloat(stats.paidAmount || 0).toLocaleString()}</div>
             <span className="kpi-change positive">{stats.paidCount || 0} pagate</span>
           </div>
-          
+
           <div className="kpi-card">
             <div className="kpi-header">
               <span className="kpi-title">Da Incassare</span>
@@ -182,7 +184,7 @@ export default function Invoices({ opportunities }) {
             <div className="kpi-value">€{parseFloat(stats.pendingAmount || 0).toLocaleString()}</div>
             <span className="kpi-change neutral">{stats.issuedCount || 0} in attesa</span>
           </div>
-          
+
           <div className="kpi-card">
             <div className="kpi-header">
               <span className="kpi-title">Scadute</span>
@@ -206,9 +208,9 @@ export default function Invoices({ opportunities }) {
                 className={`filter-tag ${statusFilter === status ? 'active' : ''}`}
                 onClick={() => setStatusFilter(status)}
               >
-                {status === 'all' ? 'Tutte' : 
-                 status === 'da_emettere' ? 'Da Emettere' : 
-                 status === 'emessa' ? 'Emesse' : 'Pagate'}
+                {status === 'all' ? 'Tutte' :
+                  status === 'da_emettere' ? 'Da Emettere' :
+                    status === 'emessa' ? 'Emesse' : 'Pagate'}
               </button>
             ))}
           </div>
@@ -236,7 +238,7 @@ export default function Invoices({ opportunities }) {
           invoices.map(invoice => {
             const statusColor = getStatusColor(invoice.status, invoice.dueDate);
             const daysUntilDue = getDaysUntilDue(invoice.dueDate);
-            
+
             return (
               <div key={invoice.id} className={`invoice-card ${statusColor}`}>
                 <div className="invoice-header">
@@ -248,19 +250,19 @@ export default function Invoices({ opportunities }) {
                     {getStatusLabel(invoice.status, invoice.dueDate)}
                   </div>
                 </div>
-                
+
                 <div className="invoice-body">
                   <div className="invoice-amount">
                     €{parseFloat(invoice.amount).toLocaleString()}
                   </div>
-                  
+
                   {invoice.opportunityTitle && (
                     <div className="invoice-opportunity">
                       <Building size={14} />
                       <span>{invoice.opportunityTitle} - {invoice.opportunityCompany}</span>
                     </div>
                   )}
-                  
+
                   <div className="invoice-dates">
                     <div className="invoice-date">
                       <Calendar size={14} />
@@ -271,18 +273,18 @@ export default function Invoices({ opportunities }) {
                       <span>Scadenza: {new Date(invoice.dueDate).toLocaleDateString('it-IT')}</span>
                       {invoice.status === 'emessa' && (
                         <span className="days-badge">
-                          {daysUntilDue < 0 ? `${Math.abs(daysUntilDue)}gg scaduta` : 
-                           daysUntilDue === 0 ? 'Oggi' : `${daysUntilDue}gg`}
+                          {daysUntilDue < 0 ? `${Math.abs(daysUntilDue)}gg scaduta` :
+                            daysUntilDue === 0 ? 'Oggi' : `${daysUntilDue}gg`}
                         </span>
                       )}
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="invoice-footer">
                   <div className="invoice-actions-left">
                     {invoice.status === 'da_emettere' && (
-                      <button 
+                      <button
                         className="action-btn-small primary"
                         onClick={() => handleStatusChange(invoice, 'emessa')}
                       >
@@ -291,7 +293,7 @@ export default function Invoices({ opportunities }) {
                       </button>
                     )}
                     {invoice.status === 'emessa' && (
-                      <button 
+                      <button
                         className="action-btn-small success"
                         onClick={() => handleStatusChange(invoice, 'pagata')}
                       >
@@ -325,7 +327,7 @@ export default function Invoices({ opportunities }) {
                 <X size={20} />
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
                 <div className="modal-form">
@@ -335,7 +337,7 @@ export default function Invoices({ opportunities }) {
                       <input
                         type="text"
                         value={formData.invoiceNumber}
-                        onChange={e => setFormData({...formData, invoiceNumber: e.target.value})}
+                        onChange={e => setFormData({ ...formData, invoiceNumber: e.target.value })}
                         placeholder="Es: FT-2025-001"
                         required
                       />
@@ -346,7 +348,7 @@ export default function Invoices({ opportunities }) {
                         type="number"
                         step="0.01"
                         value={formData.amount}
-                        onChange={e => setFormData({...formData, amount: e.target.value})}
+                        onChange={e => setFormData({ ...formData, amount: e.target.value })}
                         placeholder="0.00"
                         required
                       />
@@ -357,7 +359,7 @@ export default function Invoices({ opportunities }) {
                     <label>Opportunità Collegata (Chiuso Vinto)</label>
                     <select
                       value={formData.opportunityId}
-                      onChange={e => setFormData({...formData, opportunityId: e.target.value})}
+                      onChange={e => setFormData({ ...formData, opportunityId: e.target.value })}
                     >
                       <option value="">-- Nessuna --</option>
                       {wonOpportunities.map(opp => (
@@ -374,7 +376,7 @@ export default function Invoices({ opportunities }) {
                       <input
                         type="date"
                         value={formData.issueDate}
-                        onChange={e => setFormData({...formData, issueDate: e.target.value})}
+                        onChange={e => setFormData({ ...formData, issueDate: e.target.value })}
                         required
                       />
                     </div>
@@ -383,7 +385,7 @@ export default function Invoices({ opportunities }) {
                       <input
                         type="date"
                         value={formData.dueDate}
-                        onChange={e => setFormData({...formData, dueDate: e.target.value})}
+                        onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
                         required
                       />
                     </div>
@@ -394,7 +396,7 @@ export default function Invoices({ opportunities }) {
                       <label>Tipo</label>
                       <select
                         value={formData.type}
-                        onChange={e => setFormData({...formData, type: e.target.value})}
+                        onChange={e => setFormData({ ...formData, type: e.target.value })}
                       >
                         <option value="emessa">Fattura Emessa</option>
                         <option value="ricevuta">Fattura Ricevuta</option>
@@ -404,7 +406,7 @@ export default function Invoices({ opportunities }) {
                       <label>Stato</label>
                       <select
                         value={formData.status}
-                        onChange={e => setFormData({...formData, status: e.target.value})}
+                        onChange={e => setFormData({ ...formData, status: e.target.value })}
                       >
                         <option value="da_emettere">Da Emettere</option>
                         <option value="emessa">Emessa</option>
@@ -417,7 +419,7 @@ export default function Invoices({ opportunities }) {
                     <label>Note</label>
                     <textarea
                       value={formData.notes}
-                      onChange={e => setFormData({...formData, notes: e.target.value})}
+                      onChange={e => setFormData({ ...formData, notes: e.target.value })}
                       placeholder="Eventuali note..."
                       rows="3"
                     />

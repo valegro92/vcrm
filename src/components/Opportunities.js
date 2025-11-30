@@ -88,6 +88,18 @@ export default function Opportunities({ opportunities, openAddModal, handleDelet
                         {filteredOpportunities.length} opportunità • Valore: €{stats.totalValue.toLocaleString()}
                     </p>
                 </div>
+                {/* Year Filter */}
+                <select
+                    className="year-filter"
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(e.target.value)}
+                    style={{ height: '44px' }}
+                >
+                    <option value="all">Tutti gli anni</option>
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                </select>
             </div>
 
             {/* Stats Cards */}

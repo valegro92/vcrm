@@ -14,14 +14,7 @@ export default function Sidebar({ activeView, setActiveView, handleLogout, isOpe
 
     return (
         <div className={`sidebar ${isOpen ? 'open' : ''}`}>
-            {/* Mobile Close Button */}
-            {/* Mobile Close Button */}
-            <button
-                className="mobile-close-btn"
-                onClick={onClose}
-            >
-                <X size={20} />
-            </button>
+
 
             <div className="logo">
                 <div className="logo-icon">V</div>
