@@ -221,7 +221,9 @@ export default function YdeaCRM() {
     setModalType(type);
     if (item) {
       setNewItem(item);
-      setIsEditing(true);
+      // Only set isEditing to true if the item has an ID (meaning it exists in DB)
+      // This allows passing "pre-filled" data for new items (like linking a task to an opportunity)
+      setIsEditing(!!item.id);
     } else {
       setNewItem({});
       setIsEditing(false);

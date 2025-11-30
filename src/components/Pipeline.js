@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Eye, Calendar } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, Calendar, CheckSquare, Target, Euro, TrendingUp } from 'lucide-react';
 import pipelineStages from '../constants/pipelineStages';
 import api from '../api/api';
 
@@ -155,16 +155,55 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
                                             </div>
                                         </div>
 
-                                        <button
-                                            className="opp-eye-icon"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                openAddModal('opportunity', opp);
-                                            }}
-                                            title="Vedi dettagli"
-                                        >
-                                            <Eye size={18} />
-                                        </button>
+                                        <div className="card-actions" style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '8px' }}>
+                                            <button
+                                                className="opp-action-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openAddModal('task', {
+                                                        title: `Follow up: ${opp.title}`,
+                                                        description: `Attività relativa all'opportunità: ${opp.title} (${opp.company})`,
+                                                        priority: 'media',
+                                                        type: 'call'
+                                                    });
+                                                }}
+                                                title="Aggiungi attività"
+                                                style={{
+                                                    background: 'var(--bg-subtle)',
+                                                    border: '1px solid var(--border-color)',
+                                                    borderRadius: '6px',
+                                                    padding: '6px',
+                                                    cursor: 'pointer',
+                                                    color: 'var(--text-secondary)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center'
+                                                }}
+                                            >
+                                                <CheckSquare size={16} />
+                                            </button>
+                                            <button
+                                                className="opp-action-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openAddModal('opportunity', opp);
+                                                }}
+                                                title="Vedi dettagli"
+                                                style={{
+                                                    background: 'var(--bg-subtle)',
+                                                    border: '1px solid var(--border-color)',
+                                                    borderRadius: '6px',
+                                                    padding: '6px',
+                                                    cursor: 'pointer',
+                                                    color: 'var(--text-secondary)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center'
+                                                }}
+                                            >
+                                                <Eye size={16} />
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
 
@@ -186,225 +225,172 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
 
             {/* BI Analytics Section */}
             <div className="bi-section">
-                <div className="bi-grid">
-                    {/* Trend Chart - Area (YDEA Style) */}
-                    <div className="bi-card">
-                        <h3 className="bi-card-title">📈 Andamento Vendite {selectedYear !== 'all' ? selectedYear : ''}</h3>
-                        <div className="trend-chart">
-                            {(() => {
-                                // Group opportunities by month
-                                const monthlyData = {};
-                                const wonOpps = filteredOpportunities.filter(o => o.stage === 'Chiuso Vinto');
-                                const lostOpps = filteredOpportunities.filter(o => o.stage === 'Chiuso Perso');
+                <div className="bi-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '24px' }}>
 
-                                [...wonOpps, ...lostOpps].forEach(opp => {
-                                    if (!opp.closeDate) return;
-                                    const date = new Date(opp.closeDate);
-                                    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-
-                                    if (!monthlyData[monthKey]) {
-                                        monthlyData[monthKey] = { won: 0, lost: 0 };
-                                    }
-
-                                    if (opp.stage === 'Chiuso Vinto') {
-                                        monthlyData[monthKey].won += parseFloat(opp.value) || 0;
-                                    } else {
-                                        monthlyData[monthKey].lost += parseFloat(opp.value) || 0;
-                                    }
-                                });
-
-                                const months = Object.keys(monthlyData).sort().slice(-6);
-
-                                if (months.length === 0) {
-                                    return <div className="no-data">Nessun dato disponibile</div>;
-                                }
-
-                                const maxValue = Math.max(...months.map(m => Math.max(monthlyData[m].won, monthlyData[m].lost)), 1);
-                                const width = 500;
-                                const height = 200;
-                                const padding = 20;
-                                const chartWidth = width - 2 * padding;
-                                const chartHeight = height - 2 * padding;
-
-                                // Generate path points
-                                const generatePath = (dataKey) => {
-                                    const points = months.map((month, i) => {
-                                        const x = padding + (i / (months.length - 1)) * chartWidth;
-                                        const value = monthlyData[month][dataKey];
-                                        const y = height - padding - (value / maxValue) * chartHeight;
-                                        return { x, y, value };
-                                    });
-
-                                    // Create smooth curve path (using quadratic curves)
-                                    let path = `M ${points[0].x} ${points[0].y}`;
-
-                                    for (let i = 0; i < points.length - 1; i++) {
-                                        const current = points[i];
-                                        const next = points[i + 1];
-                                        const midX = (current.x + next.x) / 2;
-                                        path += ` Q ${current.x} ${current.y}, ${midX} ${(current.y + next.y) / 2}`;
-                                    }
-
-                                    const last = points[points.length - 1];
-                                    path += ` Q ${last.x} ${last.y}, ${last.x} ${last.y}`;
-
-                                    // Close area
-                                    path += ` L ${last.x} ${height - padding} L ${points[0].x} ${height - padding} Z`;
-
-                                    return path;
-                                };
-
-                                return (
-                                    <div className="area-chart-container">
-                                        <div className="chart-legend">
-                                            <span className="legend-item">
-                                                <span className="legend-dot" style={{ background: '#10b981' }}></span>
-                                                Chiuso Vinto
-                                            </span>
-                                            <span className="legend-item">
-                                                <span className="legend-dot" style={{ background: '#ef4444' }}></span>
-                                                Chiuso Perso
-                                            </span>
-                                        </div>
-                                        <svg viewBox={`0 0 ${width} ${height}`} className="area-chart-svg">
-                                            {/* Gradients */}
-                                            <defs>
-                                                <linearGradient id="wonGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                                                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
-                                                    <stop offset="100%" stopColor="#10b981" stopOpacity="0.1" />
-                                                </linearGradient>
-                                                <linearGradient id="lostGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                                                    <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
-                                                    <stop offset="100%" stopColor="#ef4444" stopOpacity="0.1" />
-                                                </linearGradient>
-                                            </defs>
-
-                                            {/* Lost (bottom layer) */}
-                                            <path
-                                                d={generatePath('lost')}
-                                                fill="url(#lostGradient)"
-                                                opacity="0.8"
-                                            />
-                                            {/* Won (top layer) */}
-                                            <path
-                                                d={generatePath('won')}
-                                                fill="url(#wonGradient)"
-                                                opacity="0.8"
-                                            />
-
-
-                                            {/* Month labels */}
-                                            {months.map((month, i) => {
-                                                const x = padding + (i / (months.length - 1)) * chartWidth;
-                                                const [year, monthNum] = month.split('-');
-                                                const monthName = new Date(year, monthNum - 1).toLocaleDateString('it-IT', { month: 'short' });
-                                                return (
-                                                    <text
-                                                        key={month}
-                                                        x={x}
-                                                        y={height - 5}
-                                                        textAnchor="middle"
-                                                        fontSize="11"
-                                                        fill="#94a3b8"
-                                                        fontWeight="600"
-                                                    >
-                                                        {monthName.toUpperCase()}
-                                                    </text>
-                                                );
-                                            })}
-                                        </svg>
-                                    </div>
-                                );
-                            })()}
+                    {/* KPI 1: Opportunità Attive */}
+                    <div className="bi-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '140px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                Opportunità Attive
+                            </span>
+                            <div style={{
+                                width: '40px', height: '40px', borderRadius: '12px',
+                                background: '#e0e7ff', color: '#4f46e5',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}>
+                                <Target size={20} />
+                            </div>
+                        </div>
+                        <div style={{ fontSize: '32px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                            {filteredOpportunities.filter(o => !['Chiuso Vinto', 'Chiuso Perso'].includes(o.stage)).length}
                         </div>
                     </div>
 
-                    {/* Distribution Chart - Donut */}
-                    <div className="bi-card">
-                        <h3 className="bi-card-title">🎯 Pipeline per Fase</h3>
-                        <div className="donut-chart">
-                            {(() => {
-                                const activeStages = pipelineStages.filter(s =>
-                                    !s.includes('Chiuso')
-                                );
-                                const stageData = activeStages.map(stage => ({
-                                    stage,
-                                    count: filteredOpportunities.filter(o => o.stage === stage).length,
-                                    value: filteredOpportunities
-                                        .filter(o => o.stage === stage)
-                                        .reduce((sum, o) => sum + (parseFloat(o.value) || 0), 0),
-                                    color: STAGE_COLORS[stage]
-                                })).filter(d => d.count > 0);
-
-                                const total = stageData.reduce((sum, d) => sum + d.count, 0);
-
-                                if (total === 0) {
-                                    return <div className="no-data">Nessuna opportunità attiva</div>;
-                                }
-
-                                return (
-                                    <>
-                                        <div className="donut-visual">
-                                            <svg viewBox="0 0 100 100" className="donut-svg">
-                                                {(() => {
-                                                    let currentAngle = 0;
-                                                    return stageData.map((d, i) => {
-                                                        const percentage = (d.count / total) * 100;
-                                                        const angle = (percentage / 100) * 360;
-                                                        const radius = 40;
-                                                        const innerRadius = 28;
-
-                                                        const startAngle = (currentAngle - 90) * (Math.PI / 180);
-                                                        const endAngle = (currentAngle + angle - 90) * (Math.PI / 180);
-
-                                                        const x1 = 50 + radius * Math.cos(startAngle);
-                                                        const y1 = 50 + radius * Math.sin(startAngle);
-                                                        const x2 = 50 + radius * Math.cos(endAngle);
-                                                        const y2 = 50 + radius * Math.sin(endAngle);
-
-                                                        const largeArc = angle > 180 ? 1 : 0;
-
-                                                        const path = [
-                                                            `M 50 50`,
-                                                            `L ${x1} ${y1}`,
-                                                            `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
-                                                            `Z`
-                                                        ].join(' ');
-
-                                                        currentAngle += angle;
-
-                                                        return (
-                                                            <path
-                                                                key={i}
-                                                                d={path}
-                                                                fill={d.color}
-                                                                opacity="0.9"
-                                                            />
-                                                        );
-                                                    });
-                                                })()}
-                                                <circle cx="50" cy="50" r="28" fill="white" />
-                                            </svg>
-                                            <div className="donut-center">
-                                                <div className="donut-total">{total}</div>
-                                                <div className="donut-label">Opportunità</div>
-                                            </div>
-                                        </div>
-                                        <div className="donut-legend">
-                                            {stageData.map((d, i) => (
-                                                <div key={i} className="legend-row">
-                                                    <span className="legend-color" style={{ background: d.color }}></span>
-                                                    <span className="legend-name">{d.stage}</span>
-                                                    <span className="legend-percentage">
-                                                        {Math.round((d.count / total) * 100)}%
-                                                    </span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </>
-                                );
-                            })()}
+                    {/* KPI 2: Valore Totale */}
+                    <div className="bi-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '140px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                Valore Totale
+                            </span>
+                            <div style={{
+                                width: '40px', height: '40px', borderRadius: '12px',
+                                background: '#dcfce7', color: '#16a34a',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}>
+                                <Euro size={20} />
+                            </div>
                         </div>
+                        <div style={{ fontSize: '32px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                            €{(filteredOpportunities.reduce((sum, o) => sum + (parseFloat(o.value) || 0), 0) / 1000).toFixed(0)}K
+                        </div>
+                    </div>
+
+                    {/* KPI 3: Probabilità Media */}
+                    <div className="bi-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '140px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                Probabilità Media
+                            </span>
+                            <div style={{
+                                width: '40px', height: '40px', borderRadius: '12px',
+                                background: '#f3e8ff', color: '#9333ea',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}>
+                                <TrendingUp size={20} />
+                            </div>
+                        </div>
+                        <div style={{ fontSize: '32px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                            {filteredOpportunities.length > 0
+                                ? Math.round(filteredOpportunities.reduce((sum, o) => sum + (parseInt(o.probability) || 0), 0) / filteredOpportunities.length)
+                                : 0}%
+                        </div>
+                    </div>
+
+                    {/* KPI 4: Valore Ponderato */}
+                    <div className="bi-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '140px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                Valore Ponderato
+                            </span>
+                            <div style={{
+                                width: '40px', height: '40px', borderRadius: '12px',
+                                background: '#ffedd5', color: '#ea580c',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}>
+                                <Euro size={20} />
+                            </div>
+                        </div>
+                        <div style={{ fontSize: '32px', fontWeight: 800, color: 'var(--text-primary)' }}>
+                            €{(filteredOpportunities.reduce((sum, o) => sum + ((parseFloat(o.value) || 0) * (parseInt(o.probability) || 0) / 100), 0) / 1000).toFixed(0)}K
+                        </div>
+                    </div>
+                </div>
+
+                {/* Pipeline Distribution - Donut Chart */}
+                <div className="bi-card">
+                    <h3 className="bi-card-title">🎯 Pipeline per Fase</h3>
+                    <div className="donut-chart">
+                        {(() => {
+                            const activeStages = pipelineStages.filter(s =>
+                                !s.includes('Chiuso')
+                            );
+                            const stageData = activeStages.map(stage => ({
+                                stage,
+                                count: filteredOpportunities.filter(o => o.stage === stage).length,
+                                value: filteredOpportunities
+                                    .filter(o => o.stage === stage)
+                                    .reduce((sum, o) => sum + (parseFloat(o.value) || 0), 0),
+                                color: STAGE_COLORS[stage]
+                            })).filter(d => d.count > 0);
+
+                            const total = stageData.reduce((sum, d) => sum + d.count, 0);
+
+                            if (total === 0) {
+                                return <div className="no-data">Nessuna opportunità attiva</div>;
+                            }
+
+                            return (
+                                <>
+                                    <div className="donut-visual">
+                                        <svg viewBox="0 0 100 100" className="donut-svg">
+                                            {(() => {
+                                                let currentAngle = 0;
+                                                return stageData.map((d, i) => {
+                                                    const percentage = (d.count / total) * 100;
+                                                    const angle = (percentage / 100) * 360;
+                                                    const radius = 40;
+                                                    const innerRadius = 28;
+
+                                                    const startAngle = (currentAngle - 90) * (Math.PI / 180);
+                                                    const endAngle = (currentAngle + angle - 90) * (Math.PI / 180);
+
+                                                    const x1 = 50 + radius * Math.cos(startAngle);
+                                                    const y1 = 50 + radius * Math.sin(startAngle);
+                                                    const x2 = 50 + radius * Math.cos(endAngle);
+                                                    const y2 = 50 + radius * Math.sin(endAngle);
+
+                                                    const largeArc = angle > 180 ? 1 : 0;
+
+                                                    const path = [
+                                                        `M 50 50`,
+                                                        `L ${x1} ${y1}`,
+                                                        `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
+                                                        `Z`
+                                                    ].join(' ');
+
+                                                    currentAngle += angle;
+
+                                                    return (
+                                                        <path
+                                                            key={i}
+                                                            d={path}
+                                                            fill={d.color}
+                                                            opacity="0.9"
+                                                        />
+                                                    );
+                                                });
+                                            })()}
+                                            <circle cx="50" cy="50" r="28" fill="white" />
+                                        </svg>
+                                        <div className="donut-center">
+                                            <div className="donut-total">{total}</div>
+                                            <div className="donut-label">Opportunità</div>
+                                        </div>
+                                    </div>
+                                    <div className="donut-legend">
+                                        {stageData.map((d, i) => (
+                                            <div key={i} className="legend-row">
+                                                <span className="legend-color" style={{ background: d.color }}></span>
+                                                <span className="legend-name">{d.stage}</span>
+                                                <span className="legend-percentage">
+                                                    {Math.round((d.count / total) * 100)}%
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </>
+                            );
+                        })()}
                     </div>
                 </div>
             </div>
@@ -565,6 +551,6 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
                     }
                 }
             `}</style>
-        </div>
+        </div >
     );
 }

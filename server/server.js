@@ -185,21 +185,23 @@ const bcrypt = require('bcryptjs');
 
 const initializeDatabaseIfNeeded = async () => {
   try {
-    let tableExists = false;
+    // Always try to create tables (they use IF NOT EXISTS)
+    // This ensures new tables (like invoices) are added to existing databases
+    console.log('Checking database schema...');
+    await createTables();
 
+    // Check if admin user exists
+    let adminExists = false;
     if (db.type === 'postgres') {
-      const result = await getOne("SELECT to_regclass('public.users') as exists");
-      tableExists = !!result?.exists;
+      const result = await getOne("SELECT id FROM users WHERE username = 'admin'");
+      adminExists = !!result;
     } else {
-      const result = await getOne("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
-      tableExists = !!result;
+      const result = await getOne("SELECT id FROM users WHERE username = 'admin'");
+      adminExists = !!result;
     }
 
-    if (!tableExists) {
-      console.log('Database not initialized. Creating tables...');
-      await createTables();
-
-      // Create default admin user
+    if (!adminExists) {
+      console.log('Creating default admin user...');
       const hashedPassword = await bcrypt.hash('admin123', 10);
 
       try {
@@ -216,13 +218,13 @@ const initializeDatabaseIfNeeded = async () => {
           `, ['admin', 'admin@vcrm.it', hashedPassword, 'Amministratore', 'AD', 'admin']);
         }
 
-        console.log('✓ Database initialized successfully');
+        console.log('✓ Default admin user created');
         console.log('  Default credentials: admin / admin123');
       } catch (err) {
         console.error('Error creating default user:', err);
       }
     } else {
-      console.log('✓ Database already initialized');
+      console.log('✓ Database schema verified');
     }
   } catch (error) {
     console.error('Error initializing database:', error);
