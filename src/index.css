@@ -737,8 +737,13 @@ body {
 }
 
 .kpi-icon.orange {
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-  color: var(--amber-600);
+  background: linear-gradient(135deg, #ffedd5, #fed7aa);
+  color: #ea580c;
+}
+
+.kpi-icon.red {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #dc2626;
 }
 
 .kpi-icon.cyan {
@@ -1177,20 +1182,18 @@ body {
 /* Opportunity Card - Premium Design */
 .opp-card {
   background: white;
-  border: 2px solid var(--slate-100);
-  border-radius: var(--radius-xl);
-  padding: var(--space-4);
+  border: 1px solid var(--slate-200);
+  border-radius: 8px;
+  /* Slightly less rounded for a cleaner look */
+  padding: 16px;
   cursor: grab;
   transition: all var(--transition-base);
   position: relative;
-  overflow: hidden;
-}
-
-height: 160px;
-/* Fixed height for consistency */
-display: flex;
-flex-direction: column;
-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  height: 160px;
+  /* Fixed height for consistency */
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .opp-card:hover {

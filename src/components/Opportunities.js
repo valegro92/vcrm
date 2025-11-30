@@ -136,31 +136,27 @@ export default function Opportunities({ opportunities, openAddModal, handleDelet
                         {hasActiveFilters && <span style={{ background: 'var(--primary-500)', color: 'white', padding: '2px 8px', borderRadius: '10px', fontSize: '11px' }}>!</span>}
                     </button>
                 </div>
-                <div className="toolbar-right">
-                    <button className="primary-btn" onClick={() => openAddModal('opportunity')}>
-                        <Plus size={18} />
-                        <span className="hide-mobile">Nuova Opportunità</span>
-                    </button>
-                </div>
+                {/* Removed "Nuovo" button - using global Quick Add instead */}
+
             </div>
 
             {/* Filters Panel */}
             {showFilters && (
-                <div style={{ 
-                    background: 'white', 
-                    borderRadius: '12px', 
-                    padding: '16px', 
-                    display: 'flex', 
-                    gap: '16px', 
-                    alignItems: 'flex-end', 
+                <div style={{
+                    background: 'white',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    display: 'flex',
+                    gap: '16px',
+                    alignItems: 'flex-end',
                     flexWrap: 'wrap',
                     boxShadow: 'var(--shadow-sm)',
                     border: '1px solid var(--gray-100)'
                 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-500)' }}>Fase</label>
-                        <select 
-                            value={filterStage} 
+                        <select
+                            value={filterStage}
                             onChange={(e) => setFilterStage(e.target.value)}
                             style={{ padding: '8px 12px', border: '1px solid var(--gray-200)', borderRadius: '8px', fontSize: '14px', minWidth: '150px' }}
                         >
@@ -172,8 +168,8 @@ export default function Opportunities({ opportunities, openAddModal, handleDelet
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--gray-500)' }}>Ordina per</label>
-                        <select 
-                            value={sortBy} 
+                        <select
+                            value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
                             style={{ padding: '8px 12px', border: '1px solid var(--gray-200)', borderRadius: '8px', fontSize: '14px', minWidth: '150px' }}
                         >
@@ -183,7 +179,7 @@ export default function Opportunities({ opportunities, openAddModal, handleDelet
                         </select>
                     </div>
                     {hasActiveFilters && (
-                        <button 
+                        <button
                             onClick={() => { setFilterStage('all'); setSearchTerm(''); }}
                             style={{ background: 'none', border: 'none', color: 'var(--gray-500)', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline' }}
                         >

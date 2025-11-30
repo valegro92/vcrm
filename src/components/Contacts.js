@@ -26,7 +26,7 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
     }, [contacts, searchTerm, statusFilter]);
 
     const statuses = ['Lead', 'Prospect', 'Cliente'];
-    
+
     const getAvatarGradient = (name) => {
         const gradients = [
             'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -60,18 +60,18 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {/* Header Section */}
-            <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                flexWrap: 'wrap', 
-                gap: '16px' 
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '16px'
             }}>
                 <div>
-                    <h2 style={{ 
-                        fontSize: '28px', 
-                        fontWeight: 800, 
-                        color: '#0f172a', 
+                    <h2 style={{
+                        fontSize: '28px',
+                        fontWeight: 800,
+                        color: '#0f172a',
                         marginBottom: '4px',
                         letterSpacing: '-0.5px'
                     }}>
@@ -81,20 +81,17 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
                         {filteredContacts.length} contatti • Valore totale: <strong>€{filteredContacts.reduce((sum, c) => sum + (parseFloat(c.value) || 0), 0).toLocaleString()}</strong>
                     </p>
                 </div>
-                <button className="primary-btn" onClick={() => openAddModal('contact')}>
-                    <Plus size={20} />
-                    <span>Nuovo Contatto</span>
-                </button>
             </div>
+            {/* Removed "Nuovo Contatto" button - using global Quick Add instead */}
 
             {/* Search & Filters */}
-            <div style={{ 
-                display: 'flex', 
-                gap: '16px', 
+            <div style={{
+                display: 'flex',
+                gap: '16px',
                 flexWrap: 'wrap',
                 alignItems: 'center'
             }}>
-                <div style={{ 
+                <div style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '12px',
@@ -112,10 +109,10 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
                         placeholder="Cerca contatti..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{ 
-                            border: 'none', 
-                            outline: 'none', 
-                            flex: 1, 
+                        style={{
+                            border: 'none',
+                            outline: 'none',
+                            flex: 1,
                             fontSize: '15px',
                             background: 'transparent'
                         }}
@@ -159,15 +156,15 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
                     {filteredContacts.map(contact => {
                         const statusStyle = getStatusColor(contact.status);
                         return (
-                            <div 
-                                key={contact.id} 
+                            <div
+                                key={contact.id}
                                 className="card"
                                 onClick={() => setSelectedContact(contact)}
                                 style={{ cursor: 'pointer' }}
                             >
                                 {/* Card Top */}
                                 <div className="card-top">
-                                    <div 
+                                    <div
                                         className="card-avatar"
                                         style={{ background: getAvatarGradient(contact.name) }}
                                     >
@@ -201,10 +198,10 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
                                     {contact.email && (
                                         <div className="card-detail">
                                             <Mail size={16} />
-                                            <span style={{ 
-                                                overflow: 'hidden', 
-                                                textOverflow: 'ellipsis', 
-                                                whiteSpace: 'nowrap' 
+                                            <span style={{
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis',
+                                                whiteSpace: 'nowrap'
                                             }}>
                                                 {contact.email}
                                             </span>
@@ -230,14 +227,14 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
                                         €{(contact.value || 0).toLocaleString()}
                                     </div>
                                     <div className="card-actions">
-                                        <button 
+                                        <button
                                             className="action-btn"
                                             onClick={(e) => { e.stopPropagation(); openAddModal('contact', contact); }}
                                             title="Modifica"
                                         >
                                             <Edit2 size={16} />
                                         </button>
-                                        <button 
+                                        <button
                                             className="action-btn delete"
                                             onClick={(e) => { e.stopPropagation(); handleDeleteContact(contact.id); }}
                                             title="Elimina"
@@ -264,10 +261,10 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
                         </div>
                         <div className="modal-body">
                             {/* Profile Header */}
-                            <div style={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                gap: '20px', 
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '20px',
                                 marginBottom: '28px',
                                 padding: '20px',
                                 background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)',
@@ -289,10 +286,10 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
                                     {getInitials(selectedContact.name)}
                                 </div>
                                 <div>
-                                    <h3 style={{ 
-                                        fontSize: '22px', 
-                                        fontWeight: 700, 
-                                        color: '#0f172a', 
+                                    <h3 style={{
+                                        fontSize: '22px',
+                                        fontWeight: 700,
+                                        color: '#0f172a',
                                         marginBottom: '6px',
                                         letterSpacing: '-0.3px'
                                     }}>
@@ -318,20 +315,20 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
 
                             {/* Contact Info */}
                             <div style={{ marginBottom: '24px' }}>
-                                <h4 style={{ 
-                                    fontSize: '12px', 
-                                    fontWeight: 700, 
-                                    color: '#94a3b8', 
+                                <h4 style={{
+                                    fontSize: '12px',
+                                    fontWeight: 700,
+                                    color: '#94a3b8',
                                     textTransform: 'uppercase',
                                     letterSpacing: '1px',
-                                    marginBottom: '16px' 
+                                    marginBottom: '16px'
                                 }}>
                                     Informazioni di contatto
                                 </h4>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    <div style={{ 
-                                        display: 'flex', 
-                                        alignItems: 'center', 
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
                                         gap: '14px',
                                         padding: '12px 16px',
                                         background: '#f8fafc',
@@ -342,9 +339,9 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
                                             {selectedContact.email || 'Non specificato'}
                                         </span>
                                     </div>
-                                    <div style={{ 
-                                        display: 'flex', 
-                                        alignItems: 'center', 
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
                                         gap: '14px',
                                         padding: '12px 16px',
                                         background: '#f8fafc',
@@ -355,9 +352,9 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
                                             {selectedContact.phone || 'Non specificato'}
                                         </span>
                                     </div>
-                                    <div style={{ 
-                                        display: 'flex', 
-                                        alignItems: 'center', 
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
                                         gap: '14px',
                                         padding: '12px 16px',
                                         background: '#f8fafc',
@@ -372,15 +369,15 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
                             </div>
 
                             {/* Value */}
-                            <div style={{ 
+                            <div style={{
                                 padding: '20px',
                                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                 borderRadius: '16px',
                                 textAlign: 'center'
                             }}>
-                                <div style={{ 
-                                    fontSize: '12px', 
-                                    color: 'rgba(255,255,255,0.8)', 
+                                <div style={{
+                                    fontSize: '12px',
+                                    color: 'rgba(255,255,255,0.8)',
                                     marginBottom: '4px',
                                     textTransform: 'uppercase',
                                     letterSpacing: '1px',
@@ -388,9 +385,9 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
                                 }}>
                                     Valore Totale
                                 </div>
-                                <div style={{ 
-                                    fontSize: '32px', 
-                                    fontWeight: 800, 
+                                <div style={{
+                                    fontSize: '32px',
+                                    fontWeight: 800,
                                     color: 'white',
                                     letterSpacing: '-1px'
                                 }}>
@@ -402,9 +399,9 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
                             <button className="secondary-btn" onClick={() => setSelectedContact(null)}>
                                 Chiudi
                             </button>
-                            <button className="primary-btn" onClick={() => { 
-                                openAddModal('contact', selectedContact); 
-                                setSelectedContact(null); 
+                            <button className="primary-btn" onClick={() => {
+                                openAddModal('contact', selectedContact);
+                                setSelectedContact(null);
                             }}>
                                 <Edit2 size={16} />
                                 <span>Modifica</span>

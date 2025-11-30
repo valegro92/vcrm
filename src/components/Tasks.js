@@ -66,7 +66,7 @@ export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask,
         const today = new Date();
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
-        
+
         if (d.toDateString() === today.toDateString()) return 'Oggi';
         if (d.toDateString() === tomorrow.toDateString()) return 'Domani';
         return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -88,18 +88,18 @@ export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask,
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             {/* Header Section */}
-            <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center', 
-                flexWrap: 'wrap', 
-                gap: '16px' 
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '16px'
             }}>
                 <div>
-                    <h2 style={{ 
-                        fontSize: '28px', 
-                        fontWeight: 800, 
-                        color: '#0f172a', 
+                    <h2 style={{
+                        fontSize: '28px',
+                        fontWeight: 800,
+                        color: '#0f172a',
                         marginBottom: '4px',
                         letterSpacing: '-0.5px'
                     }}>
@@ -109,135 +109,60 @@ export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask,
                         {filteredTasks.length} attività • {stats.pending} da completare
                     </p>
                 </div>
-                <button className="primary-btn" onClick={() => openAddModal('task')}>
-                    <Plus size={20} />
-                    <span>Nuova Attività</span>
-                </button>
             </div>
+            {/* Removed "Nuova Attività" button - using global Quick Add instead */}
 
-            {/* Stats Cards */}
-            <div style={{ 
-                display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', 
-                gap: '16px' 
-            }}>
-                <div style={{
-                    background: 'white',
-                    borderRadius: '16px',
-                    padding: '20px',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                    border: '1px solid rgba(226,232,240,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px'
-                }}>
-                    <div style={{
-                        width: '48px',
-                        height: '48px',
-                        background: 'linear-gradient(135deg, #e0e7ff, #c7d2fe)',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}>
-                        <ListTodo size={24} color="#4f46e5" />
+            {/* Stats Cards - Unified KPI Design */}
+            <div className="kpi-grid">
+                <div className="kpi-card">
+                    <div className="kpi-header">
+                        <span className="kpi-title">Totali</span>
+                        <div className="kpi-icon blue">
+                            <ListTodo size={20} />
+                        </div>
                     </div>
-                    <div>
-                        <div style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a' }}>{tasks.length}</div>
-                        <div style={{ fontSize: '13px', color: '#64748b' }}>Totali</div>
-                    </div>
+                    <div className="kpi-value">{tasks.length}</div>
                 </div>
 
-                <div style={{
-                    background: 'white',
-                    borderRadius: '16px',
-                    padding: '20px',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                    border: '1px solid rgba(226,232,240,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px'
-                }}>
-                    <div style={{
-                        width: '48px',
-                        height: '48px',
-                        background: 'linear-gradient(135deg, #d1fae5, #a7f3d0)',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}>
-                        <CheckCircle size={24} color="#059669" />
+                <div className="kpi-card">
+                    <div className="kpi-header">
+                        <span className="kpi-title">Completate</span>
+                        <div className="kpi-icon green">
+                            <CheckCircle size={20} />
+                        </div>
                     </div>
-                    <div>
-                        <div style={{ fontSize: '24px', fontWeight: 800, color: '#059669' }}>{stats.completed}</div>
-                        <div style={{ fontSize: '13px', color: '#64748b' }}>Completate</div>
-                    </div>
+                    <div className="kpi-value" style={{ color: 'var(--green-600)' }}>{stats.completed}</div>
                 </div>
 
-                <div style={{
-                    background: 'white',
-                    borderRadius: '16px',
-                    padding: '20px',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                    border: '1px solid rgba(226,232,240,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px'
-                }}>
-                    <div style={{
-                        width: '48px',
-                        height: '48px',
-                        background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}>
-                        <Clock size={24} color="#d97706" />
+                <div className="kpi-card">
+                    <div className="kpi-header">
+                        <span className="kpi-title">Oggi</span>
+                        <div className="kpi-icon orange">
+                            <Clock size={20} />
+                        </div>
                     </div>
-                    <div>
-                        <div style={{ fontSize: '24px', fontWeight: 800, color: '#d97706' }}>{stats.today}</div>
-                        <div style={{ fontSize: '13px', color: '#64748b' }}>Oggi</div>
-                    </div>
+                    <div className="kpi-value" style={{ color: 'var(--orange-600)' }}>{stats.today}</div>
                 </div>
 
-                <div style={{
-                    background: 'white',
-                    borderRadius: '16px',
-                    padding: '20px',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                    border: '1px solid rgba(226,232,240,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px'
-                }}>
-                    <div style={{
-                        width: '48px',
-                        height: '48px',
-                        background: 'linear-gradient(135deg, #fee2e2, #fecaca)',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}>
-                        <AlertCircle size={24} color="#dc2626" />
+                <div className="kpi-card">
+                    <div className="kpi-header">
+                        <span className="kpi-title">Scadute</span>
+                        <div className="kpi-icon red">
+                            <AlertCircle size={20} />
+                        </div>
                     </div>
-                    <div>
-                        <div style={{ fontSize: '24px', fontWeight: 800, color: '#dc2626' }}>{stats.overdue}</div>
-                        <div style={{ fontSize: '13px', color: '#64748b' }}>Scadute</div>
-                    </div>
+                    <div className="kpi-value" style={{ color: 'var(--red-600)' }}>{stats.overdue}</div>
                 </div>
             </div>
 
             {/* Search & Filters */}
-            <div style={{ 
-                display: 'flex', 
-                gap: '16px', 
+            <div style={{
+                display: 'flex',
+                gap: '16px',
                 flexWrap: 'wrap',
                 alignItems: 'center'
             }}>
-                <div style={{ 
+                <div style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '12px',
@@ -255,10 +180,10 @@ export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask,
                         placeholder="Cerca attività..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{ 
-                            border: 'none', 
-                            outline: 'none', 
-                            flex: 1, 
+                        style={{
+                            border: 'none',
+                            outline: 'none',
+                            flex: 1,
                             fontSize: '15px',
                             background: 'transparent'
                         }}
@@ -299,10 +224,10 @@ export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask,
                         const isCompleted = task.status === 'Completata';
                         const overdue = isOverdue(task.dueDate) && !isCompleted;
                         const todayTask = isToday(task.dueDate);
-                        
+
                         return (
-                            <div 
-                                key={task.id} 
+                            <div
+                                key={task.id}
                                 style={{
                                     background: 'white',
                                     borderRadius: '20px',
@@ -350,10 +275,10 @@ export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask,
 
                                 {/* Content */}
                                 <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ 
-                                        display: 'flex', 
-                                        alignItems: 'center', 
-                                        gap: '12px', 
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '12px',
                                         marginBottom: '8px',
                                         flexWrap: 'wrap'
                                     }}>
@@ -365,7 +290,7 @@ export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask,
                                         }}>
                                             {task.title}
                                         </span>
-                                        
+
                                         {/* Badges */}
                                         <span style={{
                                             padding: '4px 12px',
@@ -378,7 +303,7 @@ export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask,
                                         }}>
                                             {task.type || 'Task'}
                                         </span>
-                                        
+
                                         <span style={{
                                             padding: '4px 12px',
                                             borderRadius: '20px',
@@ -397,9 +322,9 @@ export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask,
                                     </div>
 
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                                        <span style={{ 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
+                                        <span style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
                                             gap: '6px',
                                             fontSize: '13px',
                                             color: '#64748b'
@@ -407,10 +332,10 @@ export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask,
                                             <Users size={14} />
                                             {getContactName(task.contactId)}
                                         </span>
-                                        
-                                        <span style={{ 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
+
+                                        <span style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
                                             gap: '6px',
                                             fontSize: '13px',
                                             color: overdue ? '#dc2626' : todayTask ? '#d97706' : '#64748b',
@@ -436,14 +361,14 @@ export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask,
 
                                 {/* Actions */}
                                 <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                                    <button 
+                                    <button
                                         className="action-btn"
                                         onClick={() => openAddModal('task', task)}
                                         title="Modifica"
                                     >
                                         <Edit2 size={16} />
                                     </button>
-                                    <button 
+                                    <button
                                         className="action-btn delete"
                                         onClick={() => handleDeleteTask(task.id)}
                                         title="Elimina"
