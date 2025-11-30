@@ -129,6 +129,26 @@ const createPostgresTables = async () => {
       "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Invoices table (Scadenziario Fatture)
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS invoices (
+      id SERIAL PRIMARY KEY,
+      "invoiceNumber" VARCHAR(50) NOT NULL,
+      "opportunityId" INTEGER REFERENCES opportunities(id) ON DELETE SET NULL,
+      "contactId" INTEGER REFERENCES contacts(id) ON DELETE SET NULL,
+      type VARCHAR(20) DEFAULT 'emessa',
+      amount DECIMAL(10, 2) NOT NULL,
+      "issueDate" DATE NOT NULL,
+      "dueDate" DATE NOT NULL,
+      "paidDate" DATE,
+      status VARCHAR(20) DEFAULT 'da_emettere',
+      notes TEXT,
+      "userId" INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 };
 
 const createSQLiteTables = (resolve, reject) => {
@@ -247,6 +267,29 @@ const createSQLiteTables = (resolve, reject) => {
         content TEXT NOT NULL,
         createdBy INTEGER,
         createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Invoices table (Scadenziario Fatture)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS invoices (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        invoiceNumber TEXT NOT NULL,
+        opportunityId INTEGER,
+        contactId INTEGER,
+        type TEXT DEFAULT 'emessa',
+        amount REAL NOT NULL,
+        issueDate DATE NOT NULL,
+        dueDate DATE NOT NULL,
+        paidDate DATE,
+        status TEXT DEFAULT 'da_emettere',
+        notes TEXT,
+        userId INTEGER,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (opportunityId) REFERENCES opportunities(id) ON DELETE SET NULL,
+        FOREIGN KEY (contactId) REFERENCES contacts(id) ON DELETE SET NULL,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
       )
     `, (err) => {
       if (err) {

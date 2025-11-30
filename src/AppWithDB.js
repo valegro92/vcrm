@@ -10,6 +10,7 @@ import Pipeline from './components/Pipeline';
 import Contacts from './components/Contacts';
 import Opportunities from './components/Opportunities';
 import Tasks from './components/Tasks';
+import Invoices from './components/Invoices';
 import AddModal from './components/AddModal';
 import Settings from './components/Settings';
 import Calendar from './components/Calendar';
@@ -324,6 +325,12 @@ export default function YdeaCRM() {
               tasks={tasks}
               openAddModal={openAddModal}
               handleToggleTask={handleToggleTask}
+            />
+          )}
+
+          {!loading && activeView === 'invoices' && (
+            <Invoices
+              opportunities={opportunities}
             />
           )}
         </div>

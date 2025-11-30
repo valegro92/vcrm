@@ -337,6 +337,85 @@ const api = {
       }
     });
     return handleResponse(response);
+  },
+
+  // Invoices (Scadenziario Fatture)
+  getInvoices: async (filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.status) params.append('status', filters.status);
+    if (filters.type) params.append('type', filters.type);
+    if (filters.opportunityId) params.append('opportunityId', filters.opportunityId);
+    const url = params.toString() ? `${API_URL}/invoices?${params}` : `${API_URL}/invoices`;
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return handleResponse(response);
+  },
+
+  getInvoiceStats: async () => {
+    const response = await fetch(`${API_URL}/invoices/stats`, {
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return handleResponse(response);
+  },
+
+  getInvoice: async (id) => {
+    const response = await fetch(`${API_URL}/invoices/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return handleResponse(response);
+  },
+
+  createInvoice: async (invoiceData) => {
+    const response = await fetch(`${API_URL}/invoices`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify(invoiceData)
+    });
+    return handleResponse(response);
+  },
+
+  updateInvoice: async (id, invoiceData) => {
+    const response = await fetch(`${API_URL}/invoices/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify(invoiceData)
+    });
+    return handleResponse(response);
+  },
+
+  updateInvoiceStatus: async (id, status, paidDate) => {
+    const response = await fetch(`${API_URL}/invoices/${id}/status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({ status, paidDate })
+    });
+    return handleResponse(response);
+  },
+
+  deleteInvoice: async (id) => {
+    const response = await fetch(`${API_URL}/invoices/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return handleResponse(response);
   }
 };
 

@@ -1186,7 +1186,7 @@ body {
 /* Kanban Board - Mobile Horizontal Scroll */
 .kanban-board { 
   display: flex;
-  gap: var(--space-4);
+  gap: var(--space-3);
   overflow-x: auto;
   padding-bottom: var(--space-4);
   -webkit-overflow-scrolling: touch;
@@ -1207,10 +1207,32 @@ body {
   border-radius: var(--radius-full);
 }
 
-@media (min-width: 1200px) {
+/* Tablet - 2 righe di 3 colonne */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .kanban-board { 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
+    overflow-x: visible;
+  }
+}
+
+/* Desktop - Griglia 3x2 per più spazio */
+@media (min-width: 1200px) and (max-width: 1599px) {
+  .kanban-board { 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+    overflow-x: visible;
+  }
+}
+
+/* Wide Desktop - 6 colonne */
+@media (min-width: 1600px) {
   .kanban-board { 
     display: grid; 
     grid-template-columns: repeat(6, 1fr);
+    gap: var(--space-4);
     overflow-x: visible;
   }
 }

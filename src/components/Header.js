@@ -104,12 +104,13 @@ export default function Header({ activeView, searchQuery, setSearchQuery, user, 
     const totalResults = searchResults.contacts.length + searchResults.opportunities.length + searchResults.tasks.length;
 
     const getPageTitle = () => {
-        switch(activeView) {
+        switch (activeView) {
             case 'dashboard': return 'Dashboard';
             case 'pipeline': return 'Pipeline';
             case 'contacts': return 'Contatti';
             case 'opportunities': return 'Opportunità';
             case 'tasks': return 'Attività';
+            case 'invoices': return 'Scadenziario Fatture';
             case 'calendar': return 'Calendario';
             case 'settings': return 'Impostazioni';
             default: return 'Dashboard';
