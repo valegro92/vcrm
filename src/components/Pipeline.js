@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
-import { GripVertical, CheckSquare, Edit2, Plus, Clock } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, Calendar } from 'lucide-react';
 import pipelineStages from '../constants/pipelineStages';
-import COLORS from '../constants/colors';
 import api from '../api/api';
+
+// Colori per gli header delle colonne stile Ydea
+const STAGE_COLORS = {
+    'Lead': '#f59e0b',           // Arancione
+    'In contatto': '#3b82f6',    // Blu
+    'Follow Up da fare': '#8b5cf6', // Viola
+    'Revisionare offerta': '#ec4899', // Rosa
+    'Chiuso Vinto': '#10b981',   // Verde
+    'Chiuso Perso': '#ef4444'    // Rosso
+};
 
 export default function Pipeline({ opportunities, tasks, setOpportunities, openAddModal, setNewItem }) {
     const [selectedYear, setSelectedYear] = useState('all');
@@ -20,7 +29,7 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
 
     const handleDrop = async (e, newStage) => {
         e.preventDefault();
-        if (draggedItem) {
+        if (draggedItem && draggedItem.stage !== newStage) {
             try {
                 const newProbabilities = {
                     'Lead': 10,
@@ -38,7 +47,18 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
                 setOpportunities(opportunities.map(opp =>
                     opp.id === updated.id ? updated : opp
                 ));
-                setDraggedItem(null);
+            } catch (error) {
+                alert('Errore: ' + error.message);
+            }
+        }
+        setDraggedItem(null);
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm('Eliminare questa opportunità?')) {
+            try {
+                await api.deleteOpportunity(id);
+                setOpportunities(opportunities.filter(o => o.id !== id));
             } catch (error) {
                 alert('Errore: ' + error.message);
             }
@@ -52,109 +72,126 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
         return oppYear === parseInt(selectedYear);
     });
 
+    const formatDate = (dateStr) => {
+        if (!dateStr) return 'N/D';
+        return new Date(dateStr).toLocaleDateString('it-IT', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric' 
+        });
+    };
+
     return (
         <div className="pipeline-view">
-            <div className="pipeline-header">
-                <div className="pipeline-filters">
+            {/* Toolbar */}
+            <div className="view-toolbar">
+                <div className="toolbar-left">
                     <select
                         className="year-filter"
                         value={selectedYear}
                         onChange={(e) => setSelectedYear(e.target.value)}
                     >
-                        <option value="all">Tutto</option>
+                        <option value="all">Tutti gli anni</option>
                         <option value="2024">2024</option>
                         <option value="2025">2025</option>
                         <option value="2026">2026</option>
                     </select>
                 </div>
-                <div className="pipeline-stats">
-                    {pipelineStages.map((stage, idx) => {
-                        const stageOpps = filteredOpportunities.filter(o => o.stage === stage);
-                        const stageValue = stageOpps.reduce((sum, o) => sum + (parseFloat(o.value) || 0), 0);
-                        return (
-                            <div key={stage} className="stage-stat">
-                                <span className="stage-name">{stage}</span>
-                                <span className="stage-count">{stageOpps.length} opportunità</span>
-                                <span className="stage-value">€{stageValue.toLocaleString()}</span>
-                            </div>
-                        );
-                    })}
+                <div className="toolbar-right">
+                    <button className="primary-btn" onClick={() => openAddModal('opportunity')}>
+                        <Plus size={18} />
+                        <span>Aggiungi</span>
+                    </button>
                 </div>
             </div>
 
+            {/* Kanban Board - Scroll Orizzontale */}
             <div className="kanban-board">
-                {pipelineStages.map((stage, idx) => {
-                    const color = COLORS[idx];
+                {pipelineStages.map((stage) => {
+                    const stageOpps = filteredOpportunities.filter(o => o.stage === stage);
+                    const stageValue = stageOpps.reduce((sum, o) => sum + (parseFloat(o.value) || 0), 0);
+                    const headerColor = STAGE_COLORS[stage] || '#6366f1';
+
                     return (
                         <div
                             key={stage}
                             className="kanban-column"
                             onDragOver={handleDragOver}
                             onDrop={(e) => handleDrop(e, stage)}
-                            style={{
-                                '--header-bg-1': color,
-                                '--header-bg-2': color
-                            }}
                         >
-                            <div className="column-header">
+                            {/* Header colorato */}
+                            <div 
+                                className="column-header"
+                                style={{ background: headerColor }}
+                            >
                                 <h3>{stage}</h3>
-                                <span className="column-count">{filteredOpportunities.filter(o => o.stage === stage).length}</span>
+                                <span className="column-count">{stageOpps.length}</span>
                             </div>
+
+                            {/* Valore totale */}
+                            <div className="column-value">
+                                €{stageValue.toLocaleString('it-IT', { minimumFractionDigits: 2 })}
+                            </div>
+
+                            {/* Cards */}
                             <div className="column-content">
-                                {filteredOpportunities.filter(o => o.stage === stage).map(opp => {
-                                    const oppTasks = tasks.filter(t => t.opportunityId === opp.id);
-                                    return (
-                                        <div
-                                            key={opp.id}
-                                            className="kanban-card"
-                                            draggable
-                                            onDragStart={(e) => handleDragStart(e, opp)}
-                                            style={{ '--card-accent-color': color }}
-                                        >
-                                            <div className="card-drag-handle"><GripVertical size={16} /></div>
-                                            <div className="kanban-card-header">
-                                                <span className="card-title">{opp.title || 'Senza titolo'}</span>
-                                                <div className="card-actions">
-                                                    <button
-                                                        className="card-action-btn"
-                                                        onClick={() => {
-                                                            setNewItem({ opportunityId: opp.id, title: '' });
-                                                            openAddModal('task');
-                                                        }}
-                                                        title="Aggiungi attività"
-                                                    >
-                                                        <CheckSquare size={14} />
-                                                    </button>
-                                                    <button className="card-action-btn" onClick={() => openAddModal('opportunity', opp)}>
-                                                        <Edit2 size={14} />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div className="card-company">{opp.company || 'N/D'}</div>
-                                            <div className="card-footer">
-                                                <span className="card-value">€{(parseFloat(opp.value) || 0).toLocaleString()}</span>
-                                                <span className="card-probability">{opp.probability}%</span>
-                                            </div>
-                                            {oppTasks.length > 0 && (
-                                                <div className="card-tasks">
-                                                    <div className="card-tasks-header">
-                                                        <CheckSquare size={12} />
-                                                        <span>{oppTasks.filter(t => t.status === 'Completata').length}/{oppTasks.length} attività</span>
-                                                    </div>
-                                                </div>
-                                            )}
-                                            <div className="card-meta">
-                                                <Clock size={14} />
-                                                <span>Chiusura: {opp.closeDate}</span>
-                                            </div>
+                                {stageOpps.map(opp => (
+                                    <div
+                                        key={opp.id}
+                                        className="opp-card"
+                                        draggable
+                                        onDragStart={(e) => handleDragStart(e, opp)}
+                                    >
+                                        <div className="opp-card-title">{opp.title || 'Senza titolo'}</div>
+                                        <div className="opp-card-value">€{(parseFloat(opp.value) || 0).toLocaleString('it-IT', { minimumFractionDigits: 2 })}</div>
+                                        <div className="opp-card-company">{opp.company || 'N/D'}</div>
+                                        <div className="opp-card-owner">{opp.owner || 'Non assegnato'}</div>
+                                        <div className="opp-card-date">
+                                            <Calendar size={12} />
+                                            {formatDate(opp.closeDate)}
                                         </div>
-                                    );
-                                })}
+                                        
+                                        {/* Actions */}
+                                        <div className="opp-card-actions">
+                                            <button 
+                                                className="opp-action-btn"
+                                                onClick={() => openAddModal('opportunity', opp)}
+                                                title="Modifica"
+                                            >
+                                                <Edit2 size={12} />
+                                            </button>
+                                            <button 
+                                                className="opp-action-btn"
+                                                onClick={() => {
+                                                    setNewItem({ opportunityId: opp.id, title: '' });
+                                                    openAddModal('task');
+                                                }}
+                                                title="Aggiungi attività"
+                                            >
+                                                <Plus size={12} />
+                                            </button>
+                                            <button 
+                                                className="opp-action-btn delete"
+                                                onClick={() => handleDelete(opp.id)}
+                                                title="Elimina"
+                                            >
+                                                <Trash2 size={12} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {stageOpps.length === 0 && (
+                                    <div style={{ 
+                                        padding: '20px', 
+                                        textAlign: 'center', 
+                                        color: '#94a3b8',
+                                        fontSize: '13px'
+                                    }}>
+                                        Nessuna opportunità
+                                    </div>
+                                )}
                             </div>
-                            <button className="add-card-btn" onClick={() => openAddModal('opportunity')}>
-                                <Plus size={16} />
-                                <span>Aggiungi opportunità</span>
-                            </button>
                         </div>
                     );
                 })}
