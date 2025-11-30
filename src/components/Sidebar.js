@@ -15,34 +15,13 @@ export default function Sidebar({ activeView, setActiveView, handleLogout, isOpe
     return (
         <div className={`sidebar ${isOpen ? 'open' : ''}`}>
             {/* Mobile Close Button */}
-            <button 
+            {/* Mobile Close Button */}
+            <button
                 className="mobile-close-btn"
                 onClick={onClose}
-                style={{
-                    display: 'none',
-                    position: 'absolute',
-                    top: '16px',
-                    right: '16px',
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '10px',
-                    border: 'none',
-                    background: 'rgba(255,255,255,0.1)',
-                    color: 'white',
-                    cursor: 'pointer',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}
             >
                 <X size={20} />
             </button>
-            <style>{`
-                @media (max-width: 768px) {
-                    .mobile-close-btn {
-                        display: flex !important;
-                    }
-                }
-            `}</style>
 
             <div className="logo">
                 <div className="logo-icon">V</div>

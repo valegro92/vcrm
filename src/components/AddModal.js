@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, CheckSquare } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, CheckSquare, AlertCircle } from 'lucide-react';
 import pipelineStages from '../constants/pipelineStages';
 
 export default function AddModal({
@@ -13,7 +13,37 @@ export default function AddModal({
     contacts,
     opportunities
 }) {
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState(null);
+
     if (!showAddModal) return null;
+
+    const handleSubmit = async () => {
+        setError(null);
+
+        // Validazione
+        if (modalType === 'contact' && !newItem.name?.trim()) {
+            setError('Il nome è obbligatorio');
+            return;
+        }
+        if (modalType === 'opportunity' && !newItem.title?.trim()) {
+            setError('Il titolo è obbligatorio');
+            return;
+        }
+        if (modalType === 'task' && !newItem.title?.trim()) {
+            setError('Il titolo è obbligatorio');
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            await handleAddItem();
+        } catch (err) {
+            setError(err.message || 'Si è verificato un errore');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
@@ -111,8 +141,8 @@ export default function AddModal({
                                         value={newItem.contactId || ''}
                                         onChange={(e) => {
                                             const selectedContact = contacts.find(c => c.id === parseInt(e.target.value));
-                                            setNewItem({ 
-                                                ...newItem, 
+                                            setNewItem({
+                                                ...newItem,
                                                 contactId: selectedContact?.id || null,
                                                 company: selectedContact?.company || selectedContact?.name || ''
                                             });
@@ -289,26 +319,19 @@ export default function AddModal({
                     )}
                 </div>
                 <div className="modal-footer">
-                    <button className="secondary-btn" onClick={() => setShowAddModal(false)}>Annulla</button>
-                    <button 
-                        className="primary-btn" 
-                        onClick={() => {
-                            // Validazione
-                            if (modalType === 'contact' && !newItem.name?.trim()) {
-                                alert('Il nome è obbligatorio');
-                                return;
-                            }
-                            if (modalType === 'opportunity' && !newItem.title?.trim()) {
-                                alert('Il titolo è obbligatorio');
-                                return;
-                            }
-                            if (modalType === 'task' && !newItem.title?.trim()) {
-                                alert('Il titolo è obbligatorio');
-                                return;
-                            }
-                            handleAddItem();
-                        }}
+                    {error && (
+                        <div className="error-message" style={{ marginBottom: 0, marginRight: 'auto' }}>
+                            <AlertCircle size={16} />
+                            <span>{error}</span>
+                        </div>
+                    )}
+                    <button className="secondary-btn" onClick={() => setShowAddModal(false)} disabled={isSubmitting}>Annulla</button>
+                    <button
+                        className={`primary-btn ${isSubmitting ? 'btn-loading' : ''}`}
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
                     >
+                        {isSubmitting && <div className="loading-spinner-sm"></div>}
                         {isEditing ? 'Aggiorna' : 'Crea'}
                     </button>
                 </div>
