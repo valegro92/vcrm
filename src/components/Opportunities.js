@@ -34,6 +34,15 @@ export default function Opportunities({ opportunities, openAddModal, handleDelet
             );
         }
 
+        // Year filter
+        if (selectedYear !== 'all') {
+            result = result.filter(o => {
+                if (!o.closeDate) return false;
+                const oppYear = new Date(o.closeDate).getFullYear();
+                return oppYear === parseInt(selectedYear);
+            });
+        }
+
         if (filterStage !== 'all') {
             result = result.filter(o => o.stage === filterStage);
         }
@@ -64,7 +73,7 @@ export default function Opportunities({ opportunities, openAddModal, handleDelet
         });
 
         return result;
-    }, [opportunities, searchTerm, filterStage, sortBy, sortOrder]);
+    }, [opportunities, searchTerm, filterStage, sortBy, sortOrder, selectedYear]);
 
     const formatCurrency = (value) => {
         if (value >= 1000000) return `€${(value / 1000000).toFixed(1)}M`;
