@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X, CheckSquare, AlertCircle } from 'lucide-react';
 import pipelineStages from '../constants/pipelineStages';
 
@@ -15,6 +15,24 @@ export default function AddModal({
 }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
+
+    // Sort contacts alphabetically by name or company
+    const sortedContacts = useMemo(() => {
+        return [...contacts].sort((a, b) => {
+            const nameA = (a.name || a.company || '').toLowerCase();
+            const nameB = (b.name || b.company || '').toLowerCase();
+            return nameA.localeCompare(nameB);
+        });
+    }, [contacts]);
+
+    // Sort opportunities alphabetically by title
+    const sortedOpportunities = useMemo(() => {
+        return [...opportunities].sort((a, b) => {
+            const titleA = (a.title || '').toLowerCase();
+            const titleB = (b.title || '').toLowerCase();
+            return titleA.localeCompare(titleB);
+        });
+    }, [opportunities]);
 
     if (!showAddModal) return null;
 
@@ -149,7 +167,7 @@ export default function AddModal({
                                         }}
                                     >
                                         <option value="">Seleziona azienda/contatto</option>
-                                        {contacts.map(c => (
+                                        {sortedContacts.map(c => (
                                             <option key={c.id} value={c.id}>
                                                 {c.company || c.name} {c.company && c.name !== c.company ? `(${c.name})` : ''}
                                             </option>
@@ -228,7 +246,7 @@ export default function AddModal({
                                         onChange={(e) => setNewItem({ ...newItem, contactId: parseInt(e.target.value) || null })}
                                     >
                                         <option value="">Seleziona contatto</option>
-                                        {contacts.map(c => (
+                                        {sortedContacts.map(c => (
                                             <option key={c.id} value={c.id}>{c.name || c.company}</option>
                                         ))}
                                     </select>
@@ -240,7 +258,7 @@ export default function AddModal({
                                         onChange={(e) => setNewItem({ ...newItem, opportunityId: parseInt(e.target.value) || null })}
                                     >
                                         <option value="">Nessuna opportunità</option>
-                                        {opportunities.map(o => (
+                                        {sortedOpportunities.map(o => (
                                             <option key={o.id} value={o.id}>{o.title} ({o.company})</option>
                                         ))}
                                     </select>

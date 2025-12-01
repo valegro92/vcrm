@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Plus, FileText, Calendar, Euro, Check, AlertTriangle,
   Clock, Edit2, Trash2, Building, Filter, TrendingUp,
@@ -24,8 +24,12 @@ export default function Invoices({ opportunities }) {
     notes: ''
   });
 
-  // Filtra solo opportunità chiuse vinte
-  const wonOpportunities = opportunities.filter(o => o.stage === 'Chiuso Vinto');
+  // Filtra solo opportunità chiuse vinte e ordina alfabeticamente
+  const wonOpportunities = useMemo(() => {
+    return opportunities
+      .filter(o => o.stage === 'Chiuso Vinto')
+      .sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+  }, [opportunities]);
 
   useEffect(() => {
     loadData();
