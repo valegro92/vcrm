@@ -28,12 +28,13 @@ const QuickAction = ({ icon, label, color, onClick }) => (
 
 export default function Dashboard({ opportunities, tasks, contacts, setActiveView }) {
     const [timeRange, setTimeRange] = useState('year');
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
     // Calcoli KPI
     const kpiData = useMemo(() => {
         const now = new Date();
         const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
+        const currentYear = selectedYear; // Use selected year instead of current year
 
         // Target Mese Corrente
         const currentMonthTarget = MONTHLY_TARGETS[currentMonth]?.target || 0;
@@ -87,11 +88,11 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
             dueTodayCount,
             openTasks: tasks.filter(t => t.status !== 'Completata').length
         };
-    }, [opportunities, tasks]);
+    }, [opportunities, tasks, selectedYear]); // Add selectedYear to dependencies
 
     // Dati Grafico Target vs Actual
     const chartData = useMemo(() => {
-        const currentYear = new Date().getFullYear();
+        const currentYear = selectedYear; // Use selected year
 
         return MONTHLY_TARGETS.map(t => {
             const actual = opportunities
@@ -111,11 +112,11 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
                 gap: actual - t.target
             };
         });
-    }, [opportunities]);
+    }, [opportunities, selectedYear]); // Add selectedYear to dependencies
 
     // Dati Trend Valore Medio Deal
     const avgDealValueData = useMemo(() => {
-        const currentYear = new Date().getFullYear();
+        const currentYear = selectedYear; // Use selected year
         const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
 
         return months.map((monthName, index) => {
@@ -136,7 +137,7 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
                 count: monthDeals.length
             };
         });
-    }, [opportunities]);
+    }, [opportunities, selectedYear]); // Add selectedYear to dependencies
 
     const formatCurrency = (value) => {
         if (value >= 1000000) return `€${(value / 1000000).toFixed(1)}M`;
@@ -231,9 +232,26 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
                 <div className="chart-card large">
                     <div className="chart-header">
                         <div>
-                            <h3>🎯 Performance 2026</h3>
+                            <h3>🎯 Performance {selectedYear}</h3>
                             <p className="subtitle">Fatturato Reale vs Obiettivi Mensili</p>
                         </div>
+                        <select
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                            style={{
+                                padding: '8px 12px',
+                                border: '1px solid var(--gray-200)',
+                                borderRadius: '8px',
+                                fontSize: '14px',
+                                fontWeight: 600,
+                                background: 'white',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2026">2026</option>
+                        </select>
                         <div className="chart-legend">
                             <span className="legend-item"><span className="dot target"></span>Target</span>
                             <span className="legend-item"><span className="dot actual"></span>Reale</span>
