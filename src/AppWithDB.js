@@ -25,6 +25,7 @@ export default function YdeaCRM() {
   const [contacts, setContacts] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [modalType, setModalType] = useState('');
@@ -85,14 +86,16 @@ export default function YdeaCRM() {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [contactsData, opportunitiesData, tasksData] = await Promise.all([
+      const [contactsData, opportunitiesData, tasksData, invoicesData] = await Promise.all([
         api.getContacts(),
         api.getOpportunities(),
-        api.getTasks()
+        api.getTasks(),
+        api.getInvoices()
       ]);
       setContacts(contactsData);
       setOpportunities(opportunitiesData);
       setTasks(tasksData);
+      setInvoices(invoicesData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -113,6 +116,7 @@ export default function YdeaCRM() {
     setContacts([]);
     setOpportunities([]);
     setTasks([]);
+    setInvoices([]);
   };
 
   // Mobile navigation handler
@@ -286,6 +290,7 @@ export default function YdeaCRM() {
               opportunities={opportunities}
               tasks={tasks}
               contacts={contacts}
+              invoices={invoices}
               setActiveView={setActiveView}
             />
           )}
@@ -349,6 +354,8 @@ export default function YdeaCRM() {
           {!loading && activeView === 'invoices' && (
             <Invoices
               opportunities={opportunities}
+              invoices={invoices}
+              setInvoices={setInvoices}
             />
           )}
         </div>

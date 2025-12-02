@@ -10,14 +10,15 @@ export default function AddModal({
     newItem,
     setNewItem,
     handleAddItem,
-    contacts,
-    opportunities
+    contacts = [],
+    opportunities = []
 }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
 
     // Sort contacts alphabetically by name or company
     const sortedContacts = useMemo(() => {
+        if (!contacts) return [];
         return [...contacts].sort((a, b) => {
             const nameA = (a.name || a.company || '').toLowerCase();
             const nameB = (b.name || b.company || '').toLowerCase();
@@ -27,6 +28,7 @@ export default function AddModal({
 
     // Sort opportunities alphabetically by title
     const sortedOpportunities = useMemo(() => {
+        if (!opportunities) return [];
         return [...opportunities].sort((a, b) => {
             const titleA = (a.title || '').toLowerCase();
             const titleB = (b.title || '').toLowerCase();
@@ -267,7 +269,7 @@ export default function AddModal({
                             {newItem.opportunityId && (
                                 <div className="form-info" style={{ background: '#dcfce7', padding: '8px 12px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: '#166534' }}>
                                     <CheckSquare size={16} />
-                                    <span>Collegata a: {opportunities.find(o => o.id === newItem.opportunityId)?.title}</span>
+                                    <span>Collegata a: {opportunities?.find(o => o.id === newItem.opportunityId)?.title || 'Opportunità non trovata'}</span>
                                 </div>
                             )}
                             <div className="form-row">

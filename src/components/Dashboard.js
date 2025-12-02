@@ -26,7 +26,7 @@ const QuickAction = ({ icon, label, color, onClick }) => (
     </button>
 );
 
-export default function Dashboard({ opportunities, tasks, contacts, setActiveView }) {
+export default function Dashboard({ opportunities, tasks, contacts, invoices = [], setActiveView }) {
     const [timeRange, setTimeRange] = useState('year');
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
@@ -77,18 +77,28 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
             t.dueDate === today && t.status !== 'Completata'
         ).length;
 
+        // Fatturato Incassato/Emesso (Fatture)
+        const invoicedRevenue = invoices
+            .filter(i => {
+                if (!i.date) return false; // Use date or issueDate
+                const d = new Date(i.date);
+                return d.getFullYear() === currentYear && i.status !== 'Bozza' && i.status !== 'Annullata';
+            })
+            .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+
         return {
             currentMonthRevenue,
             currentMonthTarget,
             targetGap,
             targetProgress,
-            annualRevenue,
+            annualRevenue, // This is "Venduto" (Closed Won Opps)
+            invoicedRevenue, // This is "Fatturato" (Invoices)
             annualProgress,
             totalPipeline,
             dueTodayCount,
             openTasks: tasks.filter(t => t.status !== 'Completata').length
         };
-    }, [opportunities, tasks, selectedYear]); // Add selectedYear to dependencies
+    }, [opportunities, tasks, invoices, selectedYear]); // Add invoices and selectedYear to dependencies
 
     // Dati Grafico Target vs Actual
     const chartData = useMemo(() => {
@@ -105,14 +115,25 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
                 })
                 .reduce((sum, o) => sum + (parseFloat(o.value) || 0), 0);
 
+            const invoiced = invoices
+                .filter(i => {
+                    if (!i.date) return false;
+                    const d = new Date(i.date);
+                    return d.getMonth() === t.month &&
+                        d.getFullYear() === currentYear &&
+                        i.status !== 'Bozza' && i.status !== 'Annullata';
+                })
+                .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+
             return {
                 month: t.label,
                 target: t.target,
-                actual: actual,
+                actual: actual, // Venduto
+                invoiced: invoiced, // Fatturato
                 gap: actual - t.target
             };
         });
-    }, [opportunities, selectedYear]); // Add selectedYear to dependencies
+    }, [opportunities, invoices, selectedYear]); // Add invoices and selectedYear to dependencies
 
     // Dati Trend Valore Medio Deal
     const avgDealValueData = useMemo(() => {
@@ -254,7 +275,8 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
                         </select>
                         <div className="chart-legend">
                             <span className="legend-item"><span className="dot target"></span>Target</span>
-                            <span className="legend-item"><span className="dot actual"></span>Reale</span>
+                            <span className="legend-item"><span className="dot actual"></span>Venduto</span>
+                            <span className="legend-item"><span className="dot" style={{ background: '#10b981' }}></span>Fatturato</span>
                         </div>
                     </div>
                     <ResponsiveContainer width="100%" height={300}>
@@ -270,9 +292,15 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
                             <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `€${v / 1000}k`} />
                             <Tooltip
                                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                formatter={(value, name) => [formatCurrency(value), name === 'actual' ? 'Fatturato' : 'Obiettivo']}
+                                formatter={(value, name) => [
+                                    formatCurrency(value),
+                                    name === 'actual' ? 'Venduto (Ordini)' :
+                                        name === 'invoiced' ? 'Fatturato (Reale)' :
+                                            'Obiettivo'
+                                ]}
                             />
                             <Area type="monotone" dataKey="actual" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorActual)" />
+                            <Line type="monotone" dataKey="invoiced" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981' }} />
                             <Line type="step" dataKey="target" stroke="#94a3b8" strokeWidth={2} strokeDasharray="5 5" dot={false} />
                         </AreaChart>
                     </ResponsiveContainer>
@@ -283,9 +311,17 @@ export default function Dashboard({ opportunities, tasks, contacts, setActiveVie
                     <div className="stat-box">
                         <div className="stat-icon-bg blue"><Euro size={20} /></div>
                         <div className="stat-info">
-                            <span className="stat-label">Fatturato Annuo</span>
+                            <span className="stat-label">Venduto (Ordini)</span>
                             <span className="stat-value">{formatCurrency(kpiData.annualRevenue)}</span>
                             <span className="stat-sub">su {formatCurrency(ANNUAL_TARGET)}</span>
+                        </div>
+                    </div>
+                    <div className="stat-box">
+                        <div className="stat-icon-bg green"><CheckSquare size={20} /></div>
+                        <div className="stat-info">
+                            <span className="stat-label">Fatturato (Reale)</span>
+                            <span className="stat-value">{formatCurrency(kpiData.invoicedRevenue)}</span>
+                            <span className="stat-sub">Totale fatture emesse</span>
                         </div>
                     </div>
                     <div className="stat-box">
