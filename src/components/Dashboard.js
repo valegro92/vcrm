@@ -80,8 +80,9 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
         // Fatturato Incassato/Emesso (Fatture)
         const invoicedRevenue = invoices
             .filter(i => {
-                if (!i.date) return false; // Use date or issueDate
-                const d = new Date(i.date);
+                const dateStr = i.issueDate || i.date;
+                if (!dateStr) return false;
+                const d = new Date(dateStr);
                 return d.getFullYear() === currentYear && i.status !== 'Bozza' && i.status !== 'Annullata';
             })
             .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
@@ -117,8 +118,9 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
 
             const invoiced = invoices
                 .filter(i => {
-                    if (!i.date) return false;
-                    const d = new Date(i.date);
+                    const dateStr = i.issueDate || i.date;
+                    if (!dateStr) return false;
+                    const d = new Date(dateStr);
                     return d.getMonth() === t.month &&
                         d.getFullYear() === currentYear &&
                         i.status !== 'Bozza' && i.status !== 'Annullata';
