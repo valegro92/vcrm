@@ -82,38 +82,55 @@ router.get('/stats', async (req, res) => {
   try {
     const isPostgres = db.type === 'postgres';
 
-    let statsQuery;
+    // Fetch all invoices to calculate stats in JS (more robust across DBs)
+    let query;
     if (isPostgres) {
-      statsQuery = `
-        SELECT 
-          COUNT(*) as total,
-          COALESCE(SUM(amount), 0) as totalAmount,
-          COALESCE(SUM(CASE WHEN status = 'pagata' THEN amount ELSE 0 END), 0) as paidAmount,
-          COALESCE(SUM(CASE WHEN (status = 'emessa' OR status = 'da_pagare') AND "dueDate" < CURRENT_DATE THEN amount ELSE 0 END), 0) as overdueAmount,
-          COALESCE(SUM(CASE WHEN (status = 'emessa' OR status = 'da_pagare') AND "dueDate" >= CURRENT_DATE THEN amount ELSE 0 END), 0) as pendingAmount,
-          COUNT(CASE WHEN status = 'da_emettere' THEN 1 END) as toIssueCount,
-          COUNT(CASE WHEN status = 'emessa' OR status = 'da_pagare' THEN 1 END) as issuedCount,
-          COUNT(CASE WHEN status = 'pagata' THEN 1 END) as paidCount,
-          COUNT(CASE WHEN (status = 'emessa' OR status = 'da_pagare') AND "dueDate" < CURRENT_DATE THEN 1 END) as overdueCount
-        FROM invoices
-      `;
+      query = 'SELECT amount, status, "dueDate", "paidDate" FROM invoices';
     } else {
-      statsQuery = `
-        SELECT 
-          COUNT(*) as total,
-          COALESCE(SUM(amount), 0) as totalAmount,
-          COALESCE(SUM(CASE WHEN status = 'pagata' THEN amount ELSE 0 END), 0) as paidAmount,
-          COALESCE(SUM(CASE WHEN (status = 'emessa' OR status = 'da_pagare') AND date(dueDate) < date('now') THEN amount ELSE 0 END), 0) as overdueAmount,
-          COALESCE(SUM(CASE WHEN (status = 'emessa' OR status = 'da_pagare') AND date(dueDate) >= date('now') THEN amount ELSE 0 END), 0) as pendingAmount,
-          COUNT(CASE WHEN status = 'da_emettere' THEN 1 END) as toIssueCount,
-          COUNT(CASE WHEN status = 'emessa' OR status = 'da_pagare' THEN 1 END) as issuedCount,
-          COUNT(CASE WHEN status = 'pagata' THEN 1 END) as paidCount,
-          COUNT(CASE WHEN (status = 'emessa' OR status = 'da_pagare') AND date(dueDate) < date('now') THEN 1 END) as overdueCount
-        FROM invoices
-      `;
+      query = 'SELECT amount, status, dueDate, paidDate FROM invoices';
     }
 
-    const stats = await getOne(statsQuery);
+    const invoices = await getAll(query);
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const stats = invoices.reduce((acc, inv) => {
+      const amount = parseFloat(inv.amount) || 0;
+      const dueDate = new Date(inv.dueDate);
+      // Reset time part for date comparison
+      const due = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+
+      acc.total++;
+      acc.totalAmount += amount;
+
+      if (inv.status === 'pagata') {
+        acc.paidAmount += amount;
+        acc.paidCount++;
+      } else if (inv.status === 'da_emettere') {
+        acc.toIssueCount++;
+      } else if (inv.status === 'emessa' || inv.status === 'da_pagare') {
+        if (due < today) {
+          acc.overdueAmount += amount;
+          acc.overdueCount++;
+        } else {
+          acc.pendingAmount += amount;
+          acc.issuedCount++; // "issued" here means pending payment
+        }
+      }
+      return acc;
+    }, {
+      total: 0,
+      totalAmount: 0,
+      paidAmount: 0,
+      overdueAmount: 0,
+      pendingAmount: 0,
+      toIssueCount: 0,
+      issuedCount: 0,
+      paidCount: 0,
+      overdueCount: 0
+    });
+
     res.json(stats);
   } catch (err) {
     console.error('Error fetching invoice stats:', err);
