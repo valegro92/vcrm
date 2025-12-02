@@ -30,13 +30,6 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
     const [timeRange, setTimeRange] = useState('year');
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-    // DEBUG: Inspect invoices data
-    console.log('Dashboard received invoices:', invoices);
-    if (invoices.length > 0) {
-        console.log('First invoice sample:', invoices[0]);
-        console.log('First invoice issueDate type:', typeof invoices[0].issueDate, invoices[0].issueDate);
-    }
-
     // Calcoli KPI
     const kpiData = useMemo(() => {
         const now = new Date();
