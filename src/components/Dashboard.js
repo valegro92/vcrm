@@ -242,132 +242,134 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                 </div>
             </div>
 
-            <div className="charts-row">
-                <div className="chart-card" style={{ width: '100%' }}>
-                    <div className="chart-header">
-                        <div>
-                            <h3>📈 Trend Valore Medio Deal</h3>
-                            <p className="subtitle">Evoluzione del valore medio dei contratti chiusi</p>
-                        </div>
-                    </div>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={avgDealValueData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
-                            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `€${v / 1000}k`} />
-                            <Tooltip
-                                cursor={{ fill: '#f1f5f9' }}
-                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                formatter={(value) => [formatCurrency(value), 'Valore Medio']}
-                            />
-                            <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={40} />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="dashboard-actions-row">
-                <QuickAction icon={<Phone size={18} />} label="Nuova Chiamata" color="blue" onClick={() => setActiveView('tasks')} />
-                <QuickAction icon={<Plus size={18} />} label="Nuova Opportunità" color="green" onClick={() => setActiveView('opportunities')} />
-                <QuickAction icon={<Users size={18} />} label="Nuovo Contatto" color="purple" onClick={() => setActiveView('contacts')} />
-            </div>
-
-            {/* Main Charts Section */}
-            <div className="charts-grid-new">
-                {/* Target vs Actual Chart */}
-                <div className="chart-card large">
-                    <div className="chart-header">
-                        <div>
-                            <h3>🎯 Performance {selectedYear}</h3>
-                            <p className="subtitle">Fatturato Reale vs Obiettivi Mensili</p>
-                        </div>
-                        <select
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                            style={{
-                                padding: '8px 12px',
-                                border: '1px solid var(--gray-200)',
-                                borderRadius: '8px',
-                                fontSize: '14px',
-                                fontWeight: 600,
-                                background: 'white',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            <option value="2024">2024</option>
-                            <option value="2025">2025</option>
-                            <option value="2026">2026</option>
-                        </select>
-                        <div className="chart-legend">
-                            <span className="legend-item"><span className="dot target"></span>Target</span>
-                            <span className="legend-item"><span className="dot actual"></span>Venduto</span>
-                            <span className="legend-item"><span className="dot" style={{ background: '#10b981' }}></span>Fatturato</span>
-                        </div>
-                    </div>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                            <defs>
-                                <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
-                            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `€${v / 1000}k`} />
-                            <Tooltip
-                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                formatter={(value, name) => [
-                                    formatCurrency(value),
-                                    name === 'actual' ? 'Venduto (Ordini)' :
-                                        name === 'invoiced' ? 'Fatturato (Reale)' :
-                                            'Obiettivo'
-                                ]}
-                            />
-                            <Area type="monotone" dataKey="actual" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorActual)" />
-                            <Line type="monotone" dataKey="invoiced" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981' }} />
-                            <Line type="step" dataKey="target" stroke="#94a3b8" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-
-                {/* Grafico Fatturato Mensile (Barre) */}
-                <div className="chart-card">
-                    <div className="chart-header">
-                        <div className="chart-title-group">
-                            <div className="chart-icon green">
-                                <Euro size={20} />
-                            </div>
+            <div className="dashboard-grid">
+                {/* Left Column: Main Charts */}
+                <div className="main-chart-column">
+                    {/* Target vs Actual Chart */}
+                    <div className="chart-card large">
+                        <div className="chart-header">
                             <div>
-                                <h3>Andamento Fatturato {selectedYear}</h3>
-                                <p>Totale fatturato mese per mese</p>
+                                <h3>🎯 Performance {selectedYear}</h3>
+                                <p className="subtitle">Fatturato Reale vs Obiettivi Mensili</p>
+                            </div>
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                                style={{
+                                    padding: '8px 12px',
+                                    border: '1px solid var(--gray-200)',
+                                    borderRadius: '8px',
+                                    fontSize: '14px',
+                                    fontWeight: 600,
+                                    background: 'white',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026">2026</option>
+                            </select>
+                            <div className="chart-legend">
+                                <span className="legend-item"><span className="dot target"></span>Target</span>
+                                <span className="legend-item"><span className="dot actual"></span>Venduto</span>
+                                <span className="legend-item"><span className="dot" style={{ background: '#10b981' }}></span>Fatturato</span>
                             </div>
                         </div>
+                        <ResponsiveContainer width="100%" height={350}>
+                            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `€${v / 1000}k`} />
+                                <Tooltip
+                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                    formatter={(value, name) => [
+                                        formatCurrency(value),
+                                        name === 'actual' ? 'Venduto (Ordini)' :
+                                            name === 'invoiced' ? 'Fatturato (Reale)' :
+                                                'Obiettivo'
+                                    ]}
+                                />
+                                <Area type="monotone" dataKey="actual" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorActual)" />
+                                <Line type="monotone" dataKey="invoiced" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: '#10b981' }} />
+                                <Line type="step" dataKey="target" stroke="#94a3b8" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                            </AreaChart>
+                        </ResponsiveContainer>
                     </div>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={monthlyInvoicedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                            <defs>
-                                <linearGradient id="colorInvoicedBar" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.3} />
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
-                            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `€${v / 1000}k`} />
-                            <Tooltip
-                                cursor={{ fill: '#f1f5f9' }}
-                                contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                                formatter={(value) => [formatCurrency(value), 'Fatturato']}
-                            />
-                            <Bar dataKey="invoiced" fill="url(#colorInvoicedBar)" radius={[4, 4, 0, 0]} barSize={40} />
-                        </BarChart>
-                    </ResponsiveContainer>
+
+                    {/* Grafico Fatturato Mensile (Barre) */}
+                    <div className="chart-card">
+                        <div className="chart-header">
+                            <div className="chart-title-group">
+                                <div className="chart-icon green">
+                                    <Euro size={20} />
+                                </div>
+                                <div>
+                                    <h3>Andamento Fatturato {selectedYear}</h3>
+                                    <p>Totale fatturato mese per mese</p>
+                                </div>
+                            </div>
+                        </div>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={monthlyInvoicedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="colorInvoicedBar" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.3} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `€${v / 1000}k`} />
+                                <Tooltip
+                                    cursor={{ fill: '#f1f5f9' }}
+                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                    formatter={(value) => [formatCurrency(value), 'Fatturato']}
+                                />
+                                <Bar dataKey="invoiced" fill="url(#colorInvoicedBar)" radius={[4, 4, 0, 0]} barSize={40} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+
+                    {/* Trend Valore Medio Deal */}
+                    <div className="chart-card">
+                        <div className="chart-header">
+                            <div>
+                                <h3>📈 Trend Valore Medio Deal</h3>
+                                <p className="subtitle">Evoluzione del valore medio dei contratti chiusi</p>
+                            </div>
+                        </div>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={avgDealValueData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `€${v / 1000}k`} />
+                                <Tooltip
+                                    cursor={{ fill: '#f1f5f9' }}
+                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                    formatter={(value) => [formatCurrency(value), 'Valore Medio']}
+                                />
+                                <Bar dataKey="value" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={40} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
                 </div>
 
-                {/* Side Stats */}
-                <div className="stats-column">
+                {/* Right Column: Sidebar (Quick Actions + Stats) */}
+                <div className="sidebar-column">
+                    {/* Quick Actions */}
+                    <div className="quick-actions">
+                        <QuickAction icon={<Phone size={18} />} label="Chiamata" color="blue" onClick={() => setActiveView('tasks')} />
+                        <QuickAction icon={<Plus size={18} />} label="Opportunità" color="green" onClick={() => setActiveView('opportunities')} />
+                        <QuickAction icon={<Users size={18} />} label="Contatto" color="purple" onClick={() => setActiveView('contacts')} />
+                    </div>
+
+                    {/* KPI Cards Stacked */}
                     <div className="stat-box">
                         <div className="stat-icon-bg blue"><Euro size={20} /></div>
                         <div className="stat-info">
