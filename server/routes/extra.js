@@ -360,5 +360,16 @@ router.get('/db-test', async (req, res) => {
     });
   }
 });
+router.get('/db-type', async (req, res) => {
+  const db = require('../database/db');
+  res.json({
+    type: db.type,
+    hasPool: !!db.pool,
+    env: {
+      hasDbUrl: !!process.env.DATABASE_URL,
+      hasDbHost: !!process.env.DB_HOST
+    }
+  });
+});
 
 module.exports = router;
