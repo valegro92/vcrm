@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Plus, FileText, Calendar, Euro, Check, AlertTriangle,
-  Clock, Edit2, Trash2, Building, Filter, TrendingUp,
-  ChevronDown, X, Receipt
+  Plus, FileText, Calendar, Check, AlertTriangle,
+  Clock, Edit2, Trash2, Receipt, Building, X
 } from 'lucide-react';
 import api from '../api/api';
+import { PageHeader, KPICard, KPISection } from './ui';
 
 export default function Invoices({ opportunities }) {
   const [invoices, setInvoices] = useState([]);
@@ -159,73 +159,68 @@ export default function Invoices({ opportunities }) {
   }
 
   return (
-    <div className="invoices-view">
-      {/* Stats Cards */}
+    <div className="page-container">
+      {/* Unified Header */}
+      <PageHeader
+        title="Fatture"
+        subtitle={`${stats?.total || 0} fatture • Totale: €${parseFloat(stats?.totalAmount || 0).toLocaleString()}`}
+        icon={<Receipt size={24} />}
+      >
+        <button className="primary-btn" onClick={openNewInvoice}>
+          <Plus size={18} />
+          <span>Nuova Fattura</span>
+        </button>
+      </PageHeader>
+
+      {/* KPI Section */}
       {stats && (
-        <div className="kpi-grid" style={{ marginBottom: 'var(--space-4)' }}>
-          <div className="kpi-card">
-            <div className="kpi-header">
-              <span className="kpi-title">Totale Fatture</span>
-              <div className="kpi-icon blue"><FileText size={20} /></div>
-            </div>
-            <div className="kpi-value">€{parseFloat(stats.totalAmount || 0).toLocaleString()}</div>
-            <span className="kpi-change neutral">{stats.total || 0} fatture</span>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-header">
-              <span className="kpi-title">Incassato</span>
-              <div className="kpi-icon green"><Check size={20} /></div>
-            </div>
-            <div className="kpi-value">€{parseFloat(stats.paidAmount || 0).toLocaleString()}</div>
-            <span className="kpi-change positive">{stats.paidCount || 0} pagate</span>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-header">
-              <span className="kpi-title">Da Incassare</span>
-              <div className="kpi-icon orange"><Clock size={20} /></div>
-            </div>
-            <div className="kpi-value">€{parseFloat(stats.pendingAmount || 0).toLocaleString()}</div>
-            <span className="kpi-change neutral">{stats.issuedCount || 0} in attesa</span>
-          </div>
-
-          <div className="kpi-card">
-            <div className="kpi-header">
-              <span className="kpi-title">Scadute</span>
-              <div className="kpi-icon" style={{ background: 'linear-gradient(135deg, #fee2e2, #fef2f2)', color: '#dc2626' }}>
-                <AlertTriangle size={20} />
-              </div>
-            </div>
-            <div className="kpi-value" style={{ color: '#dc2626' }}>€{parseFloat(stats.overdueAmount || 0).toLocaleString()}</div>
-            <span className="kpi-change negative">{stats.overdueCount || 0} scadute</span>
-          </div>
-        </div>
+        <KPISection>
+          <KPICard
+            title="Totale Fatture"
+            value={`€${parseFloat(stats.totalAmount || 0).toLocaleString()}`}
+            subtitle={`${stats.total || 0} fatture`}
+            icon={<FileText size={20} />}
+            color="blue"
+          />
+          <KPICard
+            title="Incassato"
+            value={`€${parseFloat(stats.paidAmount || 0).toLocaleString()}`}
+            subtitle={`${stats.paidCount || 0} pagate`}
+            icon={<Check size={20} />}
+            color="green"
+          />
+          <KPICard
+            title="Da Incassare"
+            value={`€${parseFloat(stats.pendingAmount || 0).toLocaleString()}`}
+            subtitle={`${stats.issuedCount || 0} in attesa`}
+            icon={<Clock size={20} />}
+            color="orange"
+          />
+          <KPICard
+            title="Scadute"
+            value={`€${parseFloat(stats.overdueAmount || 0).toLocaleString()}`}
+            subtitle={`${stats.overdueCount || 0} scadute`}
+            icon={<AlertTriangle size={20} />}
+            color="red"
+          />
+        </KPISection>
       )}
 
       {/* Toolbar */}
-      <div className="view-toolbar">
-        <div className="toolbar-left">
-          <div className="filter-tags">
-            {['all', 'da_emettere', 'emessa', 'da_pagare', 'pagata'].map(status => (
-              <button
-                key={status}
-                className={`filter-tag ${statusFilter === status ? 'active' : ''}`}
-                onClick={() => setStatusFilter(status)}
-              >
-                {status === 'all' ? 'Tutte' :
-                  status === 'da_emettere' ? 'Da Emettere' :
-                    status === 'emessa' ? 'Emesse' :
-                      status === 'da_pagare' ? 'Da Pagare' : 'Saldate'}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="toolbar-right">
-          <button className="primary-btn" onClick={openNewInvoice}>
-            <Plus size={18} />
-            <span>Nuova Fattura</span>
-          </button>
+      <div className="unified-search-filter">
+        <div className="filter-tags">
+          {['all', 'da_emettere', 'emessa', 'da_pagare', 'pagata'].map(status => (
+            <button
+              key={status}
+              className={`filter-tag ${statusFilter === status ? 'active' : ''}`}
+              onClick={() => setStatusFilter(status)}
+            >
+              {status === 'all' ? 'Tutte' :
+                status === 'da_emettere' ? 'Da Emettere' :
+                  status === 'emessa' ? 'Emesse' :
+                    status === 'da_pagare' ? 'Da Pagare' : 'Saldate'}
+            </button>
+          ))}
         </div>
       </div>
 

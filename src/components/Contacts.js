@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Building2, Mail, Phone, Edit2, Trash2, X, Search, Users, MapPin, Globe } from 'lucide-react';
+import { Plus, Building2, Mail, Phone, Edit2, Trash2, X, Users, MapPin, Euro } from 'lucide-react';
+import { PageHeader, SearchFilter, KPICard, KPISection } from './ui';
 
 export default function Contacts({ contacts, openAddModal, handleDeleteContact }) {
     const [statusFilter, setStatusFilter] = useState('all');
@@ -25,7 +26,20 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
         return result.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     }, [contacts, searchTerm, statusFilter]);
 
+    // Stats
+    const stats = useMemo(() => {
+        const totalValue = contacts.reduce((sum, c) => sum + (parseFloat(c.value) || 0), 0);
+        const clienti = contacts.filter(c => c.status === 'Cliente').length;
+        const prospects = contacts.filter(c => c.status === 'Prospect').length;
+        const leads = contacts.filter(c => c.status === 'Lead' || !c.status).length;
+        return { total: contacts.length, totalValue, clienti, prospects, leads };
+    }, [contacts]);
+
     const statuses = ['Lead', 'Prospect', 'Cliente'];
+    const filters = [
+        { value: 'all', label: 'Tutti' },
+        ...statuses.map(s => ({ value: s, label: s }))
+    ];
 
     const getAvatarGradient = (name) => {
         const gradients = [
@@ -57,75 +71,63 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
         }
     };
 
+    const formatCurrency = (value) => {
+        if (value >= 1000) return `€${(value / 1000).toFixed(0)}K`;
+        return `€${value?.toLocaleString() || 0}`;
+    };
+
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            {/* Header Section */}
-            <div className="page-header">
-                <div>
-                    <h2 className="page-title">I tuoi Contatti</h2>
-                    <p className="page-subtitle">
-                        {filteredContacts.length} contatti • Valore totale: <strong>€{filteredContacts.reduce((sum, c) => sum + (parseFloat(c.value) || 0), 0).toLocaleString()}</strong>
-                    </p>
-                </div>
-            </div>
-            {/* Removed "Nuovo Contatto" button - using global Quick Add instead */}
+        <div className="page-container">
+            {/* Unified Header */}
+            <PageHeader
+                title="Contatti"
+                subtitle={`${stats.total} contatti • Valore totale: ${formatCurrency(stats.totalValue)}`}
+                icon={<Users size={24} />}
+            >
+                <button className="primary-btn" onClick={() => openAddModal('contact')}>
+                    <Plus size={18} />
+                    <span>Nuovo Contatto</span>
+                </button>
+            </PageHeader>
 
-            {/* Search & Filters */}
-            <div style={{
-                display: 'flex',
-                gap: '16px',
-                flexWrap: 'wrap',
-                alignItems: 'center'
-            }}>
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    background: 'white',
-                    padding: '12px 20px',
-                    borderRadius: '16px',
-                    border: '2px solid #e2e8f0',
-                    flex: '1',
-                    maxWidth: '400px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
-                }}>
-                    <Search size={20} color="#94a3b8" />
-                    <input
-                        type="text"
-                        placeholder="Cerca contatti..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{
-                            border: 'none',
-                            outline: 'none',
-                            flex: 1,
-                            fontSize: '15px',
-                            background: 'transparent'
-                        }}
-                    />
-                    {searchTerm && (
-                        <X size={18} style={{ cursor: 'pointer', color: '#94a3b8' }} onClick={() => setSearchTerm('')} />
-                    )}
-                </div>
+            {/* KPI Section */}
+            <KPISection>
+                <KPICard
+                    title="Totale"
+                    value={stats.total}
+                    subtitle="contatti"
+                    icon={<Users size={20} />}
+                    color="blue"
+                />
+                <KPICard
+                    title="Clienti"
+                    value={stats.clienti}
+                    icon={<Building2 size={20} />}
+                    color="green"
+                />
+                <KPICard
+                    title="Prospects"
+                    value={stats.prospects}
+                    icon={<Users size={20} />}
+                    color="orange"
+                />
+                <KPICard
+                    title="Valore Totale"
+                    value={formatCurrency(stats.totalValue)}
+                    icon={<Euro size={20} />}
+                    color="purple"
+                />
+            </KPISection>
 
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    <button
-                        onClick={() => setStatusFilter('all')}
-                        className={`filter-tag ${statusFilter === 'all' ? 'active' : ''}`}
-                    >
-                        Tutti
-                    </button>
-                    {statuses.map(status => (
-                        <button
-                            key={status}
-                            onClick={() => setStatusFilter(status)}
-                            className={`filter-tag ${statusFilter === status ? 'active' : ''}`}
-                        >
-                            {status}
-                        </button>
-                    ))}
-                </div>
-            </div>
+            {/* Unified Search & Filters */}
+            <SearchFilter
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                searchPlaceholder="Cerca contatti..."
+                filters={filters}
+                activeFilter={statusFilter}
+                onFilterChange={setStatusFilter}
+            />
 
             {/* Cards Grid */}
             {filteredContacts.length === 0 ? (

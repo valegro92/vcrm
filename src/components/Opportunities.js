@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { Filter, Plus, Building2, Edit2, Trash2, Search, Euro, TrendingUp, Target, X, Calendar } from 'lucide-react';
+import { Plus, Building2, Edit2, Trash2, Euro, TrendingUp, Target, X, Calendar, Search, Filter } from 'lucide-react';
 import pipelineStages from '../constants/pipelineStages';
+import { PageHeader, SearchFilter, KPICard, KPISection } from './ui';
 
 export default function Opportunities({ opportunities, openAddModal, handleDeleteOpportunity }) {
     const [searchTerm, setSearchTerm] = useState('');
@@ -129,74 +130,66 @@ export default function Opportunities({ opportunities, openAddModal, handleDelet
     };
 
     return (
-        <div className="opportunities-view">
-            {/* Header Section */}
-            <div className="page-header">
-                <div>
-                    <h2 className="page-title">Le tue Opportunità</h2>
-                    <p className="page-subtitle">
-                        {filteredOpportunities.length} opportunità • Valore: €{stats.totalValue.toLocaleString()}
-                    </p>
-                </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                    {/* Status Filter */}
-                    <select
-                        className="year-filter"
-                        value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value)}
-                        style={{ height: '44px', minWidth: '150px' }}
-                    >
-                        <option value="active">Attive</option>
-                        <option value="won">Chiuso Vinto</option>
-                        <option value="lost">Chiuso Perso</option>
-                        <option value="all">Tutte</option>
-                    </select>
-                    {/* Year Filter */}
-                    <select
-                        className="year-filter"
-                        value={selectedYear}
-                        onChange={(e) => setSelectedYear(e.target.value)}
-                        style={{ height: '44px' }}
-                    >
-                        <option value="all">Tutti gli anni</option>
-                        <option value="2024">2024</option>
-                        <option value="2025">2025</option>
-                        <option value="2026">2026</option>
-                    </select>
-                </div>
-            </div>
+        <div className="page-container">
+            {/* Unified Header */}
+            <PageHeader
+                title="Opportunità"
+                subtitle={`${filteredOpportunities.length} opportunità • Valore: ${formatCurrency(stats.totalValue)}`}
+                icon={<Target size={24} />}
+            >
+                <select
+                    className="year-selector"
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                >
+                    <option value="active">Attive</option>
+                    <option value="won">Chiuso Vinto</option>
+                    <option value="lost">Chiuso Perso</option>
+                    <option value="all">Tutte</option>
+                </select>
+                <select
+                    className="year-selector"
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(e.target.value)}
+                >
+                    <option value="all">Tutti gli anni</option>
+                    <option value="2024">2024</option>
+                    <option value="2025">2025</option>
+                    <option value="2026">2026</option>
+                </select>
+                <button className="primary-btn" onClick={() => openAddModal('opportunity')}>
+                    <Plus size={18} />
+                    <span>Nuova</span>
+                </button>
+            </PageHeader>
 
-            {/* Stats Cards */}
-            <div className="kpi-grid">
-                <div className="kpi-card">
-                    <div className="kpi-header">
-                        <span className="kpi-title">Opportunità Attive</span>
-                        <div className="kpi-icon blue"><Target size={20} /></div>
-                    </div>
-                    <div className="kpi-value">{stats.count}</div>
-                </div>
-                <div className="kpi-card">
-                    <div className="kpi-header">
-                        <span className="kpi-title">Valore Totale</span>
-                        <div className="kpi-icon green"><Euro size={20} /></div>
-                    </div>
-                    <div className="kpi-value">{formatCurrency(stats.totalValue)}</div>
-                </div>
-                <div className="kpi-card">
-                    <div className="kpi-header">
-                        <span className="kpi-title">Probabilità Media</span>
-                        <div className="kpi-icon purple"><TrendingUp size={20} /></div>
-                    </div>
-                    <div className="kpi-value">{stats.avgProbability}%</div>
-                </div>
-                <div className="kpi-card">
-                    <div className="kpi-header">
-                        <span className="kpi-title">Valore Ponderato</span>
-                        <div className="kpi-icon orange"><Euro size={20} /></div>
-                    </div>
-                    <div className="kpi-value">{formatCurrency(stats.weighted)}</div>
-                </div>
-            </div>
+            {/* KPI Section */}
+            <KPISection>
+                <KPICard
+                    title="Opportunità"
+                    value={stats.count}
+                    icon={<Target size={20} />}
+                    color="blue"
+                />
+                <KPICard
+                    title="Valore Totale"
+                    value={formatCurrency(stats.totalValue)}
+                    icon={<Euro size={20} />}
+                    color="green"
+                />
+                <KPICard
+                    title="Probabilità Media"
+                    value={`${stats.avgProbability}%`}
+                    icon={<TrendingUp size={20} />}
+                    color="purple"
+                />
+                <KPICard
+                    title="Valore Ponderato"
+                    value={formatCurrency(stats.weighted)}
+                    icon={<Euro size={20} />}
+                    color="orange"
+                />
+            </KPISection>
 
             {/* Toolbar */}
             <div className="view-toolbar">

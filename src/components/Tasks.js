@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Users, Calendar, Edit2, Trash2, Search, X, CheckCircle, Circle, Clock, AlertCircle, Flag, ListTodo } from 'lucide-react';
+import { Plus, Calendar, Edit2, Trash2, CheckCircle, Circle, Clock, AlertCircle, ListTodo, Flag, Users } from 'lucide-react';
+import { PageHeader, SearchFilter, KPICard, KPISection } from './ui';
 
 export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask, handleToggleTask }) {
     const [statusFilter, setStatusFilter] = useState('all');
@@ -84,115 +85,63 @@ export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask,
         const today = tasks.filter(t => isToday(t.dueDate) && t.status !== 'Completata').length;
         return { completed, pending, overdue, today };
     }, [tasks]);
+    const filters = [
+        { value: 'all', label: 'Tutte' },
+        { value: 'pending', label: 'Da fare' },
+        { value: 'completed', label: 'Completate' }
+    ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            {/* Header Section */}
-            <div className="page-header">
-                <div>
-                    <h2 className="page-title">
-                        Le tue Attività
-                    </h2>
-                    <p className="page-subtitle">
-                        {filteredTasks.length} attività • {stats.pending} da completare
-                    </p>
-                </div>
-            </div>
-            {/* Removed "Nuova Attività" button - using global Quick Add instead */}
+        <div className="page-container">
+            {/* Unified Header */}
+            <PageHeader
+                title="Attività"
+                subtitle={`${filteredTasks.length} attività • ${stats.pending} da completare`}
+                icon={<ListTodo size={24} />}
+            >
+                <button className="primary-btn" onClick={() => openAddModal('task')}>
+                    <Plus size={18} />
+                    <span>Nuova Attività</span>
+                </button>
+            </PageHeader>
 
-            {/* Stats Cards - Unified KPI Design */}
-            <div className="kpi-grid">
-                <div className="kpi-card">
-                    <div className="kpi-header">
-                        <span className="kpi-title">Totali</span>
-                        <div className="kpi-icon blue">
-                            <ListTodo size={20} />
-                        </div>
-                    </div>
-                    <div className="kpi-value">{tasks.length}</div>
-                </div>
+            {/* KPI Section */}
+            <KPISection>
+                <KPICard
+                    title="Totali"
+                    value={tasks.length}
+                    icon={<ListTodo size={20} />}
+                    color="blue"
+                />
+                <KPICard
+                    title="Completate"
+                    value={stats.completed}
+                    icon={<CheckCircle size={20} />}
+                    color="green"
+                />
+                <KPICard
+                    title="Oggi"
+                    value={stats.today}
+                    icon={<Clock size={20} />}
+                    color="orange"
+                />
+                <KPICard
+                    title="Scadute"
+                    value={stats.overdue}
+                    icon={<AlertCircle size={20} />}
+                    color="red"
+                />
+            </KPISection>
 
-                <div className="kpi-card">
-                    <div className="kpi-header">
-                        <span className="kpi-title">Completate</span>
-                        <div className="kpi-icon green">
-                            <CheckCircle size={20} />
-                        </div>
-                    </div>
-                    <div className="kpi-value" style={{ color: 'var(--green-600)' }}>{stats.completed}</div>
-                </div>
-
-                <div className="kpi-card">
-                    <div className="kpi-header">
-                        <span className="kpi-title">Oggi</span>
-                        <div className="kpi-icon orange">
-                            <Clock size={20} />
-                        </div>
-                    </div>
-                    <div className="kpi-value" style={{ color: 'var(--orange-600)' }}>{stats.today}</div>
-                </div>
-
-                <div className="kpi-card">
-                    <div className="kpi-header">
-                        <span className="kpi-title">Scadute</span>
-                        <div className="kpi-icon red">
-                            <AlertCircle size={20} />
-                        </div>
-                    </div>
-                    <div className="kpi-value" style={{ color: 'var(--red-600)' }}>{stats.overdue}</div>
-                </div>
-            </div>
-
-            {/* Search & Filters */}
-            <div style={{
-                display: 'flex',
-                gap: '16px',
-                flexWrap: 'wrap',
-                alignItems: 'center'
-            }}>
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    background: 'white',
-                    padding: '12px 20px',
-                    borderRadius: '16px',
-                    border: '2px solid #e2e8f0',
-                    flex: '1',
-                    maxWidth: '400px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
-                }}>
-                    <Search size={20} color="#94a3b8" />
-                    <input
-                        type="text"
-                        placeholder="Cerca attività..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{
-                            border: 'none',
-                            outline: 'none',
-                            flex: 1,
-                            fontSize: '15px',
-                            background: 'transparent'
-                        }}
-                    />
-                    {searchTerm && (
-                        <X size={18} style={{ cursor: 'pointer', color: '#94a3b8' }} onClick={() => setSearchTerm('')} />
-                    )}
-                </div>
-
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {['all', 'pending', 'completed'].map(status => (
-                        <button
-                            key={status}
-                            onClick={() => setStatusFilter(status)}
-                            className={`filter-tag ${statusFilter === status ? 'active' : ''}`}
-                        >
-                            {status === 'all' ? 'Tutte' : status === 'pending' ? 'Da fare' : 'Completate'}
-                        </button>
-                    ))}
-                </div>
-            </div>
+            {/* Unified Search & Filters */}
+            <SearchFilter
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                searchPlaceholder="Cerca attività..."
+                filters={filters}
+                activeFilter={statusFilter}
+                onFilterChange={setStatusFilter}
+            />
 
             {/* Tasks Grid */}
             {filteredTasks.length === 0 ? (
