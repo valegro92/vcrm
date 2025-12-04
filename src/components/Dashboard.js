@@ -33,31 +33,14 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
     const [timeRange, setTimeRange] = useState('year');
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-    // Calcoli KPI
+    // Calcoli KPI - Centro di Controllo
     const kpiData = useMemo(() => {
         const now = new Date();
         const currentMonth = now.getMonth();
-        const currentYear = selectedYear; // Use selected year instead of current year
+        const currentYear = selectedYear;
 
-        // Target Mese Corrente
-        const currentMonthTarget = MONTHLY_TARGETS[currentMonth]?.target || 0;
-
-        // Fatturato Mese Corrente (Opportunità Vinte)
-        const currentMonthRevenue = opportunities
-            .filter(o => {
-                if (!o.closeDate) return false;
-                const d = new Date(o.closeDate);
-                return d.getMonth() === currentMonth &&
-                    d.getFullYear() === currentYear &&
-                    (o.stage === 'Chiuso Vinto' || o.originalStage === 'Chiuso Vinto');
-            })
-            .reduce((sum, o) => sum + (parseFloat(o.value) || 0), 0);
-
-        // Distanza dal target
-        const targetGap = currentMonthTarget - currentMonthRevenue;
-        const targetProgress = currentMonthTarget > 0 ? (currentMonthRevenue / currentMonthTarget) * 100 : 0;
-
-        // Fatturato Annuale
+        // === ORDINATO (Venduto) ===
+        // Fatturato Annuale YTD (Opportunità Vinte)
         const annualRevenue = opportunities
             .filter(o => {
                 if (!o.closeDate) return false;
@@ -67,20 +50,16 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
             })
             .reduce((sum, o) => sum + (parseFloat(o.value) || 0), 0);
 
+        // Target YTD (somma dei target fino al mese corrente)
+        const targetYTD = MONTHLY_TARGETS
+            .filter(t => t.month <= currentMonth)
+            .reduce((sum, t) => sum + t.target, 0);
+
+        // Gap vs Target YTD
+        const targetYTDGap = annualRevenue - targetYTD;
         const annualProgress = (annualRevenue / ANNUAL_TARGET) * 100;
 
-        // Pipeline totale
-        const totalPipeline = opportunities.filter(o =>
-            !o.stage?.toLowerCase().includes('chiuso')
-        ).reduce((sum, o) => sum + (parseFloat(o.value) || 0), 0);
-
-        // Attività urgenti
-        const today = new Date().toISOString().split('T')[0];
-        const dueTodayCount = tasks.filter(t =>
-            t.dueDate === today && t.status !== 'Completata'
-        ).length;
-
-        // Fatturato Incassato/Emesso (Fatture)
+        // === FATTURATO (Reale) ===
         const invoicedRevenue = invoices
             .filter(i => {
                 const dateStr = i.issueDate || i.date;
@@ -90,19 +69,80 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
             })
             .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
 
+        // BACKLOG: Ordinato ma non ancora fatturato
+        const backlog = annualRevenue - invoicedRevenue;
+
+        // === OFFERTE FUORI (Pipeline Attiva) ===
+        // Solo stage 'attivi' (esclusi Chiuso Vinto/Perso)
+        const activeOffers = opportunities.filter(o =>
+            !o.stage?.toLowerCase().includes('chiuso')
+        );
+
+        const totalPipeline = activeOffers.reduce((sum, o) => sum + (parseFloat(o.value) || 0), 0);
+
+        // Pipeline Ponderata (stima probabilità per stage)
+        const stageProbability = {
+            'Lead': 0.1,
+            'In contatto': 0.2,
+            'Follow Up da fare': 0.4,
+            'Revisionare offerta': 0.6
+        };
+
+        const weightedPipeline = activeOffers.reduce((sum, o) => {
+            const prob = stageProbability[o.stage] || 0.3;
+            return sum + ((parseFloat(o.value) || 0) * prob);
+        }, 0);
+
+        // Offerte Stale (create più di 60 giorni fa e ancora aperte)
+        const staleOffers = activeOffers.filter(o => {
+            if (!o.createdAt) return false;
+            const created = new Date(o.createdAt);
+            const daysSinceCreation = (now - created) / (1000 * 60 * 60 * 24);
+            return daysSinceCreation > 60;
+        });
+
+        // Attività urgenti
+        const today = now.toISOString().split('T')[0];
+        const dueTodayCount = tasks.filter(t =>
+            t.dueDate === today && t.status !== 'Completata'
+        ).length;
+
+        // Target Mese Corrente (per AI message)
+        const currentMonthTarget = MONTHLY_TARGETS[currentMonth]?.target || 0;
+        const currentMonthRevenue = opportunities
+            .filter(o => {
+                if (!o.closeDate) return false;
+                const d = new Date(o.closeDate);
+                return d.getMonth() === currentMonth &&
+                    d.getFullYear() === currentYear &&
+                    (o.stage === 'Chiuso Vinto' || o.originalStage === 'Chiuso Vinto');
+            })
+            .reduce((sum, o) => sum + (parseFloat(o.value) || 0), 0);
+        const targetGap = currentMonthTarget - currentMonthRevenue;
+        const targetProgress = currentMonthTarget > 0 ? (currentMonthRevenue / currentMonthTarget) * 100 : 0;
+
         return {
+            // Ordinato
+            annualRevenue,
+            targetYTD,
+            targetYTDGap,
+            annualProgress,
+            // Fatturato
+            invoicedRevenue,
+            backlog,
+            // Pipeline
+            totalPipeline,
+            weightedPipeline,
+            staleOffersCount: staleOffers.length,
+            // UI
             currentMonthRevenue,
             currentMonthTarget,
             targetGap,
             targetProgress,
-            annualRevenue, // This is "Venduto" (Closed Won Opps)
-            invoicedRevenue, // This is "Fatturato" (Invoices)
-            annualProgress,
-            totalPipeline,
             dueTodayCount,
             openTasks: tasks.filter(t => t.status !== 'Completata').length
         };
-    }, [opportunities, tasks, invoices, selectedYear]); // Add invoices and selectedYear to dependencies
+    }, [opportunities, tasks, invoices, selectedYear]);
 
     // Dati Grafico Target vs Actual
     const chartData = useMemo(() => {
@@ -369,31 +409,46 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                         <QuickAction icon={<Users size={18} />} label="Contatto" color="purple" onClick={() => setActiveView('contacts')} />
                     </div>
 
-                    {/* KPI Cards Stacked */}
+                    {/* KPI Cards - CENTRO DI CONTROLLO */}
+                    {/* 1. ORDINATO vs Target YTD */}
                     <div className="stat-box">
-                        <div className="stat-icon-bg blue"><Euro size={20} /></div>
+                        <div className={`stat-icon-bg ${kpiData.targetYTDGap >= 0 ? 'green' : 'orange'}`}>
+                            <Target size={20} />
+                        </div>
                         <div className="stat-info">
-                            <span className="stat-label">Venduto (Ordini)</span>
+                            <span className="stat-label">Ordinato YTD</span>
                             <span className="stat-value">{formatCurrency(kpiData.annualRevenue)}</span>
-                            <span className="stat-sub">su {formatCurrency(ANNUAL_TARGET)}</span>
+                            <span className={`stat-sub ${kpiData.targetYTDGap >= 0 ? 'positive' : 'negative'}`}>
+                                {kpiData.targetYTDGap >= 0 ? '+' : ''}{formatCurrency(kpiData.targetYTDGap)} vs target
+                            </span>
                         </div>
                     </div>
+
+                    {/* 2. FATTURATO + Backlog */}
                     <div className="stat-box">
-                        <div className="stat-icon-bg green"><CheckSquare size={20} /></div>
+                        <div className="stat-icon-bg green"><Euro size={20} /></div>
                         <div className="stat-info">
-                            <span className="stat-label">Fatturato (Reale)</span>
+                            <span className="stat-label">Fatturato YTD</span>
                             <span className="stat-value">{formatCurrency(kpiData.invoicedRevenue)}</span>
-                            <span className="stat-sub">Totale fatture emesse</span>
+                            <span className="stat-sub">
+                                {kpiData.backlog > 0 ? `${formatCurrency(kpiData.backlog)} da fatturare` : 'Tutto incassato! 🎉'}
+                            </span>
                         </div>
                     </div>
+
+                    {/* 3. PIPELINE PONDERATA */}
                     <div className="stat-box">
-                        <div className="stat-icon-bg green"><TrendingUp size={20} /></div>
+                        <div className="stat-icon-bg purple"><TrendingUp size={20} /></div>
                         <div className="stat-info">
-                            <span className="stat-label">Pipeline Attiva</span>
-                            <span className="stat-value">{formatCurrency(kpiData.totalPipeline)}</span>
-                            <span className="stat-sub">Valore potenziale</span>
+                            <span className="stat-label">Pipeline Ponderata</span>
+                            <span className="stat-value">{formatCurrency(kpiData.weightedPipeline)}</span>
+                            <span className="stat-sub">
+                                {formatCurrency(kpiData.totalPipeline)} totale ({kpiData.staleOffersCount > 0 ? `${kpiData.staleOffersCount} stale` : 'tutte attive'})
+                            </span>
                         </div>
                     </div>
+
+                    {/* 4. ATTIVITÀ */}
                     <div className="stat-box">
                         <div className="stat-icon-bg orange"><CheckSquare size={20} /></div>
                         <div className="stat-info">
