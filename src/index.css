@@ -2000,195 +2000,128 @@ body {
   /* Add padding since parent might not have it */
 }
 
-/* Kanban Board - Fixed Height with Internal Scroll */
+/* Kanban Board - Compact Fixed Layout */
 .kanban-wrapper {
-  margin-top: var(--space-1);
+  margin-top: var(--space-2);
+  overflow: hidden;
 }
 
 .kanban-board {
   display: flex;
-  gap: var(--space-4);
+  gap: 12px;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: var(--space-2) var(--space-4) var(--space-4);
+  padding: 8px 16px 16px;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  scroll-snap-type: none;
-  height: 65vh;
-  min-height: 500px;
-  flex-shrink: 0;
-}
-
-/* Mobile: Stack columns vertically as accordion */
-@media (max-width: 768px) {
-  .kanban-board {
-    flex-direction: column;
-    height: auto;
-    min-height: auto;
-    overflow-x: hidden;
-    overflow-y: visible;
-    padding: var(--space-3);
-    gap: var(--space-3);
-  }
-
-  .kanban-column {
-    min-width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-  }
-
-  .column-header {
-    cursor: pointer;
-  }
-
-  .column-header-right {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-  }
-
-  .mobile-toggle {
-    font-size: 10px;
-    opacity: 0.8;
-  }
-
-  .column-content {
-    display: none;
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-  }
-
-  .column-content.show {
-    display: flex;
-    max-height: 2000px;
-  }
-
-  .kanban-column.expanded {
-    border: 2px solid var(--primary-300);
-  }
-}
-
-/* Hide mobile toggle on desktop */
-@media (min-width: 769px) {
-  .mobile-toggle {
-    display: none;
-  }
-
-  .column-header-right {
-    display: flex;
-    align-items: center;
-  }
+  height: calc(100vh - 380px);
+  /* Fixed height based on viewport minus header/KPIs */
+  min-height: 400px;
+  max-height: 500px;
 }
 
 .kanban-board::-webkit-scrollbar {
-  height: 12px;
+  height: 8px;
 }
 
 .kanban-board::-webkit-scrollbar-track {
   background: var(--slate-100);
-  border-radius: var(--radius-full);
-  margin: 0 var(--space-2);
+  border-radius: 4px;
 }
 
 .kanban-board::-webkit-scrollbar-thumb {
-  background: linear-gradient(90deg, var(--primary-400), var(--violet-500));
-  border-radius: var(--radius-full);
-  border: 2px solid var(--slate-100);
+  background: var(--primary-400);
+  border-radius: 4px;
 }
 
-/* Kanban Column - Premium Design */
+/* Kanban Column - FIXED COMPACT WIDTH */
 .kanban-column {
   background: var(--bg-card);
-  /* Semantic variable for Dark Mode */
-  border-radius: var(--radius-2xl);
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
-  min-width: 300px;
-  max-width: 400px;
+  width: 200px;
+  /* FIXED width - fits 6 cols on 1400px screen */
+  min-width: 200px;
+  max-width: 200px;
   height: 100%;
-  /* Fill the board height */
-  box-shadow: var(--shadow-card);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   border: 1px solid var(--border-color-soft);
   flex-shrink: 0;
-  scroll-snap-align: start;
-  transition: all var(--transition-base);
 }
 
 .kanban-column:hover {
-  box-shadow: var(--shadow-lg);
-  border-color: var(--primary-200);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Larger screens */
-@media (min-width: 1400px) {
+/* Larger screens - slightly wider columns */
+@media (min-width: 1600px) {
   .kanban-column {
-    min-width: 340px;
-    max-width: 450px;
+    width: 220px;
+    min-width: 220px;
+    max-width: 220px;
   }
 }
 
-/* Column Header */
+/* Mobile: Horizontal scroll, keep columns compact */
+@media (max-width: 768px) {
+  .kanban-board {
+    height: auto;
+    min-height: 300px;
+    max-height: none;
+    padding: 8px;
+    gap: 10px;
+  }
+
+  .kanban-column {
+    width: 160px;
+    min-width: 160px;
+    max-width: 160px;
+    height: 350px;
+  }
+}
+
+/* Column Header - Compact */
 .column-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  /* Reduced padding for sleeker look */
-  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  padding: 8px 10px;
+  border-radius: 12px 12px 0 0;
   color: white;
-  /* Text color will be white */
-  position: relative;
-  overflow: hidden;
   flex-shrink: 0;
 }
 
-.column-header::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: inherit;
-  filter: brightness(0.95);
-  /* Slight gradient effect */
-  z-index: -1;
-}
-
 .column-header h3 {
-  font-size: 14px;
-  /* Slightly smaller for elegance */
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.3px;
   margin: 0;
   text-transform: uppercase;
-  /* Uppercase for professional look */
   opacity: 0.95;
 }
 
 .column-count {
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(4px);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
   color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Column Value - Total Amount */
+/* Column Value - Compact */
 .column-value {
-  padding: var(--space-3) var(--space-5);
+  padding: 6px 10px;
   background: var(--bg-subtle);
-  /* Semantic variable */
   border-bottom: 1px solid var(--border-color);
-  font-size: 22px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: -0.5px;
   flex-shrink: 0;
 }
 
@@ -2223,30 +2156,80 @@ body {
   background: rgba(148, 163, 184, 0.5);
 }
 
-/* Opportunity Card - Premium Design */
+/* Opportunity Card - Compact Fixed Height */
 .opp-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 16px;
+  padding: 10px;
   cursor: grab;
-  transition: all var(--transition-base);
+  transition: all 0.15s ease;
   position: relative;
-  /* Uniform height - Fixed */
-  height: 220px;
-  min-height: 220px;
+  height: 110px;
+  /* COMPACT fixed height */
+  min-height: 110px;
+  max-height: 110px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  gap: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   overflow: hidden;
 }
 
 .opp-card:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-color: var(--primary-300);
-  transform: translateY(-2px);
+}
+
+.opp-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.opp-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  flex: 1;
+}
+
+.opp-card-value {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary-600);
+  white-space: nowrap;
+}
+
+.opp-card-body {
+  font-size: 10px;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.opp-card-company {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opp-card-date {
+  font-size: 9px;
+  color: var(--slate-400);
+  margin-top: 2px;
+}
+
+.opp-card-owner {
+  display: none;
+  /* Hide on compact view */
 }
 
 /* Opportunity Card Actions */
