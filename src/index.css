@@ -921,183 +921,33 @@ body {
   color: var(--slate-500);
 }
 
-/* Responsive - Mobile First */
+/* Responsive */
 @media (max-width: 768px) {
-
-  /* Page Container */
-  .page-container {
-    padding: var(--space-3);
-    gap: var(--space-4);
-  }
-
-  /* Unified Page Header - Stack vertically */
   .unified-page-header {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
     padding: var(--space-4);
-    gap: var(--space-3);
-    border-radius: var(--radius-xl);
-  }
-
-  .page-header-content {
-    flex-direction: column;
-    gap: var(--space-2);
-  }
-
-  .page-header-icon {
-    width: 40px;
-    height: 40px;
   }
 
   .page-header-title {
-    font-size: 18px;
+    font-size: 20px;
   }
 
-  .page-header-subtitle {
-    font-size: 13px;
-  }
-
-  .page-header-actions {
-    width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-  }
-
-  .page-header-actions .primary-btn {
-    flex: 1;
-    justify-content: center;
-    min-width: 120px;
-  }
-
-  .page-header-actions .year-selector {
-    flex: 1;
-    min-width: 100px;
-  }
-
-  /* Search & Filter - Full width on mobile */
   .unified-search-filter {
     flex-direction: column;
     align-items: stretch;
-    gap: var(--space-3);
   }
 
   .search-input-wrapper {
     max-width: none;
-    width: 100%;
   }
 
-  .filter-tags {
-    justify-content: flex-start;
-    overflow-x: auto;
-    padding-bottom: var(--space-2);
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .filter-tag {
-    flex-shrink: 0;
-    font-size: 12px;
-    padding: 6px 12px;
-  }
-
-  /* KPI Section - 2 columns on mobile */
   .unified-kpi-section {
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-3);
-  }
-
-  .unified-kpi-card {
-    padding: var(--space-4);
-  }
-
-  .kpi-card-icon {
-    width: 36px;
-    height: 36px;
   }
 
   .kpi-card-value {
-    font-size: 20px;
-  }
-
-  .kpi-card-title {
-    font-size: 11px;
-  }
-
-  .kpi-card-subtitle {
-    font-size: 11px;
-  }
-
-  /* Primary Button - Smaller on mobile */
-  .primary-btn {
-    padding: 10px 16px;
-    font-size: 13px;
-  }
-
-  .primary-btn span {
-    display: none;
-  }
-
-  /* Cards and Lists */
-  .contact-card,
-  .opportunity-card-row,
-  .task-card-row {
-    padding: var(--space-4);
-    border-radius: var(--radius-xl);
-  }
-
-  /* Empty State */
-  .empty-state {
-    padding: var(--space-8) var(--space-4);
-  }
-
-  .empty-state svg {
-    width: 48px;
-    height: 48px;
-  }
-
-  .empty-state p {
-    font-size: 14px;
-  }
-}
-
-/* Extra small screens (phones) */
-@media (max-width: 480px) {
-  .page-container {
-    padding: var(--space-2);
-  }
-
-  .unified-page-header {
-    padding: var(--space-3);
-  }
-
-  .page-header-title {
-    font-size: 16px;
-  }
-
-  .unified-kpi-section {
-    grid-template-columns: 1fr;
-  }
-
-  .unified-kpi-card {
-    padding: var(--space-3);
-  }
-
-  .kpi-card-value {
-    font-size: 18px;
-  }
-
-  .filter-tags {
-    flex-wrap: nowrap;
-    justify-content: flex-start;
-  }
-
-  /* Hide text on very small screens, show only icon */
-  .primary-btn span {
-    display: none;
-  }
-
-  .primary-btn svg {
-    margin: 0;
+    font-size: 22px;
   }
 }
 
@@ -1971,179 +1821,160 @@ body {
 }
 
 /* =========================================
-   PIPELINE - MODERN KANBAN BOARD
+   PIPELINE - KANBAN BOARD PREMIUM
+   Horizontal Scrolling World Class
    ========================================= */
-
-.pipeline-page {
+/* =========================================
+   PIPELINE - KANBAN BOARD PREMIUM
+   Horizontal Scrolling World Class
+   ========================================= */
+.pipeline-view {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  height: 100vh;
+  /* Full viewport height */
+  overflow-y: auto;
+  /* Allow page scroll to see BI section */
+  background: var(--bg-main);
 }
 
+.view-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  padding: 0 var(--space-4);
+  /* Add padding since parent might not have it */
+}
+
+/* Kanban Board - Fixed Height with Internal Scroll */
 .kanban-wrapper {
-  flex: 1;
-  min-height: 0;
+  margin-top: var(--space-1);
 }
 
 .kanban-board {
   display: flex;
-  gap: 16px;
-  height: calc(100vh - 340px);
-  min-height: 450px;
+  gap: var(--space-4);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: var(--space-2) var(--space-4) var(--space-4);
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: none;
+  height: 65vh;
+  min-height: 500px;
+  flex-shrink: 0;
 }
 
-/* Kanban Column - FLEX PROPORTIONAL */
-.kanban-column {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--slate-200);
-  overflow: hidden;
-}
-
-.kanban-column:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-/* ===========================================
-   MOBILE PIPELINE - Full Width Accordion
-   =========================================== */
+/* Mobile: Stack columns vertically as accordion */
 @media (max-width: 768px) {
-  .pipeline-page {
-    padding: 12px;
-    gap: 12px;
-  }
-
-  /* Hide KPI section on mobile - too much space */
-  .pipeline-page .unified-kpi-section {
-    display: none;
-  }
-
-  .kanban-wrapper {
-    margin: 0 -12px;
-    padding: 0 12px;
-  }
-
   .kanban-board {
     flex-direction: column;
     height: auto;
     min-height: auto;
-    gap: 8px;
-    padding: 0;
+    overflow-x: hidden;
+    overflow-y: visible;
+    padding: var(--space-3);
+    gap: var(--space-3);
   }
 
-  /* Full width columns */
   .kanban-column {
-    flex: none;
-    width: 100%;
-    border-radius: 12px;
-    overflow: hidden;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
   }
 
-  .kanban-column.expanded {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  }
-
-  /* Clickable header */
   .column-header {
-    padding: 12px 16px;
     cursor: pointer;
-    border-radius: 12px 12px 0 0;
-  }
-
-  .column-header h3 {
-    font-size: 13px;
   }
 
   .column-header-right {
     display: flex;
     align-items: center;
-    gap: 10px;
-  }
-
-  .column-count {
-    width: 26px;
-    height: 26px;
-    font-size: 13px;
+    gap: var(--space-2);
   }
 
   .mobile-toggle {
-    display: block;
-    font-size: 14px;
-    opacity: 0.9;
+    font-size: 10px;
+    opacity: 0.8;
   }
 
-  /* Column value - always visible */
-  .column-value {
-    padding: 10px 16px;
-    font-size: 18px;
-    border-radius: 0;
-  }
-
-  /* Cards container - hidden by default, show on expand */
   .column-content {
     display: none;
-    padding: 12px;
-    gap: 10px;
-    background: var(--slate-50);
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
   }
 
   .column-content.show {
     display: flex;
+    max-height: 2000px;
   }
 
-  /* Full width cards */
-  .opp-card {
-    height: auto;
-    min-height: 120px;
-    max-height: none;
-    padding: 16px;
-    border-radius: 12px;
-    background: white;
+  .kanban-column.expanded {
+    border: 2px solid var(--primary-300);
+  }
+}
+
+/* Hide mobile toggle on desktop */
+@media (min-width: 769px) {
+  .mobile-toggle {
+    display: none;
   }
 
-  .opp-card-header {
-    margin-bottom: 10px;
+  .column-header-right {
+    display: flex;
+    align-items: center;
   }
+}
 
-  .opp-card-title {
-    font-size: 15px;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-  }
+.kanban-board::-webkit-scrollbar {
+  height: 12px;
+}
 
-  .opp-card-value {
-    font-size: 15px;
-    padding: 4px 10px;
-  }
+.kanban-board::-webkit-scrollbar-track {
+  background: var(--slate-100);
+  border-radius: var(--radius-full);
+  margin: 0 var(--space-2);
+}
 
-  .opp-card-company {
-    font-size: 14px;
-  }
+.kanban-board::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, var(--primary-400), var(--violet-500));
+  border-radius: var(--radius-full);
+  border: 2px solid var(--slate-100);
+}
 
-  .opp-card-date {
-    font-size: 13px;
-    margin-top: 4px;
-  }
+/* Kanban Column - Premium Design */
+.kanban-column {
+  background: var(--bg-card);
+  /* Semantic variable for Dark Mode */
+  border-radius: var(--radius-2xl);
+  display: flex;
+  flex-direction: column;
+  min-width: 300px;
+  max-width: 400px;
+  height: 100%;
+  /* Fill the board height */
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-color-soft);
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  transition: all var(--transition-base);
+}
 
-  .opp-card-actions {
-    padding-top: 12px;
-    margin-top: 10px;
-  }
+.kanban-column:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-200);
+}
 
-  .opp-action-btn {
-    width: 36px;
-    height: 36px;
-  }
-
-  .empty-column {
-    padding: 24px;
-    font-size: 14px;
-    color: var(--slate-500);
+/* Larger screens */
+@media (min-width: 1400px) {
+  .kanban-column {
+    min-width: 340px;
+    max-width: 450px;
   }
 }
 
@@ -2152,51 +1983,62 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 16px;
-  border-radius: 16px 16px 0 0;
+  padding: 12px 16px;
+  /* Reduced padding for sleeker look */
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
   color: white;
+  /* Text color will be white */
+  position: relative;
+  overflow: hidden;
   flex-shrink: 0;
 }
 
-.column-header h3 {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  margin: 0;
-  text-transform: uppercase;
+.column-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  filter: brightness(0.95);
+  /* Slight gradient effect */
+  z-index: -1;
 }
 
-.column-header-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.column-header h3 {
+  font-size: 14px;
+  /* Slightly smaller for elegance */
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  margin: 0;
+  text-transform: uppercase;
+  /* Uppercase for professional look */
+  opacity: 0.95;
 }
 
 .column-count {
   width: 24px;
   height: 24px;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(4px);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
   font-weight: 700;
   color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.mobile-toggle {
-  display: none;
-}
-
-/* Column Value */
+/* Column Value - Total Amount */
 .column-value {
-  padding: 12px 16px;
-  background: var(--slate-50);
-  border-bottom: 1px solid var(--slate-100);
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--slate-800);
+  padding: var(--space-3) var(--space-5);
+  background: var(--bg-subtle);
+  /* Semantic variable */
+  border-bottom: 1px solid var(--border-color);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
   flex-shrink: 0;
 }
 
@@ -2231,88 +2073,30 @@ body {
   background: rgba(148, 163, 184, 0.5);
 }
 
-/* Opportunity Card - 140px Fixed Height */
+/* Opportunity Card - Premium Design */
 .opp-card {
-  background: white;
-  border: 1px solid var(--slate-200);
-  border-radius: 12px;
-  padding: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
   cursor: grab;
-  transition: all 0.15s ease;
-  height: 140px;
-  min-height: 140px;
-  max-height: 140px;
+  transition: all var(--transition-base);
+  position: relative;
+  /* Uniform height - Fixed */
+  height: 220px;
+  min-height: 220px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
 
 .opp-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   border-color: var(--primary-300);
-  transform: translateY(-1px);
-}
-
-.opp-card:active {
-  cursor: grabbing;
-}
-
-.opp-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.opp-card-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--slate-800);
-  line-height: 1.3;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  flex: 1;
-}
-
-.opp-card-value {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--primary-600);
-  white-space: nowrap;
-  background: var(--primary-50);
-  padding: 3px 8px;
-  border-radius: 6px;
-}
-
-.opp-card-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.opp-card-company {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--slate-600);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.opp-card-date {
-  font-size: 11px;
-  color: var(--slate-400);
-}
-
-.opp-card-owner {
-  display: none;
+  transform: translateY(-2px);
 }
 
 /* Opportunity Card Actions */
