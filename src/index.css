@@ -2009,40 +2009,141 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Mobile: Vertical accordion */
+/* ===========================================
+   MOBILE PIPELINE - Full Width Accordion
+   =========================================== */
 @media (max-width: 768px) {
+  .pipeline-page {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  /* Hide KPI section on mobile - too much space */
+  .pipeline-page .unified-kpi-section {
+    display: none;
+  }
+
+  .kanban-wrapper {
+    margin: 0 -12px;
+    padding: 0 12px;
+  }
+
   .kanban-board {
     flex-direction: column;
     height: auto;
     min-height: auto;
-    gap: 12px;
+    gap: 8px;
+    padding: 0;
   }
 
+  /* Full width columns */
   .kanban-column {
     flex: none;
     width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
   }
 
+  .kanban-column.expanded {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Clickable header */
   .column-header {
+    padding: 12px 16px;
     cursor: pointer;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .column-header h3 {
+    font-size: 13px;
+  }
+
+  .column-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .column-count {
+    width: 26px;
+    height: 26px;
+    font-size: 13px;
   }
 
   .mobile-toggle {
     display: block;
-    font-size: 10px;
-    opacity: 0.8;
+    font-size: 14px;
+    opacity: 0.9;
   }
 
+  /* Column value - always visible */
+  .column-value {
+    padding: 10px 16px;
+    font-size: 18px;
+    border-radius: 0;
+  }
+
+  /* Cards container - hidden by default, show on expand */
   .column-content {
     display: none;
+    padding: 12px;
+    gap: 10px;
+    background: var(--slate-50);
   }
 
   .column-content.show {
     display: flex;
   }
 
-  .kanban-column.expanded {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  /* Full width cards */
+  .opp-card {
+    height: auto;
+    min-height: 120px;
+    max-height: none;
+    padding: 16px;
+    border-radius: 12px;
+    background: white;
+  }
+
+  .opp-card-header {
+    margin-bottom: 10px;
+  }
+
+  .opp-card-title {
+    font-size: 15px;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .opp-card-value {
+    font-size: 15px;
+    padding: 4px 10px;
+  }
+
+  .opp-card-company {
+    font-size: 14px;
+  }
+
+  .opp-card-date {
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  .opp-card-actions {
+    padding-top: 12px;
+    margin-top: 10px;
+  }
+
+  .opp-action-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  .empty-column {
+    padding: 24px;
+    font-size: 14px;
+    color: var(--slate-500);
   }
 }
 
