@@ -16,7 +16,7 @@ const STAGE_COLORS = {
 };
 
 export default function Pipeline({ opportunities, tasks, setOpportunities, openAddModal, setNewItem }) {
-    const [selectedYear, setSelectedYear] = useState('all');
+    const [selectedYear, setSelectedYear] = useState('2026');
     const [draggedItem, setDraggedItem] = useState(null);
     const [mobileViewStage, setMobileViewStage] = useState(null); // For mobile accordion
     const [showWonModal, setShowWonModal] = useState(false);

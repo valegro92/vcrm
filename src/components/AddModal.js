@@ -226,8 +226,8 @@ export default function AddModal({
                                     />
                                 </div>
                             </div>
-                            {/* Date previste fatturazione/incasso per opportunità vinte */}
-                            {(newItem.stage === 'Chiuso Vinto' || isEditing) && (
+                            {/* Date previste fatturazione/incasso solo per opportunità vinte */}
+                            {newItem.stage === 'Chiuso Vinto' && (
                                 <div className="form-row">
                                     <div className="form-group">
                                         <label>Data Prevista Fatturazione</label>
