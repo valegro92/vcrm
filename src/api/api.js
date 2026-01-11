@@ -147,14 +147,18 @@ const api = {
     return handleResponse(response);
   },
 
-  updateOpportunityStage: async (id, stage, probability) => {
+  updateOpportunityStage: async (id, stage, probability, expectedInvoiceDate, expectedPaymentDate) => {
+    const body = { stage, probability };
+    if (expectedInvoiceDate) body.expectedInvoiceDate = expectedInvoiceDate;
+    if (expectedPaymentDate) body.expectedPaymentDate = expectedPaymentDate;
+
     const response = await fetch(`${API_URL}/opportunities/${id}/stage`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${getAuthToken()}`
       },
-      body: JSON.stringify({ stage, probability })
+      body: JSON.stringify(body)
     });
     return handleResponse(response);
   },

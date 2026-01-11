@@ -3,6 +3,7 @@ import { Plus, Eye, CheckSquare, Target, Euro, TrendingUp, Layers } from 'lucide
 import pipelineStages from '../constants/pipelineStages';
 import api from '../api/api';
 import { PageHeader, KPICard, KPISection } from './ui';
+import WonModal from './WonModal';
 
 // Colori per gli header delle colonne stile Ydea
 const STAGE_COLORS = {
@@ -18,6 +19,8 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
     const [selectedYear, setSelectedYear] = useState('all');
     const [draggedItem, setDraggedItem] = useState(null);
     const [mobileViewStage, setMobileViewStage] = useState(null); // For mobile accordion
+    const [showWonModal, setShowWonModal] = useState(false);
+    const [pendingWonOpportunity, setPendingWonOpportunity] = useState(null);
 
     const handleDragStart = (e, opportunity) => {
         setDraggedItem(opportunity);
@@ -29,18 +32,27 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
         e.dataTransfer.dropEffect = 'move';
     };
 
+    const newProbabilities = {
+        'Lead': 10,
+        'In contatto': 30,
+        'Follow Up da fare': 50,
+        'Revisionare offerta': 75,
+        'Chiuso Vinto': 100,
+        'Chiuso Perso': 0
+    };
+
     const handleDrop = async (e, newStage) => {
         e.preventDefault();
         if (draggedItem && draggedItem.stage !== newStage) {
+            // Se è Chiuso Vinto, mostra il modal per le date
+            if (newStage === 'Chiuso Vinto') {
+                setPendingWonOpportunity(draggedItem);
+                setShowWonModal(true);
+                setDraggedItem(null);
+                return;
+            }
+
             try {
-                const newProbabilities = {
-                    'Lead': 10,
-                    'In contatto': 30,
-                    'Follow Up da fare': 50,
-                    'Revisionare offerta': 75,
-                    'Chiuso Vinto': 100,
-                    'Chiuso Perso': 0
-                };
                 const updated = await api.updateOpportunityStage(
                     draggedItem.id,
                     newStage,
@@ -54,6 +66,32 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
             }
         }
         setDraggedItem(null);
+    };
+
+    const handleWonConfirm = async (expectedInvoiceDate, expectedPaymentDate) => {
+        if (!pendingWonOpportunity) return;
+
+        try {
+            const updated = await api.updateOpportunityStage(
+                pendingWonOpportunity.id,
+                'Chiuso Vinto',
+                100,
+                expectedInvoiceDate,
+                expectedPaymentDate
+            );
+            setOpportunities(opportunities.map(opp =>
+                opp.id === updated.id ? updated : opp
+            ));
+            setShowWonModal(false);
+            setPendingWonOpportunity(null);
+        } catch (error) {
+            alert('Errore: ' + error.message);
+        }
+    };
+
+    const handleWonCancel = () => {
+        setShowWonModal(false);
+        setPendingWonOpportunity(null);
     };
 
     const filteredOpportunities = useMemo(() => {
@@ -222,6 +260,24 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
                                                 </div>
                                             </div>
 
+                                            {/* Date previste per opportunità vinte */}
+                                            {opp.stage === 'Chiuso Vinto' && (opp.expectedInvoiceDate || opp.expectedPaymentDate) && (
+                                                <div className="opp-card-forecast">
+                                                    {opp.expectedInvoiceDate && (
+                                                        <div className="forecast-item">
+                                                            <span className="forecast-label">Fatt:</span>
+                                                            <span className="forecast-date">{formatDate(opp.expectedInvoiceDate)}</span>
+                                                        </div>
+                                                    )}
+                                                    {opp.expectedPaymentDate && (
+                                                        <div className="forecast-item">
+                                                            <span className="forecast-label">Inc:</span>
+                                                            <span className="forecast-date">{formatDate(opp.expectedPaymentDate)}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
                                             <div className="opp-card-actions">
                                                 <button
                                                     className="opp-action-btn"
@@ -334,6 +390,15 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
                     </div>
                 </div>
             </div>
+
+            {/* Won Modal */}
+            {showWonModal && (
+                <WonModal
+                    opportunity={pendingWonOpportunity}
+                    onConfirm={handleWonConfirm}
+                    onCancel={handleWonCancel}
+                />
+            )}
         </div>
     );
 }
