@@ -46,19 +46,19 @@ router.get('/:id', authMiddleware, async (req, res) => {
 
 // Create opportunity
 router.post('/', authMiddleware, async (req, res) => {
-  const { title, company, value, stage, probability, openDate, closeDate, owner, contactId, originalStage, notes } = req.body;
+  const { title, company, value, stage, probability, openDate, closeDate, expectedInvoiceDate, expectedPaymentDate, owner, contactId, originalStage, notes } = req.body;
 
   if (!title) {
     return res.status(400).json({ error: 'Title is required' });
   }
 
   const query = `
-    INSERT INTO opportunities (title, company, value, stage, probability, "openDate", "closeDate", owner, "contactId", "userId", "originalStage", notes)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ${getReturningClause()}
+    INSERT INTO opportunities (title, company, value, stage, probability, "openDate", "closeDate", "expectedInvoiceDate", "expectedPaymentDate", owner, "contactId", "userId", "originalStage", notes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ${getReturningClause()}
   `;
 
   try {
-    const result = await runQuery(query, [title, company, value || 0, stage || 'Lead', probability || 0, openDate, closeDate, owner, contactId, req.userId, originalStage, notes]);
+    const result = await runQuery(query, [title, company, value || 0, stage || 'Lead', probability || 0, openDate, closeDate, expectedInvoiceDate, expectedPaymentDate, owner, contactId, req.userId, originalStage, notes]);
 
     const opportunityId = result.lastID || (result.rows && result.rows[0]?.id);
     const opportunity = await getOne('SELECT * FROM opportunities WHERE id = ?', [opportunityId]);
@@ -72,16 +72,16 @@ router.post('/', authMiddleware, async (req, res) => {
 
 // Update opportunity
 router.put('/:id', authMiddleware, async (req, res) => {
-  const { title, company, value, stage, probability, openDate, closeDate, owner, contactId, originalStage, notes } = req.body;
+  const { title, company, value, stage, probability, openDate, closeDate, expectedInvoiceDate, expectedPaymentDate, owner, contactId, originalStage, notes } = req.body;
 
   const query = `
     UPDATE opportunities
-    SET title = ?, company = ?, value = ?, stage = ?, probability = ?, "openDate" = ?, "closeDate" = ?, owner = ?, "contactId" = ?, "originalStage" = ?, notes = ?, "updatedAt" = CURRENT_TIMESTAMP
+    SET title = ?, company = ?, value = ?, stage = ?, probability = ?, "openDate" = ?, "closeDate" = ?, "expectedInvoiceDate" = ?, "expectedPaymentDate" = ?, owner = ?, "contactId" = ?, "originalStage" = ?, notes = ?, "updatedAt" = CURRENT_TIMESTAMP
     WHERE id = ? AND ("userId" = ? OR "userId" IS NULL)
   `;
 
   try {
-    const result = await runQuery(query, [title, company, value, stage, probability, openDate, closeDate, owner, contactId, originalStage, notes, req.params.id, req.userId]);
+    const result = await runQuery(query, [title, company, value, stage, probability, openDate, closeDate, expectedInvoiceDate, expectedPaymentDate, owner, contactId, originalStage, notes, req.params.id, req.userId]);
 
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Opportunity not found' });
@@ -113,13 +113,22 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 
 // Update opportunity stage (for drag and drop)
 router.patch('/:id/stage', authMiddleware, async (req, res) => {
-  const { stage, probability } = req.body;
+  const { stage, probability, expectedInvoiceDate, expectedPaymentDate } = req.body;
 
   try {
-    const result = await runQuery(
-      'UPDATE opportunities SET stage = ?, probability = ?, "updatedAt" = CURRENT_TIMESTAMP WHERE id = ? AND ("userId" = ? OR "userId" IS NULL)',
-      [stage, probability, req.params.id, req.userId]
-    );
+    let query;
+    let params;
+
+    // Se è Chiuso Vinto, aggiorniamo anche le date previste di fatturazione e incasso
+    if (stage === 'Chiuso Vinto' && (expectedInvoiceDate || expectedPaymentDate)) {
+      query = 'UPDATE opportunities SET stage = ?, probability = ?, "expectedInvoiceDate" = ?, "expectedPaymentDate" = ?, "updatedAt" = CURRENT_TIMESTAMP WHERE id = ? AND ("userId" = ? OR "userId" IS NULL)';
+      params = [stage, probability, expectedInvoiceDate || null, expectedPaymentDate || null, req.params.id, req.userId];
+    } else {
+      query = 'UPDATE opportunities SET stage = ?, probability = ?, "updatedAt" = CURRENT_TIMESTAMP WHERE id = ? AND ("userId" = ? OR "userId" IS NULL)';
+      params = [stage, probability, req.params.id, req.userId];
+    }
+
+    const result = await runQuery(query, params);
 
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Opportunity not found' });

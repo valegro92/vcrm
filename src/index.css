@@ -3253,3 +3253,143 @@ body {
     transform: translateY(-10px);
   }
 }
+
+/* =========================================
+   Won Modal - Chiusura Opportunità
+   ========================================= */
+.won-modal {
+  max-width: 480px;
+}
+
+.won-header {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.won-header h2 {
+  color: white;
+  flex: 1;
+  margin: 0;
+}
+
+.won-header .close-btn {
+  color: white;
+  opacity: 0.8;
+}
+
+.won-header .close-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.won-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.won-summary {
+  background: var(--emerald-50);
+  border: 1px solid var(--emerald-100);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.won-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--slate-900);
+  margin-bottom: 4px;
+}
+
+.won-company {
+  color: var(--slate-500);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.won-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--emerald-600);
+}
+
+.won-info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--amber-50);
+  border: 1px solid var(--amber-100);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  color: var(--amber-600);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.won-info-box svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.form-hint {
+  display: block;
+  font-size: 12px;
+  color: var(--slate-400);
+  margin-top: 4px;
+}
+
+.success-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.success-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+
+/* =========================================
+   Opportunity Card Forecast Dates
+   ========================================= */
+.opp-card-forecast {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px dashed var(--slate-200);
+  margin-top: 8px;
+}
+
+.forecast-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  background: var(--emerald-50);
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--emerald-100);
+}
+
+.forecast-label {
+  color: var(--emerald-600);
+  font-weight: 600;
+}
+
+.forecast-date {
+  color: var(--slate-600);
+}

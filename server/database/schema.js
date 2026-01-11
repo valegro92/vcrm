@@ -74,6 +74,8 @@ const createPostgresTables = async () => {
       probability INTEGER DEFAULT 0,
       "openDate" DATE,
       "closeDate" DATE,
+      "expectedInvoiceDate" DATE,
+      "expectedPaymentDate" DATE,
       owner VARCHAR(255),
       "contactId" INTEGER REFERENCES contacts(id) ON DELETE SET NULL,
       "userId" INTEGER REFERENCES users(id) ON DELETE SET NULL,
@@ -83,6 +85,10 @@ const createPostgresTables = async () => {
       "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Add expectedInvoiceDate and expectedPaymentDate columns if they don't exist (for existing databases)
+  await client.query(`ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS "expectedInvoiceDate" DATE`).catch(() => {});
+  await client.query(`ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS "expectedPaymentDate" DATE`).catch(() => {});
 
   // Tasks table
   await client.query(`
@@ -209,6 +215,8 @@ const createSQLiteTables = (resolve, reject) => {
         probability INTEGER DEFAULT 0,
         openDate DATE,
         closeDate DATE,
+        expectedInvoiceDate DATE,
+        expectedPaymentDate DATE,
         owner TEXT,
         contactId INTEGER,
         userId INTEGER,
@@ -220,6 +228,14 @@ const createSQLiteTables = (resolve, reject) => {
         FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
       )
     `);
+
+    // Add expectedInvoiceDate and expectedPaymentDate columns if they don't exist (for existing databases)
+    db.run(`ALTER TABLE opportunities ADD COLUMN expectedInvoiceDate DATE`, (err) => {
+      // Ignore error if column already exists
+    });
+    db.run(`ALTER TABLE opportunities ADD COLUMN expectedPaymentDate DATE`, (err) => {
+      // Ignore error if column already exists
+    });
 
     // Tasks table
     db.run(`

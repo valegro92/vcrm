@@ -226,6 +226,27 @@ export default function AddModal({
                                     />
                                 </div>
                             </div>
+                            {/* Date previste fatturazione/incasso per opportunità vinte */}
+                            {(newItem.stage === 'Chiuso Vinto' || isEditing) && (
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>Data Prevista Fatturazione</label>
+                                        <input
+                                            type="date"
+                                            value={newItem.expectedInvoiceDate || ''}
+                                            onChange={(e) => setNewItem({ ...newItem, expectedInvoiceDate: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Data Prevista Incasso</label>
+                                        <input
+                                            type="date"
+                                            value={newItem.expectedPaymentDate || ''}
+                                            onChange={(e) => setNewItem({ ...newItem, expectedPaymentDate: e.target.value })}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </form>
                     )}
                     {modalType === 'task' && (
