@@ -13,6 +13,7 @@ const tasksRoutes = require('./routes/tasks');
 const extraRoutes = require('./routes/extra');
 const importRoutes = require('./routes/import');
 const invoicesRoutes = require('./routes/invoices');
+const targetsRoutes = require('./routes/targets');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -88,6 +89,7 @@ app.use('/api/contacts', contactsRoutes);
 app.use('/api/opportunities', opportunitiesRoutes);
 app.use('/api/tasks', tasksRoutes);
 app.use('/api/invoices', invoicesRoutes);
+app.use('/api/targets', targetsRoutes);
 app.use('/api', extraRoutes);
 app.use('/api/import', importRoutes);
 

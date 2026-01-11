@@ -10,7 +10,7 @@ export default function Opportunities({ opportunities, openAddModal, handleDelet
     const [sortBy, setSortBy] = useState('value');
     const [sortOrder, setSortOrder] = useState('desc');
     const [showFilters, setShowFilters] = useState(false);
-    const [selectedYear, setSelectedYear] = useState('all'); // Year filter
+    const [selectedYear, setSelectedYear] = useState('2026'); // Year filter - default 2026
 
     // Filtered opportunities for stats (before search/sort)
     const baseFilteredOpps = useMemo(() => {

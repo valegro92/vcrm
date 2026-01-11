@@ -155,6 +155,18 @@ const createPostgresTables = async () => {
       "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Yearly targets table (Target annuali per fatturato)
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS yearly_targets (
+      id SERIAL PRIMARY KEY,
+      year INTEGER NOT NULL UNIQUE,
+      target DECIMAL(10, 2) NOT NULL DEFAULT 85000,
+      "userId" INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
 };
 
 const createSQLiteTables = (resolve, reject) => {
@@ -305,6 +317,19 @@ const createSQLiteTables = (resolve, reject) => {
         updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (opportunityId) REFERENCES opportunities(id) ON DELETE SET NULL,
         FOREIGN KEY (contactId) REFERENCES contacts(id) ON DELETE SET NULL,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
+      )
+    `);
+
+    // Yearly targets table (Target annuali per fatturato)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS yearly_targets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        year INTEGER NOT NULL UNIQUE,
+        target REAL NOT NULL DEFAULT 85000,
+        userId INTEGER,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
       )
     `, (err) => {

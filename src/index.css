@@ -3393,3 +3393,118 @@ body {
 .forecast-date {
   color: var(--slate-600);
 }
+
+/* =========================================
+   Dashboard - Target & Forfettario Styles
+   ========================================= */
+.target-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--primary-50);
+  border: 1px solid var(--primary-200);
+  border-radius: var(--radius-md);
+  color: var(--primary-600);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.target-btn:hover {
+  background: var(--primary-100);
+  border-color: var(--primary-300);
+}
+
+.bi-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.forfettario-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+}
+
+.forfettario-alert.warning {
+  background: var(--amber-50);
+  border: 1px solid var(--amber-100);
+  color: var(--amber-600);
+}
+
+.forfettario-alert.danger {
+  background: var(--rose-50);
+  border: 1px solid var(--rose-100);
+  color: var(--rose-600);
+}
+
+.forfettario-alert svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.forfettario-alert div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.forfettario-alert strong {
+  font-weight: 600;
+}
+
+.forfettario-alert span {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.target-modal {
+  max-width: 420px;
+}
+
+.target-presets {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.target-presets span {
+  color: var(--slate-500);
+  font-size: 13px;
+}
+
+.target-presets button {
+  padding: 6px 12px;
+  background: var(--slate-100);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--slate-600);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.target-presets button:hover {
+  background: var(--primary-50);
+  border-color: var(--primary-200);
+  color: var(--primary-600);
+}
+
+.bi-kpi-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bi-kpi-delta.warning {
+  color: var(--amber-500);
+}

@@ -420,6 +420,47 @@ const api = {
       }
     });
     return handleResponse(response);
+  },
+
+  // Targets (Target annuali)
+  getTargets: async () => {
+    const response = await fetch(`${API_URL}/targets`, {
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return handleResponse(response);
+  },
+
+  getTargetByYear: async (year) => {
+    const response = await fetch(`${API_URL}/targets/${year}`, {
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return handleResponse(response);
+  },
+
+  saveTarget: async (year, target) => {
+    const response = await fetch(`${API_URL}/targets`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({ year, target })
+    });
+    return handleResponse(response);
+  },
+
+  deleteTarget: async (year) => {
+    const response = await fetch(`${API_URL}/targets/${year}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return handleResponse(response);
   }
 };
 
