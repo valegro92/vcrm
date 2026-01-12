@@ -317,28 +317,28 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                 </ResponsiveContainer>
             </div>
 
-            {/* GRAFICO 2: Fatturato Reale vs Ipotesi vs Target */}
+            {/* GRAFICO 2: Fatturato Cumulativo (Reale vs Ipotesi vs Target) */}
             <div className="bi-chart-card">
                 <div className="bi-chart-header">
                     <div>
-                        <h3><Receipt size={18} /> Fatturato: Reale vs Ipotesi vs Target</h3>
-                        <p>Fatture emesse vs previsioni vs obiettivo mensile</p>
+                        <h3><Receipt size={18} /> Fatturato Cumulativo</h3>
+                        <p>Cumulo fatture emesse (reale) vs previsioni (ipotesi) vs target</p>
                     </div>
                     <div className="bi-legend">
+                        <span><span className="dot" style={{ background: colors.fatturatoReale }}></span> Fatturato Reale</span>
+                        <span><span className="dot" style={{ background: colors.ipotesiFatturato }}></span> Ipotesi Fatturato</span>
                         <span><span className="dot" style={{ background: colors.target }}></span> Target</span>
-                        <span><span className="dot" style={{ background: colors.fatturatoReale }}></span> Reale</span>
-                        <span><span className="dot" style={{ background: colors.ipotesiFatturato }}></span> Ipotesi</span>
                     </div>
                 </div>
-                <ResponsiveContainer width="100%" height={280}>
-                    <ComposedChart data={biData.monthlyData} barGap={2}>
+                <ResponsiveContainer width="100%" height={300}>
+                    <ComposedChart data={biData.cumulativeData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                         <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                         <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={formatCurrency} />
                         <Tooltip formatter={formatTooltip} />
-                        <Bar dataKey="target" fill={colors.target} radius={[4, 4, 0, 0]} name="Target" />
-                        <Bar dataKey="fatturatoReale" fill={colors.fatturatoReale} radius={[4, 4, 0, 0]} name="Fatturato Reale" />
-                        <Bar dataKey="ipotesiFatturato" fill={colors.ipotesiFatturato} radius={[4, 4, 0, 0]} name="Ipotesi Fatturato" />
+                        <Area type="monotone" dataKey="cumFatturatoReale" fill={colors.fatturatoReale} fillOpacity={0.3} stroke={colors.fatturatoReale} strokeWidth={3} name="Fatturato Reale" />
+                        <Line type="monotone" dataKey="cumIpotesiFatturato" stroke={colors.ipotesiFatturato} strokeWidth={2} strokeDasharray="5 5" dot={{ r: 3 }} name="Ipotesi Fatturato" />
+                        <Line type="monotone" dataKey="cumTarget" stroke={colors.target} strokeWidth={2} dot={{ r: 3 }} name="Target Cumulativo" />
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>

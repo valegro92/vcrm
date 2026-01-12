@@ -272,66 +272,46 @@ export default function Invoices({ opportunities }) {
                       </div>
                     </div>
 
-                <div className="invoice-body">
-                  <div className="invoice-amount">
-                    €{parseFloat(invoice.amount).toLocaleString()}
-                  </div>
+                    <div className="invoice-body">
+                      <div className="invoice-amount">
+                        €{parseFloat(invoice.amount).toLocaleString()}
+                      </div>
 
-                  {invoice.opportunityTitle && (
-                    <div className="invoice-opportunity">
-                      <Building size={14} />
-                      <span>{invoice.opportunityTitle} - {invoice.opportunityCompany}</span>
-                    </div>
-                  )}
-
-                  <div className="invoice-dates">
-                    <div className="invoice-date">
-                      <Calendar size={14} />
-                      <span>Emessa: {new Date(invoice.issueDate).toLocaleDateString('it-IT')}</span>
-                    </div>
-                    <div className={`invoice-date ${statusColor === 'danger' ? 'overdue' : ''}`}>
-                      <Clock size={14} />
-                      <span>Scadenza: {new Date(invoice.dueDate).toLocaleDateString('it-IT')}</span>
-                      {invoice.status === 'emessa' && (
-                        <span className="days-badge">
-                          {daysUntilDue < 0 ? `${Math.abs(daysUntilDue)}gg scaduta` :
-                            daysUntilDue === 0 ? 'Oggi' : `${daysUntilDue}gg`}
-                        </span>
+                      {invoice.opportunityTitle && (
+                        <div className="invoice-opportunity">
+                          <Building size={14} />
+                          <span>{invoice.opportunityTitle} - {invoice.opportunityCompany}</span>
+                        </div>
                       )}
-                    </div>
-                  </div>
-                </div>
 
-                <div className="invoice-footer">
-                  <div className="invoice-actions-left">
-                    {invoice.status === 'da_emettere' && (
-                      <button
-                        className="action-btn-small primary"
-                        onClick={() => handleStatusChange(invoice, 'emessa')}
-                      >
-                        <FileText size={14} />
-                        Emetti
-                      </button>
-                    )}
-                    {invoice.status === 'emessa' && (
-                      <button
-                        className="action-btn-small success"
-                        onClick={() => handleStatusChange(invoice, 'pagata')}
-                      >
-                        <Check size={14} />
-                        Incassata
-                      </button>
-                    )}
-                  </div>
-                  <div className="invoice-actions-right">
-                    <button className="action-btn" onClick={() => handleEdit(invoice)}>
-                      <Edit2 size={16} />
-                    </button>
-                    <button className="action-btn delete" onClick={() => handleDelete(invoice.id)}>
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
+                      <div className="invoice-dates">
+                        <div className="invoice-date">
+                          <Calendar size={14} />
+                          <span>Emessa: {new Date(invoice.issueDate).toLocaleDateString('it-IT')}</span>
+                        </div>
+                        <div className={`invoice-date ${statusColor === 'danger' ? 'overdue' : ''}`}>
+                          <Clock size={14} />
+                          <span>Scadenza: {new Date(invoice.dueDate).toLocaleDateString('it-IT')}</span>
+                          {invoice.status === 'emessa' && (
+                            <span className="days-badge">
+                              {daysUntilDue < 0 ? `${Math.abs(daysUntilDue)}gg scaduta` :
+                                daysUntilDue === 0 ? 'Oggi' : `${daysUntilDue}gg`}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="invoice-footer">
+                      <div className="invoice-actions-right">
+                        <button className="action-btn" onClick={() => handleEdit(invoice)}>
+                          <Edit2 size={16} />
+                        </button>
+                        <button className="action-btn delete" onClick={() => handleDelete(invoice.id)}>
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -519,22 +499,23 @@ export default function Invoices({ opportunities }) {
 
         .invoice-quick-action {
           display: flex;
-          align-items: flex-start;
-          padding-top: var(--space-1);
+          align-items: center;
+          flex-shrink: 0;
         }
 
         .quick-pay-btn {
-          width: 28px;
-          height: 28px;
+          width: 32px;
+          height: 32px;
+          min-width: 32px;
           border-radius: 50%;
           border: 2px solid var(--gray-300);
-          background: white;
+          background: var(--gray-50);
           cursor: not-allowed;
           display: flex;
           align-items: center;
           justify-content: center;
           transition: all var(--transition-fast);
-          opacity: 0.5;
+          opacity: 0.6;
         }
 
         .quick-pay-btn.can-pay {
@@ -558,14 +539,18 @@ export default function Invoices({ opportunities }) {
         }
 
         .pay-circle {
-          width: 12px;
-          height: 12px;
+          width: 14px;
+          height: 14px;
           border-radius: 50%;
-          background: var(--gray-200);
+          background: var(--gray-300);
         }
 
         .quick-pay-btn.can-pay .pay-circle {
-          background: var(--success-200);
+          background: var(--success-300);
+        }
+
+        .quick-pay-btn.can-pay:hover .pay-circle {
+          background: var(--success-500);
         }
 
         .invoice-content {
