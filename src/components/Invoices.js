@@ -1,30 +1,53 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   Plus, FileText, Calendar, Check, AlertTriangle,
-  Clock, Edit2, Trash2, Receipt, Building, X
+  Clock, Edit2, Trash2, Receipt, Building, X, Euro, Wallet
 } from 'lucide-react';
 import api from '../api/api';
 import { PageHeader, KPICard, KPISection } from './ui';
+
+// Colonne Kanban per fatture
+const INVOICE_STAGES = ['da_emettere', 'emessa', 'pagata'];
+
+const STAGE_CONFIG = {
+  da_emettere: {
+    label: 'Da Emettere',
+    color: '#94a3b8',
+    icon: FileText
+  },
+  emessa: {
+    label: 'Emessa',
+    color: '#f59e0b',
+    icon: Clock
+  },
+  pagata: {
+    label: 'Incassata',
+    color: '#10b981',
+    icon: Check
+  }
+};
 
 export default function Invoices({ opportunities }) {
   const [invoices, setInvoices] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('all');
   const [showModal, setShowModal] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState(null);
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [selectedYear, setSelectedYear] = useState(2026);
   const [formData, setFormData] = useState({
     invoiceNumber: '',
     opportunityId: '',
     type: 'emessa',
     amount: '',
-    issueDate: new Date().toISOString().split('T')[0],
+    issueDate: '',
     dueDate: '',
+    paidDate: '',
     status: 'da_emettere',
     notes: ''
   });
 
-  // Filtra solo opportunità chiuse vinte e ordina alfabeticamente
+  // Filtra solo opportunità chiuse vinte
   const wonOpportunities = useMemo(() => {
     return opportunities
       .filter(o => o.stage === 'Chiuso Vinto')
@@ -33,14 +56,13 @@ export default function Invoices({ opportunities }) {
 
   useEffect(() => {
     loadData();
-  }, [statusFilter]);
+  }, []);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const filters = statusFilter !== 'all' ? { status: statusFilter } : {};
       const [invoicesData, statsData] = await Promise.all([
-        api.getInvoices(filters),
+        api.getInvoices({}),
         api.getInvoiceStats()
       ]);
       setInvoices(invoicesData);
@@ -52,22 +74,99 @@ export default function Invoices({ opportunities }) {
     }
   };
 
+  // Drag & Drop handlers
+  const handleDragStart = (e, invoice) => {
+    setDraggedItem(invoice);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e, newStatus) => {
+    e.preventDefault();
+    if (!draggedItem || draggedItem.status === newStatus) {
+      setDraggedItem(null);
+      return;
+    }
+
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      let updateData = { status: newStatus };
+
+      // Quando passa a "emessa", imposta issueDate se non presente
+      if (newStatus === 'emessa' && !draggedItem.issueDate) {
+        updateData.issueDate = today;
+      }
+
+      // Quando passa a "pagata", imposta paidDate (IMPORTANTE per forfettario!)
+      if (newStatus === 'pagata') {
+        updateData.paidDate = today;
+      }
+
+      // Se torna indietro a da_emettere, rimuovi le date
+      if (newStatus === 'da_emettere') {
+        updateData.issueDate = null;
+        updateData.paidDate = null;
+      }
+
+      // Se torna a emessa da pagata, rimuovi solo paidDate
+      if (newStatus === 'emessa' && draggedItem.status === 'pagata') {
+        updateData.paidDate = null;
+      }
+
+      await api.updateInvoice(draggedItem.id, updateData);
+      loadData();
+    } catch (error) {
+      alert('Errore: ' + error.message);
+    }
+    setDraggedItem(null);
+  };
+
+  // Quick pay - click per segnare come pagata
+  const handleQuickPay = async (invoice) => {
+    if (invoice.status !== 'emessa') return;
+
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      await api.updateInvoice(invoice.id, {
+        status: 'pagata',
+        paidDate: today
+      });
+      loadData();
+    } catch (error) {
+      alert('Errore: ' + error.message);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const dataToSend = { ...formData };
+
+      // Se stato è emessa e non c'è issueDate, usa oggi
+      if (dataToSend.status === 'emessa' && !dataToSend.issueDate) {
+        dataToSend.issueDate = new Date().toISOString().split('T')[0];
+      }
+
+      // Se stato è pagata e non c'è paidDate, usa oggi
+      if (dataToSend.status === 'pagata' && !dataToSend.paidDate) {
+        dataToSend.paidDate = new Date().toISOString().split('T')[0];
+      }
+
       if (editingInvoice) {
-        await api.updateInvoice(editingInvoice.id, formData);
+        await api.updateInvoice(editingInvoice.id, dataToSend);
       } else {
-        console.log('Creating invoice with data:', formData); // Debug
-        await api.createInvoice(formData);
+        await api.createInvoice(dataToSend);
       }
       setShowModal(false);
       setEditingInvoice(null);
       resetForm();
       loadData();
     } catch (error) {
-      console.error('Invoice error:', error);
-      alert(`Errore durante la ${editingInvoice ? 'modifica' : 'creazione'} della fattura:\n${error.message}`);
+      alert(`Errore: ${error.message}`);
     }
   };
 
@@ -78,8 +177,9 @@ export default function Invoices({ opportunities }) {
       opportunityId: invoice.opportunityId || '',
       type: invoice.type,
       amount: invoice.amount,
-      issueDate: invoice.issueDate,
-      dueDate: invoice.dueDate,
+      issueDate: invoice.issueDate || '',
+      dueDate: invoice.dueDate || '',
+      paidDate: invoice.paidDate || '',
       status: invoice.status,
       notes: invoice.notes || ''
     });
@@ -97,24 +197,15 @@ export default function Invoices({ opportunities }) {
     }
   };
 
-  const handleStatusChange = async (invoice, newStatus) => {
-    try {
-      const paidDate = newStatus === 'pagata' ? new Date().toISOString().split('T')[0] : null;
-      await api.updateInvoiceStatus(invoice.id, newStatus, paidDate);
-      loadData();
-    } catch (error) {
-      alert('Errore: ' + error.message);
-    }
-  };
-
   const resetForm = () => {
     setFormData({
       invoiceNumber: '',
       opportunityId: '',
       type: 'emessa',
       amount: '',
-      issueDate: new Date().toISOString().split('T')[0],
+      issueDate: '',
       dueDate: '',
+      paidDate: '',
       status: 'da_emettere',
       notes: ''
     });
@@ -126,28 +217,61 @@ export default function Invoices({ opportunities }) {
     setShowModal(true);
   };
 
-  const getStatusColor = (status, dueDate) => {
-    if (status === 'pagata') return 'success';
-    if ((status === 'emessa' || status === 'da_pagare') && new Date(dueDate) < new Date()) return 'danger';
-    if (status === 'emessa' || status === 'da_pagare') return 'warning';
-    return 'info';
+  const formatCurrency = (value) => {
+    const num = parseFloat(value) || 0;
+    if (num >= 1000) return `€${(num / 1000).toFixed(1)}K`;
+    return `€${num.toLocaleString('it-IT')}`;
   };
 
-  const getStatusLabel = (status, dueDate) => {
-    if (status === 'pagata') return 'Pagata';
-    if ((status === 'emessa' || status === 'da_pagare') && new Date(dueDate) < new Date()) return 'Scaduta';
-    if (status === 'emessa') return 'Da incassare';
-    if (status === 'da_pagare') return 'Da pagare';
-    return 'Da emettere';
+  const formatDate = (dateStr) => {
+    if (!dateStr) return null;
+    return new Date(dateStr).toLocaleDateString('it-IT', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit'
+    });
   };
 
-  const getDaysUntilDue = (dueDate) => {
-    const today = new Date();
-    const due = new Date(dueDate);
-    const diffTime = due - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
+  // Filtra fatture per anno (basato su issueDate o paidDate)
+  const filteredInvoices = useMemo(() => {
+    return invoices.filter(inv => {
+      // Per forfettario: l'anno che conta è quello di INCASSO
+      // Ma mostriamo tutte le fatture che hanno attività nell'anno selezionato
+      const issueYear = inv.issueDate ? new Date(inv.issueDate).getFullYear() : null;
+      const paidYear = inv.paidDate ? new Date(inv.paidDate).getFullYear() : null;
+
+      // Mostra se: emessa in quest'anno O incassata in quest'anno O non ancora emessa
+      return issueYear === selectedYear ||
+             paidYear === selectedYear ||
+             (!inv.issueDate && !inv.paidDate);
+    });
+  }, [invoices, selectedYear]);
+
+  // Stats per anno selezionato
+  const yearStats = useMemo(() => {
+    // Fatturato: somma fatture EMESSE nell'anno (basato su issueDate)
+    const fatturato = invoices
+      .filter(i => i.issueDate && new Date(i.issueDate).getFullYear() === selectedYear)
+      .filter(i => i.status === 'emessa' || i.status === 'pagata')
+      .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+
+    // Incassato: somma fatture PAGATE nell'anno (basato su paidDate) - QUESTO CONTA PER FORFETTARIO!
+    const incassato = invoices
+      .filter(i => i.paidDate && new Date(i.paidDate).getFullYear() === selectedYear)
+      .filter(i => i.status === 'pagata')
+      .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+
+    // Da incassare: fatture emesse ma non ancora pagate
+    const daIncassare = invoices
+      .filter(i => i.status === 'emessa')
+      .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+
+    return { fatturato, incassato, daIncassare };
+  }, [invoices, selectedYear]);
+
+  // Calcolo limite forfettario (85K)
+  const forfettarioProgress = (yearStats.incassato / 85000) * 100;
+  const forfettarioRemaining = 85000 - yearStats.incassato;
 
   if (loading && invoices.length === 0) {
     return (
@@ -159,13 +283,23 @@ export default function Invoices({ opportunities }) {
   }
 
   return (
-    <div className="page-container">
-      {/* Unified Header */}
+    <div className="page-container pipeline-page">
+      {/* Header */}
       <PageHeader
         title="Fatture"
-        subtitle={`${stats?.total || 0} fatture • Totale: €${parseFloat(stats?.totalAmount || 0).toLocaleString()}`}
+        subtitle={`${invoices.length} fatture totali`}
         icon={<Receipt size={24} />}
       >
+        <select
+          className="year-selector"
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+        >
+          <option value={2024}>2024</option>
+          <option value={2025}>2025</option>
+          <option value={2026}>2026</option>
+          <option value={2027}>2027</option>
+        </select>
         <button className="primary-btn" onClick={openNewInvoice}>
           <Plus size={18} />
           <span>Nuova Fattura</span>
@@ -173,151 +307,161 @@ export default function Invoices({ opportunities }) {
       </PageHeader>
 
       {/* KPI Section */}
-      {stats && (
-        <KPISection>
-          <KPICard
-            title="Totale Fatture"
-            value={`€${parseFloat(stats.totalAmount || 0).toLocaleString()}`}
-            subtitle={`${stats.total || 0} fatture`}
-            icon={<FileText size={20} />}
-            color="blue"
-          />
-          <KPICard
-            title="Incassato"
-            value={`€${parseFloat(stats.paidAmount || 0).toLocaleString()}`}
-            subtitle={`${stats.paidCount || 0} pagate`}
-            icon={<Check size={20} />}
-            color="green"
-          />
-          <KPICard
-            title="Da Incassare"
-            value={`€${parseFloat(stats.pendingAmount || 0).toLocaleString()}`}
-            subtitle={`${stats.issuedCount || 0} in attesa`}
-            icon={<Clock size={20} />}
-            color="orange"
-          />
-          <KPICard
-            title="Scadute"
-            value={`€${parseFloat(stats.overdueAmount || 0).toLocaleString()}`}
-            subtitle={`${stats.overdueCount || 0} scadute`}
-            icon={<AlertTriangle size={20} />}
-            color="red"
-          />
-        </KPISection>
+      <KPISection>
+        <KPICard
+          title={`Fatturato ${selectedYear}`}
+          value={formatCurrency(yearStats.fatturato)}
+          subtitle="Fatture emesse"
+          icon={<FileText size={20} />}
+          color="orange"
+        />
+        <KPICard
+          title={`Incassato ${selectedYear}`}
+          value={formatCurrency(yearStats.incassato)}
+          subtitle={`${forfettarioProgress.toFixed(0)}% del limite 85K`}
+          icon={<Wallet size={20} />}
+          color="green"
+        />
+        <KPICard
+          title="Da Incassare"
+          value={formatCurrency(yearStats.daIncassare)}
+          subtitle="Fatture in attesa"
+          icon={<Clock size={20} />}
+          color="blue"
+        />
+        <KPICard
+          title="Residuo Forfettario"
+          value={formatCurrency(Math.max(0, forfettarioRemaining))}
+          subtitle={forfettarioProgress > 90 ? '⚠️ Attenzione!' : `${(100 - forfettarioProgress).toFixed(0)}% disponibile`}
+          icon={<AlertTriangle size={20} />}
+          color={forfettarioProgress > 90 ? 'red' : forfettarioProgress > 75 ? 'orange' : 'purple'}
+        />
+      </KPISection>
+
+      {/* Alert Forfettario */}
+      {forfettarioProgress > 75 && (
+        <div className={`forfettario-alert ${forfettarioProgress > 90 ? 'danger' : 'warning'}`}>
+          <AlertTriangle size={20} />
+          <div>
+            <strong>Attenzione Limite Forfettario {selectedYear}!</strong>
+            <span>
+              Incassato {formatCurrency(yearStats.incassato)} su €85.000 ({forfettarioProgress.toFixed(1)}%).
+              Rimangono {formatCurrency(forfettarioRemaining)}.
+            </span>
+          </div>
+        </div>
       )}
 
-      {/* Toolbar */}
-      <div className="unified-search-filter">
-        <div className="filter-tags">
-          {['all', 'da_emettere', 'emessa', 'da_pagare', 'pagata'].map(status => (
-            <button
-              key={status}
-              className={`filter-tag ${statusFilter === status ? 'active' : ''}`}
-              onClick={() => setStatusFilter(status)}
-            >
-              {status === 'all' ? 'Tutte' :
-                status === 'da_emettere' ? 'Da Emettere' :
-                  status === 'emessa' ? 'Emesse' :
-                    status === 'da_pagare' ? 'Da Pagare' : 'Saldate'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Invoice List */}
-      <div className="invoices-list">
-        {invoices.length === 0 ? (
-          <div className="empty-state">
-            <Receipt size={64} />
-            <p>Nessuna fattura trovata</p>
-            <button className="primary-btn" onClick={openNewInvoice}>
-              <Plus size={18} />
-              Crea la prima fattura
-            </button>
-          </div>
-        ) : (
-          invoices.map(invoice => {
-            const statusColor = getStatusColor(invoice.status, invoice.dueDate);
-            const daysUntilDue = getDaysUntilDue(invoice.dueDate);
-            const canMarkPaid = invoice.status === 'emessa' || invoice.status === 'da_pagare';
-            const isPaid = invoice.status === 'pagata';
+      {/* Kanban Board */}
+      <div className="kanban-wrapper">
+        <div className="kanban-board invoice-kanban">
+          {INVOICE_STAGES.map((status) => {
+            const config = STAGE_CONFIG[status];
+            const stageInvoices = filteredInvoices.filter(i => i.status === status);
+            const stageValue = stageInvoices.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+            const IconComponent = config.icon;
 
             return (
-              <div key={invoice.id} className={`invoice-card ${statusColor}`}>
-                <div className="invoice-card-wrapper">
-                  {/* Quick Pay Checkbox */}
-                  <div className="invoice-quick-action">
-                    <button
-                      className={`quick-pay-btn ${isPaid ? 'paid' : ''} ${canMarkPaid ? 'can-pay' : ''}`}
-                      onClick={() => canMarkPaid && handleStatusChange(invoice, 'pagata')}
-                      disabled={!canMarkPaid && !isPaid}
-                      title={isPaid ? `Pagata il ${invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString('it-IT') : ''}` : canMarkPaid ? 'Segna come pagata' : 'Da emettere'}
+              <div
+                key={status}
+                className="kanban-column"
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, status)}
+              >
+                {/* Header */}
+                <div className="column-header" style={{ background: config.color }}>
+                  <h3>
+                    <IconComponent size={16} />
+                    {config.label}
+                  </h3>
+                  <span className="column-count">{stageInvoices.length}</span>
+                </div>
+
+                {/* Valore totale colonna */}
+                <div className="column-value">
+                  {formatCurrency(stageValue)}
+                </div>
+
+                {/* Cards */}
+                <div className="column-content">
+                  {stageInvoices.map(invoice => (
+                    <div
+                      key={invoice.id}
+                      className={`invoice-kanban-card ${status === 'emessa' ? 'can-pay' : ''}`}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, invoice)}
                     >
-                      {isPaid ? (
-                        <Check size={20} strokeWidth={3} />
-                      ) : (
-                        <div className="pay-circle" />
-                      )}
-                    </button>
-                  </div>
-
-                  <div className="invoice-content">
-                    <div className="invoice-header">
-                      <div className="invoice-number">
-                        <FileText size={18} />
-                        <span>{invoice.invoiceNumber}</span>
-                      </div>
-                      <div className={`invoice-status status-${statusColor}`}>
-                        {getStatusLabel(invoice.status, invoice.dueDate)}
-                      </div>
-                    </div>
-
-                    <div className="invoice-body">
-                      <div className="invoice-amount">
-                        €{parseFloat(invoice.amount).toLocaleString()}
-                      </div>
-
-                      {invoice.opportunityTitle && (
-                        <div className="invoice-opportunity">
-                          <Building size={14} />
-                          <span>{invoice.opportunityTitle} - {invoice.opportunityCompany}</span>
-                        </div>
+                      {/* Quick Pay Button per fatture emesse */}
+                      {status === 'emessa' && (
+                        <button
+                          className="quick-pay-circle"
+                          onClick={() => handleQuickPay(invoice)}
+                          title="Clicca per segnare come incassata"
+                        >
+                          <Check size={14} />
+                        </button>
                       )}
 
-                      <div className="invoice-dates">
-                        <div className="invoice-date">
-                          <Calendar size={14} />
-                          <span>Emessa: {new Date(invoice.issueDate).toLocaleDateString('it-IT')}</span>
+                      {/* Contenuto card */}
+                      <div className="card-content">
+                        <div className="card-header">
+                          <span className="invoice-num">{invoice.invoiceNumber}</span>
+                          <span className="invoice-amount">{formatCurrency(invoice.amount)}</span>
                         </div>
-                        <div className={`invoice-date ${statusColor === 'danger' ? 'overdue' : ''}`}>
-                          <Clock size={14} />
-                          <span>Scadenza: {new Date(invoice.dueDate).toLocaleDateString('it-IT')}</span>
-                          {invoice.status === 'emessa' && (
-                            <span className="days-badge">
-                              {daysUntilDue < 0 ? `${Math.abs(daysUntilDue)}gg scaduta` :
-                                daysUntilDue === 0 ? 'Oggi' : `${daysUntilDue}gg`}
+
+                        {invoice.opportunityTitle && (
+                          <div className="card-client">
+                            <Building size={12} />
+                            {invoice.opportunityCompany || invoice.opportunityTitle}
+                          </div>
+                        )}
+
+                        {/* Date rilevanti */}
+                        <div className="card-dates">
+                          {invoice.issueDate && (
+                            <span className="date-tag issue">
+                              <Calendar size={10} />
+                              Em: {formatDate(invoice.issueDate)}
+                            </span>
+                          )}
+                          {invoice.dueDate && status === 'emessa' && (
+                            <span className={`date-tag due ${new Date(invoice.dueDate) < new Date() ? 'overdue' : ''}`}>
+                              <Clock size={10} />
+                              Sc: {formatDate(invoice.dueDate)}
+                            </span>
+                          )}
+                          {invoice.paidDate && (
+                            <span className="date-tag paid">
+                              <Check size={10} />
+                              Inc: {formatDate(invoice.paidDate)}
                             </span>
                           )}
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="invoice-footer">
-                      <div className="invoice-actions-right">
-                        <button className="action-btn" onClick={() => handleEdit(invoice)}>
-                          <Edit2 size={16} />
-                        </button>
-                        <button className="action-btn delete" onClick={() => handleDelete(invoice.id)}>
-                          <Trash2 size={16} />
-                        </button>
+                        {/* Actions */}
+                        <div className="card-actions">
+                          <button onClick={() => handleEdit(invoice)} title="Modifica">
+                            <Edit2 size={12} />
+                          </button>
+                          <button onClick={() => handleDelete(invoice.id)} title="Elimina" className="delete">
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ))}
+
+                  {stageInvoices.length === 0 && (
+                    <div className="empty-column">
+                      <IconComponent size={24} />
+                      <span>Nessuna fattura</span>
+                    </div>
+                  )}
                 </div>
               </div>
             );
-          })
-        )}
+          })}
+        </div>
       </div>
 
       {/* Modal */}
@@ -341,7 +485,7 @@ export default function Invoices({ opportunities }) {
                         type="text"
                         value={formData.invoiceNumber}
                         onChange={e => setFormData({ ...formData, invoiceNumber: e.target.value })}
-                        placeholder="Es: FT-2025-001"
+                        placeholder="Es: FT-2026-001"
                         required
                       />
                     </div>
@@ -359,7 +503,7 @@ export default function Invoices({ opportunities }) {
                   </div>
 
                   <div className="form-group">
-                    <label>Opportunità Collegata (Chiuso Vinto)</label>
+                    <label>Opportunità Collegata</label>
                     <select
                       value={formData.opportunityId}
                       onChange={e => {
@@ -368,9 +512,6 @@ export default function Invoices({ opportunities }) {
                         setFormData({
                           ...formData,
                           opportunityId: oppId,
-                          // Auto-link contact if opportunity has one
-                          contactId: selectedOpp ? selectedOpp.contactId : formData.contactId,
-                          // Auto-fill amount if empty
                           amount: selectedOpp && !formData.amount ? selectedOpp.value : formData.amount
                         });
                       }}
@@ -384,58 +525,47 @@ export default function Invoices({ opportunities }) {
                     </select>
                   </div>
 
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Data Emissione *</label>
-                      <input
-                        type="date"
-                        value={formData.issueDate}
-                        onChange={e => setFormData({ ...formData, issueDate: e.target.value })}
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Data Scadenza *</label>
-                      <input
-                        type="date"
-                        value={formData.dueDate}
-                        onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
-                        required
-                      />
-                    </div>
+                  <div className="form-group">
+                    <label>Stato</label>
+                    <select
+                      value={formData.status}
+                      onChange={e => setFormData({ ...formData, status: e.target.value })}
+                    >
+                      <option value="da_emettere">Da Emettere</option>
+                      <option value="emessa">Emessa</option>
+                      <option value="pagata">Incassata</option>
+                    </select>
                   </div>
 
                   <div className="form-row">
                     <div className="form-group">
-                      <label>Tipo</label>
-                      <select
-                        value={formData.type}
-                        onChange={e => setFormData({ ...formData, type: e.target.value })}
-                      >
-                        <option value="emessa">Fattura Emessa</option>
-                        <option value="ricevuta">Fattura Ricevuta</option>
-                      </select>
+                      <label>Data Emissione</label>
+                      <input
+                        type="date"
+                        value={formData.issueDate}
+                        onChange={e => setFormData({ ...formData, issueDate: e.target.value })}
+                      />
+                      <small>Quando hai emesso la fattura</small>
                     </div>
                     <div className="form-group">
-                      <label>Stato</label>
-                      <select
-                        value={formData.status}
-                        onChange={e => setFormData({ ...formData, status: e.target.value })}
-                      >
-                        {formData.type === 'emessa' ? (
-                          <>
-                            <option value="da_emettere">Da Emettere</option>
-                            <option value="emessa">Emessa</option>
-                            <option value="pagata">Incassata</option>
-                          </>
-                        ) : (
-                          <>
-                            <option value="da_pagare">Da Pagare</option>
-                            <option value="pagata">Pagata</option>
-                          </>
-                        )}
-                      </select>
+                      <label>Data Scadenza</label>
+                      <input
+                        type="date"
+                        value={formData.dueDate}
+                        onChange={e => setFormData({ ...formData, dueDate: e.target.value })}
+                      />
+                      <small>Termine per il pagamento</small>
                     </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Data Incasso</label>
+                    <input
+                      type="date"
+                      value={formData.paidDate}
+                      onChange={e => setFormData({ ...formData, paidDate: e.target.value })}
+                    />
+                    <small>⚠️ Per forfettario: questa data determina l'anno fiscale!</small>
                   </div>
 
                   <div className="form-group full">
@@ -444,7 +574,7 @@ export default function Invoices({ opportunities }) {
                       value={formData.notes}
                       onChange={e => setFormData({ ...formData, notes: e.target.value })}
                       placeholder="Eventuali note..."
-                      rows="3"
+                      rows="2"
                     />
                   </div>
                 </div>
@@ -460,255 +590,8 @@ export default function Invoices({ opportunities }) {
               </div>
             </form>
           </div>
-        </div >
-      )
-      }
-
-      <style jsx>{`
-        .invoices-view {
-          display: flex;
-          flex-direction: column;
-          gap: var(--space-4);
-        }
-
-        .invoices-list {
-          display: flex;
-          flex-direction: column;
-          gap: var(--space-3);
-        }
-
-        .invoice-card {
-          background: white;
-          border-radius: var(--radius-xl);
-          box-shadow: var(--shadow-sm);
-          border: 1px solid var(--gray-100);
-          border-left: 4px solid var(--primary-500);
-          transition: all var(--transition-fast);
-        }
-
-        .invoice-card:hover {
-          box-shadow: var(--shadow-md);
-          transform: translateY(-2px);
-        }
-
-        .invoice-card-wrapper {
-          display: flex;
-          gap: var(--space-3);
-          padding: var(--space-4);
-        }
-
-        .invoice-quick-action {
-          display: flex;
-          align-items: center;
-          flex-shrink: 0;
-        }
-
-        .quick-pay-btn {
-          width: 32px;
-          height: 32px;
-          min-width: 32px;
-          border-radius: 50%;
-          border: 2px solid var(--gray-300);
-          background: var(--gray-50);
-          cursor: not-allowed;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all var(--transition-fast);
-          opacity: 0.6;
-        }
-
-        .quick-pay-btn.can-pay {
-          cursor: pointer;
-          border-color: var(--success-400);
-          opacity: 1;
-        }
-
-        .quick-pay-btn.can-pay:hover {
-          background: var(--success-50);
-          border-color: var(--success-500);
-          transform: scale(1.1);
-        }
-
-        .quick-pay-btn.paid {
-          background: var(--success-500);
-          border-color: var(--success-500);
-          color: white;
-          cursor: default;
-          opacity: 1;
-        }
-
-        .pay-circle {
-          width: 14px;
-          height: 14px;
-          border-radius: 50%;
-          background: var(--gray-300);
-        }
-
-        .quick-pay-btn.can-pay .pay-circle {
-          background: var(--success-300);
-        }
-
-        .quick-pay-btn.can-pay:hover .pay-circle {
-          background: var(--success-500);
-        }
-
-        .invoice-content {
-          flex: 1;
-        }
-
-        .invoice-card.success { border-left-color: var(--success-500); }
-        .invoice-card.warning { border-left-color: var(--warning-500); }
-        .invoice-card.danger { border-left-color: var(--error-500); }
-        .invoice-card.info { border-left-color: var(--primary-500); }
-
-        .invoice-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: var(--space-3);
-        }
-
-        .invoice-number {
-          display: flex;
-          align-items: center;
-          gap: var(--space-2);
-          font-weight: 600;
-          color: var(--gray-900);
-        }
-
-        .invoice-status {
-          padding: var(--space-1) var(--space-3);
-          border-radius: var(--radius-full);
-          font-size: 12px;
-          font-weight: 600;
-        }
-
-        .status-success { background: var(--success-100); color: var(--success-700); }
-        .status-warning { background: var(--warning-100); color: var(--warning-600); }
-        .status-danger { background: var(--error-100); color: var(--error-600); }
-        .status-info { background: var(--primary-100); color: var(--primary-700); }
-
-        .invoice-body {
-          display: flex;
-          flex-direction: column;
-          gap: var(--space-2);
-        }
-
-        .invoice-amount {
-          font-size: 24px;
-          font-weight: 700;
-          color: var(--gray-900);
-        }
-
-        .invoice-opportunity {
-          display: flex;
-          align-items: center;
-          gap: var(--space-2);
-          font-size: 13px;
-          color: var(--gray-600);
-        }
-
-        .invoice-dates {
-          display: flex;
-          flex-wrap: wrap;
-          gap: var(--space-4);
-          margin-top: var(--space-2);
-        }
-
-        .invoice-date {
-          display: flex;
-          align-items: center;
-          gap: var(--space-2);
-          font-size: 13px;
-          color: var(--gray-500);
-        }
-
-        .invoice-date.overdue {
-          color: var(--error-600);
-          font-weight: 600;
-        }
-
-        .days-badge {
-          padding: 2px 8px;
-          border-radius: var(--radius-full);
-          background: var(--gray-100);
-          font-size: 11px;
-          font-weight: 600;
-          margin-left: var(--space-1);
-        }
-
-        .invoice-date.overdue .days-badge {
-          background: var(--error-100);
-          color: var(--error-700);
-        }
-
-        .invoice-footer {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-top: var(--space-3);
-          padding-top: var(--space-3);
-          border-top: 1px solid var(--gray-100);
-        }
-
-        .invoice-actions-left,
-        .invoice-actions-right {
-          display: flex;
-          gap: var(--space-2);
-        }
-
-        .action-btn-small {
-          display: flex;
-          align-items: center;
-          gap: var(--space-1);
-          padding: var(--space-2) var(--space-3);
-          border-radius: var(--radius-lg);
-          border: none;
-          font-size: 13px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all var(--transition-fast);
-        }
-
-        .action-btn-small.primary {
-          background: var(--primary-100);
-          color: var(--primary-700);
-        }
-
-        .action-btn-small.primary:hover {
-          background: var(--primary-500);
-          color: white;
-        }
-
-        .action-btn-small.success {
-          background: var(--success-100);
-          color: var(--success-700);
-        }
-
-        .action-btn-small.success:hover {
-          background: var(--success-500);
-          color: white;
-        }
-
-        @media (max-width: 768px) {
-          .invoice-dates {
-            flex-direction: column;
-            gap: var(--space-2);
-          }
-
-          .invoice-footer {
-            flex-direction: column;
-            gap: var(--space-3);
-          }
-
-          .invoice-actions-left,
-          .invoice-actions-right {
-            width: 100%;
-            justify-content: center;
-          }
-        }
-      `}</style>
-    </div >
+        </div>
+      )}
+    </div>
   );
 }
