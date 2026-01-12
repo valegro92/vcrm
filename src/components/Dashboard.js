@@ -317,27 +317,29 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                 </ResponsiveContainer>
             </div>
 
-            {/* GRAFICO 2: Fatturato Reale vs Ipotesi */}
+            {/* GRAFICO 2: Fatturato Reale vs Ipotesi vs Target */}
             <div className="bi-chart-card">
                 <div className="bi-chart-header">
                     <div>
-                        <h3><Receipt size={18} /> Fatturato: Reale vs Ipotesi</h3>
-                        <p>Fatture emesse vs previsioni da opportunità</p>
+                        <h3><Receipt size={18} /> Fatturato: Reale vs Ipotesi vs Target</h3>
+                        <p>Fatture emesse vs previsioni vs obiettivo mensile</p>
                     </div>
                     <div className="bi-legend">
+                        <span><span className="dot" style={{ background: colors.target }}></span> Target</span>
                         <span><span className="dot" style={{ background: colors.fatturatoReale }}></span> Reale</span>
                         <span><span className="dot" style={{ background: colors.ipotesiFatturato }}></span> Ipotesi</span>
                     </div>
                 </div>
                 <ResponsiveContainer width="100%" height={280}>
-                    <BarChart data={biData.monthlyData} barGap={2}>
+                    <ComposedChart data={biData.monthlyData} barGap={2}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                         <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                         <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={formatCurrency} />
                         <Tooltip formatter={formatTooltip} />
+                        <Bar dataKey="target" fill={colors.target} radius={[4, 4, 0, 0]} name="Target" />
                         <Bar dataKey="fatturatoReale" fill={colors.fatturatoReale} radius={[4, 4, 0, 0]} name="Fatturato Reale" />
                         <Bar dataKey="ipotesiFatturato" fill={colors.ipotesiFatturato} radius={[4, 4, 0, 0]} name="Ipotesi Fatturato" />
-                    </BarChart>
+                    </ComposedChart>
                 </ResponsiveContainer>
             </div>
 

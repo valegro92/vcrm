@@ -239,18 +239,38 @@ export default function Invoices({ opportunities }) {
           invoices.map(invoice => {
             const statusColor = getStatusColor(invoice.status, invoice.dueDate);
             const daysUntilDue = getDaysUntilDue(invoice.dueDate);
+            const canMarkPaid = invoice.status === 'emessa' || invoice.status === 'da_pagare';
+            const isPaid = invoice.status === 'pagata';
 
             return (
               <div key={invoice.id} className={`invoice-card ${statusColor}`}>
-                <div className="invoice-header">
-                  <div className="invoice-number">
-                    <FileText size={18} />
-                    <span>{invoice.invoiceNumber}</span>
+                <div className="invoice-card-wrapper">
+                  {/* Quick Pay Checkbox */}
+                  <div className="invoice-quick-action">
+                    <button
+                      className={`quick-pay-btn ${isPaid ? 'paid' : ''} ${canMarkPaid ? 'can-pay' : ''}`}
+                      onClick={() => canMarkPaid && handleStatusChange(invoice, 'pagata')}
+                      disabled={!canMarkPaid && !isPaid}
+                      title={isPaid ? `Pagata il ${invoice.paidDate ? new Date(invoice.paidDate).toLocaleDateString('it-IT') : ''}` : canMarkPaid ? 'Segna come pagata' : 'Da emettere'}
+                    >
+                      {isPaid ? (
+                        <Check size={20} strokeWidth={3} />
+                      ) : (
+                        <div className="pay-circle" />
+                      )}
+                    </button>
                   </div>
-                  <div className={`invoice-status status-${statusColor}`}>
-                    {getStatusLabel(invoice.status, invoice.dueDate)}
-                  </div>
-                </div>
+
+                  <div className="invoice-content">
+                    <div className="invoice-header">
+                      <div className="invoice-number">
+                        <FileText size={18} />
+                        <span>{invoice.invoiceNumber}</span>
+                      </div>
+                      <div className={`invoice-status status-${statusColor}`}>
+                        {getStatusLabel(invoice.status, invoice.dueDate)}
+                      </div>
+                    </div>
 
                 <div className="invoice-body">
                   <div className="invoice-amount">
@@ -310,6 +330,8 @@ export default function Invoices({ opportunities }) {
                     <button className="action-btn delete" onClick={() => handleDelete(invoice.id)}>
                       <Trash2 size={16} />
                     </button>
+                  </div>
+                </div>
                   </div>
                 </div>
               </div>
@@ -478,7 +500,6 @@ export default function Invoices({ opportunities }) {
         .invoice-card {
           background: white;
           border-radius: var(--radius-xl);
-          padding: var(--space-4);
           box-shadow: var(--shadow-sm);
           border: 1px solid var(--gray-100);
           border-left: 4px solid var(--primary-500);
@@ -488,6 +509,67 @@ export default function Invoices({ opportunities }) {
         .invoice-card:hover {
           box-shadow: var(--shadow-md);
           transform: translateY(-2px);
+        }
+
+        .invoice-card-wrapper {
+          display: flex;
+          gap: var(--space-3);
+          padding: var(--space-4);
+        }
+
+        .invoice-quick-action {
+          display: flex;
+          align-items: flex-start;
+          padding-top: var(--space-1);
+        }
+
+        .quick-pay-btn {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          border: 2px solid var(--gray-300);
+          background: white;
+          cursor: not-allowed;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all var(--transition-fast);
+          opacity: 0.5;
+        }
+
+        .quick-pay-btn.can-pay {
+          cursor: pointer;
+          border-color: var(--success-400);
+          opacity: 1;
+        }
+
+        .quick-pay-btn.can-pay:hover {
+          background: var(--success-50);
+          border-color: var(--success-500);
+          transform: scale(1.1);
+        }
+
+        .quick-pay-btn.paid {
+          background: var(--success-500);
+          border-color: var(--success-500);
+          color: white;
+          cursor: default;
+          opacity: 1;
+        }
+
+        .pay-circle {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: var(--gray-200);
+        }
+
+        .quick-pay-btn.can-pay .pay-circle {
+          background: var(--success-200);
+        }
+
+        .invoice-content {
+          flex: 1;
         }
 
         .invoice-card.success { border-left-color: var(--success-500); }
