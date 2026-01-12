@@ -3587,3 +3587,75 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ===========================================
+   Invoice Quick Pay Button
+   =========================================== */
+
+.invoice-card-wrapper {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.invoice-quick-action {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.quick-pay-btn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--gray-300);
+  background: var(--gray-50);
+  cursor: not-allowed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  opacity: 0.6;
+}
+
+.quick-pay-btn.can-pay {
+  cursor: pointer;
+  border-color: var(--success-400);
+  background: var(--success-50);
+  opacity: 1;
+}
+
+.quick-pay-btn.can-pay:hover {
+  background: var(--success-100);
+  border-color: var(--success-500);
+  transform: scale(1.1);
+}
+
+.quick-pay-btn.paid {
+  background: var(--success-500);
+  border-color: var(--success-500);
+  color: white;
+  cursor: default;
+  opacity: 1;
+}
+
+.pay-circle {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--gray-300);
+}
+
+.quick-pay-btn.can-pay .pay-circle {
+  background: var(--success-400);
+}
+
+.quick-pay-btn.can-pay:hover .pay-circle {
+  background: var(--success-500);
+}
+
+.invoice-content {
+  flex: 1;
+  min-width: 0;
+}
