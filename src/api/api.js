@@ -422,17 +422,8 @@ const api = {
     return handleResponse(response);
   },
 
-  // Targets (Target annuali)
-  getTargets: async () => {
-    const response = await fetch(`${API_URL}/targets`, {
-      headers: {
-        'Authorization': `Bearer ${getAuthToken()}`
-      }
-    });
-    return handleResponse(response);
-  },
-
-  getTargetByYear: async (year) => {
+  // Targets (Target mensili)
+  getMonthlyTargets: async (year) => {
     const response = await fetch(`${API_URL}/targets/${year}`, {
       headers: {
         'Authorization': `Bearer ${getAuthToken()}`
@@ -441,19 +432,40 @@ const api = {
     return handleResponse(response);
   },
 
-  saveTarget: async (year, target) => {
+  getAnnualTotal: async (year) => {
+    const response = await fetch(`${API_URL}/targets/${year}/total`, {
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return handleResponse(response);
+  },
+
+  saveMonthlyTarget: async (year, month, target) => {
     const response = await fetch(`${API_URL}/targets`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${getAuthToken()}`
       },
-      body: JSON.stringify({ year, target })
+      body: JSON.stringify({ year, month, target })
     });
     return handleResponse(response);
   },
 
-  deleteTarget: async (year) => {
+  saveAllTargets: async (year, targets) => {
+    const response = await fetch(`${API_URL}/targets/batch`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({ year, targets })
+    });
+    return handleResponse(response);
+  },
+
+  deleteTargets: async (year) => {
     const response = await fetch(`${API_URL}/targets/${year}`, {
       method: 'DELETE',
       headers: {

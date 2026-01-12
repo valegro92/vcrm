@@ -156,17 +156,22 @@ const createPostgresTables = async () => {
     )
   `);
 
-  // Yearly targets table (Target annuali per fatturato)
+  // Monthly targets table (Target mensili per fatturato)
   await client.query(`
-    CREATE TABLE IF NOT EXISTS yearly_targets (
+    CREATE TABLE IF NOT EXISTS monthly_targets (
       id SERIAL PRIMARY KEY,
-      year INTEGER NOT NULL UNIQUE,
-      target DECIMAL(10, 2) NOT NULL DEFAULT 85000,
+      year INTEGER NOT NULL,
+      month INTEGER NOT NULL,
+      target DECIMAL(10, 2) NOT NULL DEFAULT 0,
       "userId" INTEGER REFERENCES users(id) ON DELETE SET NULL,
       "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(year, month, "userId")
     )
   `);
+
+  // Drop old yearly_targets if exists and migrate
+  await client.query(`DROP TABLE IF EXISTS yearly_targets`).catch(() => {});
 };
 
 const createSQLiteTables = (resolve, reject) => {
@@ -321,18 +326,23 @@ const createSQLiteTables = (resolve, reject) => {
       )
     `);
 
-    // Yearly targets table (Target annuali per fatturato)
+    // Monthly targets table (Target mensili per fatturato)
     db.run(`
-      CREATE TABLE IF NOT EXISTS yearly_targets (
+      CREATE TABLE IF NOT EXISTS monthly_targets (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        year INTEGER NOT NULL UNIQUE,
-        target REAL NOT NULL DEFAULT 85000,
+        year INTEGER NOT NULL,
+        month INTEGER NOT NULL,
+        target REAL NOT NULL DEFAULT 0,
         userId INTEGER,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL,
+        UNIQUE(year, month, userId)
       )
-    `, (err) => {
+    `);
+
+    // Drop old yearly_targets if exists
+    db.run(`DROP TABLE IF EXISTS yearly_targets`, (err) => {
       if (err) {
         reject(err);
       } else {
