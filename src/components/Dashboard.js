@@ -3,63 +3,59 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     Line, ReferenceLine, ComposedChart, Area
 } from 'recharts';
-import { Settings, Target, TrendingUp, Receipt, Wallet, AlertTriangle } from 'lucide-react';
+import { Target, TrendingUp, Receipt, Wallet, AlertTriangle, Calendar, Edit3 } from 'lucide-react';
 import api from '../api/api';
+
+const MONTH_NAMES = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
 
 export default function Dashboard({ opportunities, tasks, contacts, invoices = [], setActiveView }) {
     const [selectedYear, setSelectedYear] = useState(2026);
-    const [annualTarget, setAnnualTarget] = useState(85000);
+    const [monthlyTargets, setMonthlyTargets] = useState(Array(12).fill(0).map((_, i) => ({ month: i, target: 0 })));
     const [showTargetModal, setShowTargetModal] = useState(false);
-    const [editingTarget, setEditingTarget] = useState(85000);
+    const [editingTargets, setEditingTargets] = useState([]);
     const [isSavingTarget, setIsSavingTarget] = useState(false);
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
 
-    // Carica target dal database
+    // Carica target mensili dal database
     useEffect(() => {
-        const loadTarget = async () => {
+        const loadTargets = async () => {
             try {
-                const target = await api.getTargetByYear(selectedYear);
-                setAnnualTarget(target.target || 85000);
-                setEditingTarget(target.target || 85000);
+                const targets = await api.getMonthlyTargets(selectedYear);
+                setMonthlyTargets(targets);
+                setEditingTargets(targets.map(t => ({ ...t })));
             } catch (error) {
-                console.error('Error loading target:', error);
-                setAnnualTarget(85000);
-                setEditingTarget(85000);
+                console.error('Error loading targets:', error);
+                const defaultTargets = Array(12).fill(0).map((_, i) => ({ month: i, target: 0 }));
+                setMonthlyTargets(defaultTargets);
+                setEditingTargets(defaultTargets);
             }
         };
-        loadTarget();
+        loadTargets();
     }, [selectedYear]);
 
-    // Salva target
-    const handleSaveTarget = async () => {
+    // Salva tutti i target
+    const handleSaveTargets = async () => {
         setIsSavingTarget(true);
         try {
-            await api.saveTarget(selectedYear, editingTarget);
-            setAnnualTarget(editingTarget);
+            await api.saveAllTargets(selectedYear, editingTargets);
+            setMonthlyTargets(editingTargets.map(t => ({ ...t })));
             setShowTargetModal(false);
         } catch (error) {
-            alert('Errore nel salvataggio del target: ' + error.message);
+            alert('Errore nel salvataggio dei target: ' + error.message);
         } finally {
             setIsSavingTarget(false);
         }
     };
 
-    // Target mensili distribuiti proporzionalmente
-    const monthlyTargets = useMemo(() => {
-        const distribution = [0.04, 0.06, 0.07, 0.08, 0.09, 0.09, 0.09, 0.05, 0.08, 0.10, 0.12, 0.13];
-        return distribution.map((pct, i) => ({
-            month: i,
-            target: Math.round(annualTarget * pct),
-            label: ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'][i]
-        }));
-    }, [annualTarget]);
+    // Target annuale totale
+    const annualTarget = useMemo(() => {
+        return monthlyTargets.reduce((sum, t) => sum + (parseFloat(t.target) || 0), 0);
+    }, [monthlyTargets]);
 
     // === DATI PER GRAFICI BI ===
     const biData = useMemo(() => {
-        const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
-
-        // Opportunità vinte per l'anno selezionato
+        // Opportunità vinte
         const wonOpportunities = opportunities.filter(o =>
             o.stage === 'Chiuso Vinto' || o.originalStage === 'Chiuso Vinto'
         );
@@ -83,16 +79,11 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
             return sum + ((parseFloat(o.value) || 0) * prob);
         }, 0);
 
-        // Mesi rimanenti nell'anno
-        const isCurrentYear = selectedYear === currentYear;
-        const remainingMonths = isCurrentYear ? Math.max(1, 12 - currentMonth - 1) : 12;
-        const pipelinePerMonth = remainingMonths > 0 ? weightedPipeline / remainingMonths : 0;
-
         // Genera dati per ogni mese
-        const monthlyData = months.map((monthName, index) => {
+        const monthlyData = MONTH_NAMES.map((monthName, index) => {
             const target = monthlyTargets[index]?.target || 0;
 
-            // Ordinato: basato su closeDate delle opportunità vinte
+            // ORDINATO: basato su closeDate delle opportunità vinte
             const ordinato = wonOpportunities
                 .filter(o => {
                     if (!o.closeDate) return false;
@@ -101,8 +92,8 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                 })
                 .reduce((sum, o) => sum + (parseFloat(o.value) || 0), 0);
 
-            // Fatturato: basato su expectedInvoiceDate delle opportunità vinte
-            const fatturato = wonOpportunities
+            // IPOTESI FATTURATO: basato su expectedInvoiceDate delle opportunità vinte
+            const ipotesiFatturato = wonOpportunities
                 .filter(o => {
                     if (!o.expectedInvoiceDate) return false;
                     const d = new Date(o.expectedInvoiceDate);
@@ -110,8 +101,8 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                 })
                 .reduce((sum, o) => sum + (parseFloat(o.value) || 0), 0);
 
-            // Incassato: basato su expectedPaymentDate delle opportunità vinte
-            const incassato = wonOpportunities
+            // IPOTESI INCASSATO: basato su expectedPaymentDate delle opportunità vinte
+            const ipotesiIncassato = wonOpportunities
                 .filter(o => {
                     if (!o.expectedPaymentDate) return false;
                     const d = new Date(o.expectedPaymentDate);
@@ -119,18 +110,40 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                 })
                 .reduce((sum, o) => sum + (parseFloat(o.value) || 0), 0);
 
-            // Forecast (per mesi futuri nell'anno corrente)
+            // FATTURATO REALE: basato su issueDate delle fatture emesse
+            const fatturatoReale = invoices
+                .filter(i => {
+                    if (!i.issueDate) return false;
+                    const d = new Date(i.issueDate);
+                    return d.getMonth() === index &&
+                           d.getFullYear() === selectedYear &&
+                           (i.status === 'emessa' || i.status === 'pagata');
+                })
+                .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+
+            // INCASSATO REALE: basato su paidDate delle fatture pagate
+            const incassatoReale = invoices
+                .filter(i => {
+                    if (!i.paidDate) return false;
+                    const d = new Date(i.paidDate);
+                    return d.getMonth() === index &&
+                           d.getFullYear() === selectedYear &&
+                           i.status === 'pagata';
+                })
+                .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+
+            const isCurrentYear = selectedYear === currentYear;
             const isFuture = isCurrentYear && index > currentMonth;
-            const forecast = isFuture ? pipelinePerMonth : null;
 
             return {
                 month: monthName,
                 monthIndex: index,
                 target,
                 ordinato,
-                fatturato,
-                incassato,
-                forecast,
+                ipotesiFatturato,
+                ipotesiIncassato,
+                fatturatoReale,
+                incassatoReale,
                 isFuture,
                 isPast: isCurrentYear ? index < currentMonth : true,
                 isCurrent: isCurrentYear && index === currentMonth
@@ -138,61 +151,57 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
         });
 
         // Calcoli cumulativi
-        let cumulativeOrdinato = 0;
-        let cumulativeFatturato = 0;
-        let cumulativeIncassato = 0;
-        let cumulativeForecast = 0;
+        let cumOrdinato = 0, cumIpotesiFatturato = 0, cumIpotesiIncassato = 0;
+        let cumFatturatoReale = 0, cumIncassatoReale = 0, cumTarget = 0;
 
         const cumulativeData = monthlyData.map((m, index) => {
-            if (m.isFuture) {
-                cumulativeForecast += m.forecast || 0;
-            } else {
-                cumulativeOrdinato += m.ordinato;
-                cumulativeFatturato += m.fatturato;
-                cumulativeIncassato += m.incassato;
-            }
-
-            // Target cumulativo
-            const cumulativeTarget = monthlyTargets
-                .slice(0, index + 1)
-                .reduce((sum, t) => sum + t.target, 0);
+            cumOrdinato += m.ordinato;
+            cumIpotesiFatturato += m.ipotesiFatturato;
+            cumIpotesiIncassato += m.ipotesiIncassato;
+            cumFatturatoReale += m.fatturatoReale;
+            cumIncassatoReale += m.incassatoReale;
+            cumTarget += m.target;
 
             return {
                 ...m,
-                cumulativeOrdinato,
-                cumulativeFatturato,
-                cumulativeIncassato,
-                cumulativeTarget,
-                cumulativeForecast: m.isFuture ? cumulativeOrdinato + cumulativeForecast : null
+                cumOrdinato,
+                cumIpotesiFatturato,
+                cumIpotesiIncassato,
+                cumFatturatoReale,
+                cumIncassatoReale,
+                cumTarget
             };
         });
 
-        // KPI Summary - basati sull'anno corrente o sull'intero anno selezionato
+        // KPI Summary
+        const isCurrentYear = selectedYear === currentYear;
         const referenceMonth = isCurrentYear ? currentMonth : 11;
-        const ytdOrdinato = cumulativeData[referenceMonth]?.cumulativeOrdinato || 0;
-        const ytdFatturato = cumulativeData[referenceMonth]?.cumulativeFatturato || 0;
-        const ytdIncassato = cumulativeData[referenceMonth]?.cumulativeIncassato || 0;
-        const ytdTarget = cumulativeData[referenceMonth]?.cumulativeTarget || 0;
-        const projectedTotal = ytdOrdinato + (isCurrentYear ? weightedPipeline : 0);
+        const ytdOrdinato = cumulativeData[referenceMonth]?.cumOrdinato || 0;
+        const ytdIpotesiFatturato = cumulativeData[referenceMonth]?.cumIpotesiFatturato || 0;
+        const ytdIpotesiIncassato = cumulativeData[referenceMonth]?.cumIpotesiIncassato || 0;
+        const ytdFatturatoReale = cumulativeData[referenceMonth]?.cumFatturatoReale || 0;
+        const ytdIncassatoReale = cumulativeData[referenceMonth]?.cumIncassatoReale || 0;
+        const ytdTarget = cumulativeData[referenceMonth]?.cumTarget || 0;
 
-        // Calcolo % verso limite 85K forfettario (basato su incassato)
+        // Calcolo % verso limite 85K forfettario (basato su incassato REALE)
         const forfettarioLimit = 85000;
-        const forfettarioProgress = (ytdIncassato / forfettarioLimit) * 100;
-        const forfettarioRemaining = forfettarioLimit - ytdIncassato;
+        const forfettarioProgress = (ytdIncassatoReale / forfettarioLimit) * 100;
+        const forfettarioRemaining = forfettarioLimit - ytdIncassatoReale;
 
         return {
             monthlyData,
             cumulativeData,
             ytdOrdinato,
-            ytdFatturato,
-            ytdIncassato,
+            ytdIpotesiFatturato,
+            ytdIpotesiIncassato,
+            ytdFatturatoReale,
+            ytdIncassatoReale,
             ytdTarget,
             weightedPipeline,
-            projectedTotal,
             forfettarioProgress,
             forfettarioRemaining
         };
-    }, [opportunities, selectedYear, currentMonth, currentYear, monthlyTargets]);
+    }, [opportunities, invoices, selectedYear, currentMonth, currentYear, monthlyTargets]);
 
     const formatCurrency = (value) => {
         if (value >= 1000000) return `€${(value / 1000000).toFixed(1)}M`;
@@ -206,9 +215,10 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
     const colors = {
         target: '#94a3b8',
         ordinato: '#3b82f6',
-        fatturato: '#f59e0b',
-        incassato: '#10b981',
-        forecast: '#8b5cf6',
+        ipotesiFatturato: '#fbbf24',
+        ipotesiIncassato: '#a78bfa',
+        fatturatoReale: '#f59e0b',
+        incassatoReale: '#10b981',
         danger: '#ef4444'
     };
 
@@ -231,7 +241,7 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                     <button
                         className="target-btn"
                         onClick={() => setShowTargetModal(true)}
-                        title="Imposta target annuale"
+                        title="Imposta target mensili"
                     >
                         <Target size={18} />
                         Target: {formatCurrency(annualTarget)}
@@ -249,28 +259,21 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                     </div>
                     <div className="bi-kpi">
                         <span className="bi-kpi-label">
-                            <Receipt size={14} /> Fatturato YTD
+                            <Receipt size={14} /> Fatturato Reale YTD
                         </span>
-                        <span className="bi-kpi-value">{formatCurrency(biData.ytdFatturato)}</span>
+                        <span className="bi-kpi-value">{formatCurrency(biData.ytdFatturatoReale)}</span>
                         <span className="bi-kpi-delta neutral">
-                            {formatCurrency(biData.ytdOrdinato - biData.ytdFatturato)} da fatturare
+                            Ipotesi: {formatCurrency(biData.ytdIpotesiFatturato)}
                         </span>
                     </div>
                     <div className="bi-kpi">
                         <span className="bi-kpi-label">
-                            <Wallet size={14} /> Incassato YTD
+                            <Wallet size={14} /> Incassato Reale YTD
                         </span>
-                        <span className="bi-kpi-value">{formatCurrency(biData.ytdIncassato)}</span>
+                        <span className="bi-kpi-value">{formatCurrency(biData.ytdIncassatoReale)}</span>
                         <span className={`bi-kpi-delta ${biData.forfettarioProgress > 90 ? 'negative' : biData.forfettarioProgress > 75 ? 'warning' : 'positive'}`}>
                             {biData.forfettarioProgress > 90 && <AlertTriangle size={12} />}
                             {biData.forfettarioProgress.toFixed(0)}% limite 85K
-                        </span>
-                    </div>
-                    <div className="bi-kpi">
-                        <span className="bi-kpi-label">Proiezione Anno</span>
-                        <span className="bi-kpi-value">{formatCurrency(biData.projectedTotal)}</span>
-                        <span className={`bi-kpi-delta ${biData.projectedTotal >= annualTarget ? 'positive' : 'negative'}`}>
-                            {biData.projectedTotal >= annualTarget ? '✓' : '⚠'} Target {formatCurrency(annualTarget)}
                         </span>
                     </div>
                 </div>
@@ -283,7 +286,7 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                     <div>
                         <strong>Attenzione Limite Forfettario!</strong>
                         <span>
-                            Hai incassato {formatCurrency(biData.ytdIncassato)} su €85.000 ({biData.forfettarioProgress.toFixed(1)}%).
+                            Hai incassato {formatCurrency(biData.ytdIncassatoReale)} su €85.000 ({biData.forfettarioProgress.toFixed(1)}%).
                             Rimangono {formatCurrency(biData.forfettarioRemaining)}.
                         </span>
                     </div>
@@ -314,16 +317,16 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                 </ResponsiveContainer>
             </div>
 
-            {/* GRAFICO 2: Fatturato vs Incassato */}
+            {/* GRAFICO 2: Fatturato Reale vs Ipotesi */}
             <div className="bi-chart-card">
                 <div className="bi-chart-header">
                     <div>
-                        <h3><Receipt size={18} /> Fatturato vs Incassato</h3>
-                        <p>Andamento fatturazione e incassi previsti</p>
+                        <h3><Receipt size={18} /> Fatturato: Reale vs Ipotesi</h3>
+                        <p>Fatture emesse vs previsioni da opportunità</p>
                     </div>
                     <div className="bi-legend">
-                        <span><span className="dot" style={{ background: colors.fatturato }}></span> Fatturato</span>
-                        <span><span className="dot" style={{ background: colors.incassato }}></span> Incassato</span>
+                        <span><span className="dot" style={{ background: colors.fatturatoReale }}></span> Reale</span>
+                        <span><span className="dot" style={{ background: colors.ipotesiFatturato }}></span> Ipotesi</span>
                     </div>
                 </div>
                 <ResponsiveContainer width="100%" height={280}>
@@ -332,21 +335,22 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                         <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                         <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={formatCurrency} />
                         <Tooltip formatter={formatTooltip} />
-                        <Bar dataKey="fatturato" fill={colors.fatturato} radius={[4, 4, 0, 0]} name="Fatturato" />
-                        <Bar dataKey="incassato" fill={colors.incassato} radius={[4, 4, 0, 0]} name="Incassato" />
+                        <Bar dataKey="fatturatoReale" fill={colors.fatturatoReale} radius={[4, 4, 0, 0]} name="Fatturato Reale" />
+                        <Bar dataKey="ipotesiFatturato" fill={colors.ipotesiFatturato} radius={[4, 4, 0, 0]} name="Ipotesi Fatturato" />
                     </BarChart>
                 </ResponsiveContainer>
             </div>
 
-            {/* GRAFICO 3: Forecast Cumulativo */}
+            {/* GRAFICO 3: Incassato Cumulativo vs Limite 85K */}
             <div className="bi-chart-card">
                 <div className="bi-chart-header">
                     <div>
                         <h3><Wallet size={18} /> Incassato Cumulativo vs Limite 85K</h3>
-                        <p>Monitoraggio incassi per regime forfettario</p>
+                        <p>Monitoraggio incassi reali per regime forfettario</p>
                     </div>
                     <div className="bi-legend">
-                        <span><span className="dot" style={{ background: colors.incassato }}></span> Incassato</span>
+                        <span><span className="dot" style={{ background: colors.incassatoReale }}></span> Incassato Reale</span>
+                        <span><span className="dot" style={{ background: colors.ipotesiIncassato }}></span> Ipotesi Incassato</span>
                         <span><span className="dot" style={{ background: colors.danger }}></span> Limite 85K</span>
                     </div>
                 </div>
@@ -357,50 +361,69 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                         <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={formatCurrency} />
                         <Tooltip formatter={formatTooltip} />
                         <ReferenceLine y={85000} stroke={colors.danger} strokeDasharray="5 5" label={{ value: 'Limite €85K', position: 'right', fill: colors.danger, fontSize: 12 }} />
-                        <ReferenceLine y={75000} stroke={colors.fatturato} strokeDasharray="3 3" label={{ value: 'Soglia attenzione', position: 'right', fill: colors.fatturato, fontSize: 11 }} />
-                        <Area type="monotone" dataKey="cumulativeIncassato" fill={colors.incassato} fillOpacity={0.3} stroke={colors.incassato} strokeWidth={3} name="Incassato Cumulativo" />
-                        <Line type="monotone" dataKey="cumulativeOrdinato" stroke={colors.ordinato} strokeWidth={2} dot={{ r: 3 }} name="Ordinato Cumulativo" />
-                        <Line type="monotone" dataKey="cumulativeFatturato" stroke={colors.fatturato} strokeWidth={2} dot={{ r: 3 }} name="Fatturato Cumulativo" />
+                        <ReferenceLine y={75000} stroke={colors.fatturatoReale} strokeDasharray="3 3" label={{ value: 'Soglia attenzione', position: 'right', fill: colors.fatturatoReale, fontSize: 11 }} />
+                        <Area type="monotone" dataKey="cumIncassatoReale" fill={colors.incassatoReale} fillOpacity={0.3} stroke={colors.incassatoReale} strokeWidth={3} name="Incassato Reale" />
+                        <Line type="monotone" dataKey="cumIpotesiIncassato" stroke={colors.ipotesiIncassato} strokeWidth={2} strokeDasharray="5 5" dot={{ r: 3 }} name="Ipotesi Incassato" />
+                        <Line type="monotone" dataKey="cumTarget" stroke={colors.target} strokeWidth={2} dot={{ r: 3 }} name="Target Cumulativo" />
                     </ComposedChart>
                 </ResponsiveContainer>
             </div>
 
-            {/* Modal Target */}
+            {/* Modal Target Mensili */}
             {showTargetModal && (
                 <div className="modal-overlay" onClick={() => setShowTargetModal(false)}>
-                    <div className="modal target-modal" onClick={e => e.stopPropagation()}>
+                    <div className="modal target-modal monthly-targets-modal" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2><Target size={20} /> Target Annuale {selectedYear}</h2>
+                            <h2><Calendar size={20} /> Target Mensili {selectedYear}</h2>
                             <button className="close-btn" onClick={() => setShowTargetModal(false)}>×</button>
                         </div>
                         <div className="modal-body">
-                            <div className="form-group">
-                                <label>Target fatturato per il {selectedYear}</label>
-                                <input
-                                    type="number"
-                                    value={editingTarget}
-                                    onChange={(e) => setEditingTarget(parseFloat(e.target.value) || 0)}
-                                    placeholder="85000"
-                                    step="1000"
-                                />
-                                <small className="form-hint">
-                                    Per il regime forfettario il limite è €85.000.
-                                    Puoi impostare un target diverso per ogni anno.
-                                </small>
+                            <p className="modal-description">
+                                Imposta il target di fatturato per ogni mese. Il totale annuale sarà la somma dei mesi.
+                            </p>
+                            <div className="monthly-targets-grid">
+                                {editingTargets.map((t, index) => (
+                                    <div key={index} className="monthly-target-input">
+                                        <label>{MONTH_NAMES[index]}</label>
+                                        <input
+                                            type="number"
+                                            value={t.target || ''}
+                                            onChange={(e) => {
+                                                const newTargets = [...editingTargets];
+                                                newTargets[index] = { ...newTargets[index], target: parseFloat(e.target.value) || 0 };
+                                                setEditingTargets(newTargets);
+                                            }}
+                                            placeholder="0"
+                                            step="500"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="target-total">
+                                <span>Totale Annuale:</span>
+                                <strong>{formatCurrency(editingTargets.reduce((sum, t) => sum + (parseFloat(t.target) || 0), 0))}</strong>
                             </div>
                             <div className="target-presets">
-                                <span>Preset:</span>
-                                <button onClick={() => setEditingTarget(50000)}>€50K</button>
-                                <button onClick={() => setEditingTarget(70000)}>€70K</button>
-                                <button onClick={() => setEditingTarget(85000)}>€85K</button>
-                                <button onClick={() => setEditingTarget(100000)}>€100K</button>
+                                <span>Preset annuale:</span>
+                                <button onClick={() => {
+                                    const monthly = Math.round(50000 / 12);
+                                    setEditingTargets(editingTargets.map(t => ({ ...t, target: monthly })));
+                                }}>€50K</button>
+                                <button onClick={() => {
+                                    const monthly = Math.round(70000 / 12);
+                                    setEditingTargets(editingTargets.map(t => ({ ...t, target: monthly })));
+                                }}>€70K</button>
+                                <button onClick={() => {
+                                    const monthly = Math.round(85000 / 12);
+                                    setEditingTargets(editingTargets.map(t => ({ ...t, target: monthly })));
+                                }}>€85K</button>
                             </div>
                         </div>
                         <div className="modal-footer">
                             <button className="secondary-btn" onClick={() => setShowTargetModal(false)}>Annulla</button>
                             <button
                                 className="primary-btn"
-                                onClick={handleSaveTarget}
+                                onClick={handleSaveTargets}
                                 disabled={isSavingTarget}
                             >
                                 {isSavingTarget ? 'Salvataggio...' : 'Salva Target'}
