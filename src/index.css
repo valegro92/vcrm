@@ -2923,6 +2923,7 @@ body {
   padding: var(--space-6);
   overflow-y: auto;
   flex: 1;
+  max-height: calc(90vh - 160px); /* Account for header + footer */
 }
 
 .modal-form {

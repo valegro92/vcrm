@@ -272,30 +272,30 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// PATCH invoice status (quick update)
+// PATCH invoice status (quick update - supports status, issueDate, paidDate)
 router.patch('/:id/status', async (req, res) => {
   try {
-    const { status, paidDate } = req.body;
+    const { status, issueDate, paidDate } = req.body;
 
     const isPostgres = db.type === 'postgres';
     let result;
 
     if (isPostgres) {
       const query = `
-        UPDATE invoices 
-        SET status = $1, "paidDate" = $2, "updatedAt" = CURRENT_TIMESTAMP
-        WHERE id = $3
+        UPDATE invoices
+        SET status = $1, "issueDate" = COALESCE($2, "issueDate"), "paidDate" = $3, "updatedAt" = CURRENT_TIMESTAMP
+        WHERE id = $4
         RETURNING *
       `;
-      const dbResult = await db.pool.query(query, [status, paidDate || null, req.params.id]);
+      const dbResult = await db.pool.query(query, [status, issueDate || null, paidDate || null, req.params.id]);
       result = dbResult.rows[0];
     } else {
       const query = `
-        UPDATE invoices 
-        SET status = ?, paidDate = ?, updatedAt = CURRENT_TIMESTAMP
+        UPDATE invoices
+        SET status = ?, issueDate = COALESCE(?, issueDate), paidDate = ?, updatedAt = CURRENT_TIMESTAMP
         WHERE id = ?
       `;
-      await runQuery(query, [status, paidDate || null, req.params.id]);
+      await runQuery(query, [status, issueDate || null, paidDate || null, req.params.id]);
       result = await getOne('SELECT * FROM invoices WHERE id = ?', [req.params.id]);
     }
 

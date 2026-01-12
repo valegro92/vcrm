@@ -400,14 +400,14 @@ const api = {
     return handleResponse(response);
   },
 
-  updateInvoiceStatus: async (id, status, paidDate) => {
+  updateInvoiceStatus: async (id, status, issueDate = null, paidDate = null) => {
     const response = await fetch(`${API_URL}/invoices/${id}/status`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${getAuthToken()}`
       },
-      body: JSON.stringify({ status, paidDate })
+      body: JSON.stringify({ status, issueDate, paidDate })
     });
     return handleResponse(response);
   },

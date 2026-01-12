@@ -34,7 +34,7 @@ export default function Invoices({ opportunities }) {
   const [showModal, setShowModal] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [draggedItem, setDraggedItem] = useState(null);
-  const [selectedYear, setSelectedYear] = useState(2026);
+  const [selectedYear, setSelectedYear] = useState('2026'); // 'all' o anno specifico
   const [formData, setFormData] = useState({
     invoiceNumber: '',
     opportunityId: '',
@@ -94,30 +94,24 @@ export default function Invoices({ opportunities }) {
 
     try {
       const today = new Date().toISOString().split('T')[0];
-      let updateData = { status: newStatus };
+      let issueDate = null;
+      let paidDate = null;
 
       // Quando passa a "emessa", imposta issueDate se non presente
       if (newStatus === 'emessa' && !draggedItem.issueDate) {
-        updateData.issueDate = today;
+        issueDate = today;
       }
 
       // Quando passa a "pagata", imposta paidDate (IMPORTANTE per forfettario!)
       if (newStatus === 'pagata') {
-        updateData.paidDate = today;
+        paidDate = today;
+        // Se non ha issueDate, imposta anche quella
+        if (!draggedItem.issueDate) {
+          issueDate = today;
+        }
       }
 
-      // Se torna indietro a da_emettere, rimuovi le date
-      if (newStatus === 'da_emettere') {
-        updateData.issueDate = null;
-        updateData.paidDate = null;
-      }
-
-      // Se torna a emessa da pagata, rimuovi solo paidDate
-      if (newStatus === 'emessa' && draggedItem.status === 'pagata') {
-        updateData.paidDate = null;
-      }
-
-      await api.updateInvoice(draggedItem.id, updateData);
+      await api.updateInvoiceStatus(draggedItem.id, newStatus, issueDate, paidDate);
       loadData();
     } catch (error) {
       alert('Errore: ' + error.message);
@@ -131,10 +125,7 @@ export default function Invoices({ opportunities }) {
 
     try {
       const today = new Date().toISOString().split('T')[0];
-      await api.updateInvoice(invoice.id, {
-        status: 'pagata',
-        paidDate: today
-      });
+      await api.updateInvoiceStatus(invoice.id, 'pagata', null, today);
       loadData();
     } catch (error) {
       alert('Errore: ' + error.message);
@@ -234,6 +225,9 @@ export default function Invoices({ opportunities }) {
 
   // Filtra fatture per anno (basato su issueDate o paidDate)
   const filteredInvoices = useMemo(() => {
+    if (selectedYear === 'all') return invoices;
+
+    const year = parseInt(selectedYear);
     return invoices.filter(inv => {
       // Per forfettario: l'anno che conta è quello di INCASSO
       // Ma mostriamo tutte le fatture che hanno attività nell'anno selezionato
@@ -241,23 +235,25 @@ export default function Invoices({ opportunities }) {
       const paidYear = inv.paidDate ? new Date(inv.paidDate).getFullYear() : null;
 
       // Mostra se: emessa in quest'anno O incassata in quest'anno O non ancora emessa
-      return issueYear === selectedYear ||
-             paidYear === selectedYear ||
+      return issueYear === year ||
+             paidYear === year ||
              (!inv.issueDate && !inv.paidDate);
     });
   }, [invoices, selectedYear]);
 
   // Stats per anno selezionato
   const yearStats = useMemo(() => {
+    const year = selectedYear === 'all' ? null : parseInt(selectedYear);
+
     // Fatturato: somma fatture EMESSE nell'anno (basato su issueDate)
     const fatturato = invoices
-      .filter(i => i.issueDate && new Date(i.issueDate).getFullYear() === selectedYear)
+      .filter(i => i.issueDate && (year === null || new Date(i.issueDate).getFullYear() === year))
       .filter(i => i.status === 'emessa' || i.status === 'pagata')
       .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
 
     // Incassato: somma fatture PAGATE nell'anno (basato su paidDate) - QUESTO CONTA PER FORFETTARIO!
     const incassato = invoices
-      .filter(i => i.paidDate && new Date(i.paidDate).getFullYear() === selectedYear)
+      .filter(i => i.paidDate && (year === null || new Date(i.paidDate).getFullYear() === year))
       .filter(i => i.status === 'pagata')
       .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
 
@@ -293,12 +289,13 @@ export default function Invoices({ opportunities }) {
         <select
           className="year-selector"
           value={selectedYear}
-          onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+          onChange={(e) => setSelectedYear(e.target.value)}
         >
-          <option value={2024}>2024</option>
-          <option value={2025}>2025</option>
-          <option value={2026}>2026</option>
-          <option value={2027}>2027</option>
+          <option value="all">Tutte</option>
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
+          <option value="2026">2026</option>
+          <option value="2027">2027</option>
         </select>
         <button className="primary-btn" onClick={openNewInvoice}>
           <Plus size={18} />
@@ -309,16 +306,16 @@ export default function Invoices({ opportunities }) {
       {/* KPI Section */}
       <KPISection>
         <KPICard
-          title={`Fatturato ${selectedYear}`}
+          title={`Fatturato ${selectedYear === 'all' ? 'Totale' : selectedYear}`}
           value={formatCurrency(yearStats.fatturato)}
           subtitle="Fatture emesse"
           icon={<FileText size={20} />}
           color="orange"
         />
         <KPICard
-          title={`Incassato ${selectedYear}`}
+          title={`Incassato ${selectedYear === 'all' ? 'Totale' : selectedYear}`}
           value={formatCurrency(yearStats.incassato)}
-          subtitle={`${forfettarioProgress.toFixed(0)}% del limite 85K`}
+          subtitle={selectedYear !== 'all' ? `${forfettarioProgress.toFixed(0)}% del limite 85K` : 'Totale incassato'}
           icon={<Wallet size={20} />}
           color="green"
         />
@@ -329,17 +326,19 @@ export default function Invoices({ opportunities }) {
           icon={<Clock size={20} />}
           color="blue"
         />
-        <KPICard
-          title="Residuo Forfettario"
-          value={formatCurrency(Math.max(0, forfettarioRemaining))}
-          subtitle={forfettarioProgress > 90 ? '⚠️ Attenzione!' : `${(100 - forfettarioProgress).toFixed(0)}% disponibile`}
-          icon={<AlertTriangle size={20} />}
-          color={forfettarioProgress > 90 ? 'red' : forfettarioProgress > 75 ? 'orange' : 'purple'}
-        />
+        {selectedYear !== 'all' && (
+          <KPICard
+            title="Residuo Forfettario"
+            value={formatCurrency(Math.max(0, forfettarioRemaining))}
+            subtitle={forfettarioProgress > 90 ? '⚠️ Attenzione!' : `${(100 - forfettarioProgress).toFixed(0)}% disponibile`}
+            icon={<AlertTriangle size={20} />}
+            color={forfettarioProgress > 90 ? 'red' : forfettarioProgress > 75 ? 'orange' : 'purple'}
+          />
+        )}
       </KPISection>
 
       {/* Alert Forfettario */}
-      {forfettarioProgress > 75 && (
+      {selectedYear !== 'all' && forfettarioProgress > 75 && (
         <div className={`forfettario-alert ${forfettarioProgress > 90 ? 'danger' : 'warning'}`}>
           <AlertTriangle size={20} />
           <div>
