@@ -341,6 +341,7 @@ export default function YdeaCRM() {
               contacts={contacts}
               openAddModal={openAddModal}
               handleToggleTask={handleToggleTask}
+              refreshData={loadAllData}
             />
           )}
 

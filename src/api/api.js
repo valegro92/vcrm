@@ -163,6 +163,18 @@ const api = {
     return handleResponse(response);
   },
 
+  updateProjectStatus: async (id, projectStatus) => {
+    const response = await fetch(`${API_URL}/opportunities/${id}/project-status`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({ projectStatus })
+    });
+    return handleResponse(response);
+  },
+
   // Tasks
   getTasks: async () => {
     const response = await fetch(`${API_URL}/tasks`, {
