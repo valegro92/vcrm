@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, Target, Users, Euro, CheckSquare, Calendar, Receipt, Settings, LogOut, X } from 'lucide-react';
+import { TrendingUp, Target, Users, Euro, CheckSquare, Calendar, Receipt, Settings, LogOut, X, FolderKanban } from 'lucide-react';
 
 export default function Sidebar({ activeView, setActiveView, handleLogout, isOpen, onClose }) {
     const NavItem = ({ icon, label, view }) => (
@@ -45,6 +45,7 @@ export default function Sidebar({ activeView, setActiveView, handleLogout, isOpe
                     <NavItem icon={<Users size={20} />} label="Contatti" view="contacts" />
                     <NavItem icon={<Euro size={20} />} label="Opportunità" view="opportunities" />
                     <NavItem icon={<CheckSquare size={20} />} label="Attività" view="tasks" />
+                    <NavItem icon={<FolderKanban size={20} />} label="Progetti" view="projects" />
                     <NavItem icon={<Receipt size={20} />} label="Fatture" view="invoices" />
                     <NavItem icon={<Calendar size={20} />} label="Calendario" view="calendar" />
                 </nav>
