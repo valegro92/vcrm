@@ -4272,6 +4272,37 @@ body {
   border-left: 3px solid var(--error-500);
 }
 
+.project-kanban-card.has-promotion {
+  border-top: 2px solid var(--success-500);
+}
+
+/* Promotion Banner */
+.promotion-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px var(--space-3);
+  background: linear-gradient(90deg, var(--success-500), var(--success-400));
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.promotion-banner:hover {
+  background: linear-gradient(90deg, var(--success-600), var(--success-500));
+}
+
+.promotion-banner svg {
+  flex-shrink: 0;
+}
+
+.promotion-banner svg:last-child {
+  margin-left: auto;
+}
+
 .project-kanban-header {
   padding: var(--space-3);
   display: flex;

@@ -150,18 +150,66 @@ export default function Projects({ opportunities, tasks, invoices, contacts, ope
         }
     };
 
+    // Logica per suggerire avanzamento di stato
+    const getPromotionSuggestion = (project) => {
+        const { projectStatus, taskProgress, allInvoicesPaid, projectTasks, projectInvoices } = project;
+
+        // In Lavorazione → In Revisione: tutti i task completati
+        if (projectStatus === 'in_lavorazione' && taskProgress === 100 && projectTasks.length > 0) {
+            return { nextStatus: 'in_revisione', label: 'Pronto per revisione', icon: Eye };
+        }
+
+        // In Revisione → Consegnato: manuale (approvazione cliente)
+        // Nessun suggerimento automatico per questo step
+
+        // Consegnato → Chiuso: tutte le fatture pagate
+        if (projectStatus === 'consegnato' && allInvoicesPaid && projectInvoices.length > 0) {
+            return { nextStatus: 'chiuso', label: 'Pronto per chiusura', icon: Lock };
+        }
+
+        // Chiuso → Archiviato: manuale
+        if (projectStatus === 'chiuso') {
+            return { nextStatus: 'archiviato', label: 'Archivia progetto', icon: Archive };
+        }
+
+        return null;
+    };
+
+    // Azione rapida per avanzare stato
+    const handlePromote = async (project, nextStatus) => {
+        try {
+            await api.updateProjectStatus(project.id, nextStatus);
+            if (refreshData) {
+                refreshData();
+            }
+        } catch (error) {
+            console.error('Failed to promote project:', error);
+            alert('Errore nell\'avanzamento del progetto');
+        }
+    };
+
     // Render card progetto
     const renderProjectCard = (project) => {
         const isExpanded = expandedProject === project.id;
+        const promotion = getPromotionSuggestion(project);
 
         return (
             <div
                 key={project.id}
-                className={`project-kanban-card ${project.hasOverdueTasks ? 'has-overdue' : ''} ${draggedProject?.id === project.id ? 'dragging' : ''}`}
+                className={`project-kanban-card ${project.hasOverdueTasks ? 'has-overdue' : ''} ${draggedProject?.id === project.id ? 'dragging' : ''} ${promotion ? 'has-promotion' : ''}`}
                 draggable
                 onDragStart={(e) => handleDragStart(e, project)}
                 onDragEnd={handleDragEnd}
             >
+                {/* Promotion Banner */}
+                {promotion && (
+                    <div className="promotion-banner" onClick={(e) => { e.stopPropagation(); handlePromote(project, promotion.nextStatus); }}>
+                        <promotion.icon size={12} />
+                        <span>{promotion.label}</span>
+                        <ChevronRight size={12} />
+                    </div>
+                )}
+
                 {/* Card Header */}
                 <div className="project-kanban-header" onClick={() => toggleExpand(project.id)}>
                     <div className="project-kanban-title">
