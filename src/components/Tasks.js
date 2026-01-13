@@ -1,12 +1,22 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Calendar, Edit2, Trash2, CheckCircle, Circle, Clock, AlertCircle, ListTodo, Flag, Users, Calendar as CalendarIcon } from 'lucide-react';
-import { PageHeader, SearchFilter, KPICard, KPISection } from './ui';
+import {
+    Plus, Calendar, Edit2, Trash2, CheckCircle, Circle, Clock, AlertCircle,
+    ListTodo, Flag, Users, Calendar as CalendarIcon, Briefcase, Target, Filter
+} from 'lucide-react';
+import { PageHeader, KPICard, KPISection } from './ui';
 import { downloadICS } from '../utils/icsGenerator';
 
-export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask, handleToggleTask }) {
+export default function Tasks({ tasks, contacts, opportunities, openAddModal, handleDeleteTask, handleToggleTask }) {
     const [statusFilter, setStatusFilter] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
     const [priorityFilter, setPriorityFilter] = useState('all');
+    const [opportunityFilter, setOpportunityFilter] = useState('all');
+
+    // Get opportunities that have tasks linked
+    const opportunitiesWithTasks = useMemo(() => {
+        const oppIds = new Set(tasks.filter(t => t.opportunityId).map(t => t.opportunityId));
+        return opportunities?.filter(o => oppIds.has(o.id)) || [];
+    }, [tasks, opportunities]);
 
     const filteredTasks = useMemo(() => {
         let result = [...tasks];
@@ -31,24 +41,34 @@ export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask,
             result = result.filter(t => t.priority?.toLowerCase() === priorityFilter.toLowerCase());
         }
 
+        if (opportunityFilter !== 'all') {
+            if (opportunityFilter === 'linked') {
+                result = result.filter(t => t.opportunityId);
+            } else if (opportunityFilter === 'unlinked') {
+                result = result.filter(t => !t.opportunityId);
+            } else {
+                result = result.filter(t => t.opportunityId === parseInt(opportunityFilter));
+            }
+        }
+
         // Sort by due date
         return result.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
-    }, [tasks, searchTerm, statusFilter, priorityFilter]);
+    }, [tasks, searchTerm, statusFilter, priorityFilter, opportunityFilter]);
 
     const getPriorityStyle = (priority) => {
         switch (priority?.toLowerCase()) {
-            case 'alta': return { bg: 'linear-gradient(135deg, #fee2e2, #fecaca)', color: '#dc2626', icon: '🔴' };
-            case 'media': return { bg: 'linear-gradient(135deg, #fef3c7, #fde68a)', color: '#d97706', icon: '🟡' };
-            default: return { bg: 'linear-gradient(135deg, #d1fae5, #a7f3d0)', color: '#059669', icon: '🟢' };
+            case 'alta': return { bg: '#fee2e2', color: '#dc2626', border: '#fecaca' };
+            case 'media': return { bg: '#fef3c7', color: '#d97706', border: '#fde68a' };
+            default: return { bg: '#d1fae5', color: '#059669', border: '#a7f3d0' };
         }
     };
 
     const getTypeStyle = (type) => {
         switch (type?.toLowerCase()) {
-            case 'chiamata': return { bg: 'linear-gradient(135deg, #dbeafe, #bfdbfe)', color: '#2563eb' };
-            case 'meeting': return { bg: 'linear-gradient(135deg, #ede9fe, #ddd6fe)', color: '#7c3aed' };
-            case 'email': return { bg: 'linear-gradient(135deg, #cffafe, #a5f3fc)', color: '#0891b2' };
-            default: return { bg: 'linear-gradient(135deg, #f1f5f9, #e2e8f0)', color: '#475569' };
+            case 'chiamata': return { bg: '#dbeafe', color: '#2563eb', border: '#bfdbfe' };
+            case 'meeting': return { bg: '#ede9fe', color: '#7c3aed', border: '#ddd6fe' };
+            case 'email': return { bg: '#cffafe', color: '#0891b2', border: '#a5f3fc' };
+            default: return { bg: '#f1f5f9', color: '#475569', border: '#e2e8f0' };
         }
     };
 
@@ -71,12 +91,17 @@ export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask,
 
         if (d.toDateString() === today.toDateString()) return 'Oggi';
         if (d.toDateString() === tomorrow.toDateString()) return 'Domani';
-        return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
+        return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
     };
 
     const getContactName = (contactId) => {
         const contact = contacts.find(c => c.id === contactId);
-        return contact?.name || 'Nessun contatto';
+        return contact?.name || null;
+    };
+
+    const getOpportunity = (opportunityId) => {
+        if (!opportunityId || !opportunities) return null;
+        return opportunities.find(o => o.id === opportunityId);
     };
 
     const stats = useMemo(() => {
@@ -84,17 +109,13 @@ export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask,
         const pending = tasks.length - completed;
         const overdue = tasks.filter(t => isOverdue(t.dueDate) && t.status !== 'Completata').length;
         const today = tasks.filter(t => isToday(t.dueDate) && t.status !== 'Completata').length;
-        return { completed, pending, overdue, today };
+        const linked = tasks.filter(t => t.opportunityId).length;
+        return { completed, pending, overdue, today, linked };
     }, [tasks]);
-    const filters = [
-        { value: 'all', label: 'Tutte' },
-        { value: 'pending', label: 'Da fare' },
-        { value: 'completed', label: 'Completate' }
-    ];
 
     return (
         <div className="page-container">
-            {/* Unified Header */}
+            {/* Header */}
             <PageHeader
                 title="Attività"
                 subtitle={`${filteredTasks.length} attività • ${stats.pending} da completare`}
@@ -134,17 +155,74 @@ export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask,
                 />
             </KPISection>
 
-            {/* Unified Search & Filters */}
-            <SearchFilter
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
-                searchPlaceholder="Cerca attività..."
-                filters={filters}
-                activeFilter={statusFilter}
-                onFilterChange={setStatusFilter}
-            />
+            {/* Enhanced Filters */}
+            <div className="task-filters">
+                {/* Search */}
+                <div className="search-box">
+                    <input
+                        type="text"
+                        placeholder="Cerca attività..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
 
-            {/* Tasks Grid */}
+                {/* Filter Row */}
+                <div className="filter-row">
+                    {/* Status Filter */}
+                    <div className="filter-group">
+                        <div className="filter-tags">
+                            {[
+                                { value: 'all', label: 'Tutte' },
+                                { value: 'pending', label: 'Da fare' },
+                                { value: 'completed', label: 'Completate' }
+                            ].map(f => (
+                                <button
+                                    key={f.value}
+                                    className={`filter-tag ${statusFilter === f.value ? 'active' : ''}`}
+                                    onClick={() => setStatusFilter(f.value)}
+                                >
+                                    {f.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Opportunity Filter */}
+                    <div className="filter-group">
+                        <select
+                            className="filter-select"
+                            value={opportunityFilter}
+                            onChange={(e) => setOpportunityFilter(e.target.value)}
+                        >
+                            <option value="all">Tutte le opportunità</option>
+                            <option value="linked">Solo collegate</option>
+                            <option value="unlinked">Non collegate</option>
+                            {opportunitiesWithTasks.map(opp => (
+                                <option key={opp.id} value={opp.id}>
+                                    {opp.title} - {opp.company}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Priority Filter */}
+                    <div className="filter-group">
+                        <select
+                            className="filter-select"
+                            value={priorityFilter}
+                            onChange={(e) => setPriorityFilter(e.target.value)}
+                        >
+                            <option value="all">Tutte le priorità</option>
+                            <option value="alta">Alta</option>
+                            <option value="media">Media</option>
+                            <option value="bassa">Bassa</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {/* Tasks List */}
             {filteredTasks.length === 0 ? (
                 <div className="empty-state">
                     <ListTodo size={64} strokeWidth={1} />
@@ -155,131 +233,100 @@ export default function Tasks({ tasks, contacts, openAddModal, handleDeleteTask,
                     </button>
                 </div>
             ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="tasks-list">
                     {filteredTasks.map(task => {
                         const priorityStyle = getPriorityStyle(task.priority);
                         const typeStyle = getTypeStyle(task.type);
                         const isCompleted = task.status === 'Completata';
                         const overdue = isOverdue(task.dueDate) && !isCompleted;
                         const todayTask = isToday(task.dueDate);
+                        const opportunity = getOpportunity(task.opportunityId);
+                        const contactName = getContactName(task.contactId);
 
                         return (
                             <div
                                 key={task.id}
-                                className={`task-card-row ${overdue ? 'overdue' : ''} ${isCompleted ? 'completed' : ''}`}
+                                className={`task-card ${overdue ? 'overdue' : ''} ${isCompleted ? 'completed' : ''} ${opportunity ? 'has-opportunity' : ''}`}
                             >
-                                {/* Checkbox */}
+                                {/* Left: Checkbox */}
                                 <button
+                                    className={`task-checkbox ${isCompleted ? 'checked' : ''}`}
                                     onClick={() => handleToggleTask(task.id)}
-                                    style={{
-                                        width: '32px',
-                                        height: '32px',
-                                        borderRadius: '10px',
-                                        border: isCompleted ? 'none' : '2px solid #cbd5e1',
-                                        background: isCompleted ? 'linear-gradient(135deg, #10b981, #34d399)' : 'white',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        flexShrink: 0,
-                                        transition: 'all 0.2s ease'
-                                    }}
                                 >
                                     {isCompleted ? (
-                                        <CheckCircle size={20} color="white" />
+                                        <CheckCircle size={22} />
                                     ) : (
-                                        <Circle size={20} color="#cbd5e1" />
+                                        <Circle size={22} />
                                     )}
                                 </button>
 
-                                {/* Content */}
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        marginBottom: '8px',
-                                        flexWrap: 'wrap'
-                                    }}>
-                                        <span style={{
-                                            fontSize: '16px',
-                                            fontWeight: 600,
-                                            color: isCompleted ? '#94a3b8' : '#0f172a',
-                                            textDecoration: isCompleted ? 'line-through' : 'none'
-                                        }}>
+                                {/* Center: Content */}
+                                <div className="task-content">
+                                    {/* Title Row */}
+                                    <div className="task-title-row">
+                                        <span className={`task-title ${isCompleted ? 'done' : ''}`}>
                                             {task.title}
                                         </span>
 
                                         {/* Badges */}
-                                        <span style={{
-                                            padding: '4px 12px',
-                                            borderRadius: '20px',
-                                            fontSize: '11px',
-                                            fontWeight: 700,
-                                            background: typeStyle.bg,
-                                            color: typeStyle.color,
-                                            textTransform: 'uppercase'
-                                        }}>
-                                            {task.type || 'Task'}
-                                        </span>
-
-                                        <span style={{
-                                            padding: '4px 12px',
-                                            borderRadius: '20px',
-                                            fontSize: '11px',
-                                            fontWeight: 700,
-                                            background: priorityStyle.bg,
-                                            color: priorityStyle.color,
-                                            textTransform: 'uppercase',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '4px'
-                                        }}>
-                                            <Flag size={12} />
-                                            {task.priority || 'Normale'}
-                                        </span>
+                                        <div className="task-badges">
+                                            <span
+                                                className="badge type-badge"
+                                                style={{
+                                                    background: typeStyle.bg,
+                                                    color: typeStyle.color,
+                                                    borderColor: typeStyle.border
+                                                }}
+                                            >
+                                                {task.type || 'Task'}
+                                            </span>
+                                            <span
+                                                className="badge priority-badge"
+                                                style={{
+                                                    background: priorityStyle.bg,
+                                                    color: priorityStyle.color,
+                                                    borderColor: priorityStyle.border
+                                                }}
+                                            >
+                                                <Flag size={10} />
+                                                {task.priority || 'Normale'}
+                                            </span>
+                                        </div>
                                     </div>
 
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                                        <span style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '6px',
-                                            fontSize: '13px',
-                                            color: '#64748b'
-                                        }}>
-                                            <Users size={14} />
-                                            {getContactName(task.contactId)}
-                                        </span>
+                                    {/* Meta Row */}
+                                    <div className="task-meta">
+                                        {/* Opportunity Link - NEW! */}
+                                        {opportunity && (
+                                            <span className="meta-item opportunity-link">
+                                                <Target size={14} />
+                                                <span className="opp-title">{opportunity.title}</span>
+                                                <span className="opp-company">({opportunity.company})</span>
+                                                {opportunity.stage === 'Chiuso Vinto' && (
+                                                    <span className="opp-won">Vinta</span>
+                                                )}
+                                            </span>
+                                        )}
 
-                                        <span style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '6px',
-                                            fontSize: '13px',
-                                            color: overdue ? '#dc2626' : todayTask ? '#d97706' : '#64748b',
-                                            fontWeight: overdue || todayTask ? 600 : 400
-                                        }}>
+                                        {/* Contact */}
+                                        {contactName && (
+                                            <span className="meta-item">
+                                                <Users size={14} />
+                                                {contactName}
+                                            </span>
+                                        )}
+
+                                        {/* Due Date */}
+                                        <span className={`meta-item due-date ${overdue ? 'overdue' : ''} ${todayTask ? 'today' : ''}`}>
                                             <Calendar size={14} />
                                             {formatDate(task.dueDate)}
-                                            {overdue && (
-                                                <span style={{
-                                                    padding: '2px 8px',
-                                                    background: '#fee2e2',
-                                                    color: '#dc2626',
-                                                    borderRadius: '10px',
-                                                    fontSize: '11px',
-                                                    fontWeight: 700
-                                                }}>
-                                                    SCADUTA
-                                                </span>
-                                            )}
+                                            {overdue && <span className="overdue-badge">SCADUTA</span>}
                                         </span>
                                     </div>
                                 </div>
 
-                                {/* Actions */}
-                                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                                {/* Right: Actions */}
+                                <div className="task-actions">
                                     <button
                                         className="action-btn"
                                         onClick={() => downloadICS(task)}

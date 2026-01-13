@@ -325,6 +325,7 @@ export default function YdeaCRM() {
             <Tasks
               tasks={tasks}
               contacts={contacts}
+              opportunities={opportunities}
               openAddModal={openAddModal}
               handleDeleteTask={handleDeleteTask}
               handleToggleTask={handleToggleTask}

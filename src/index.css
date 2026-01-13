@@ -3835,3 +3835,303 @@ body {
 .empty-column span {
   font-size: 12px;
 }
+
+/* ===========================================
+   Enhanced Task Cards & Filters
+   =========================================== */
+
+.task-filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.task-filters .search-box {
+  position: relative;
+}
+
+.task-filters .search-box input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-xl);
+  font-size: 14px;
+  transition: all var(--transition-fast);
+  background: white;
+}
+
+.task-filters .search-box input:focus {
+  border-color: var(--primary-400);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  outline: none;
+}
+
+.filter-row {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.filter-select {
+  padding: 8px 32px 8px 12px;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  font-size: 13px;
+  background: white;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+
+.filter-select:hover {
+  border-color: var(--gray-300);
+}
+
+.filter-select:focus {
+  border-color: var(--primary-400);
+  outline: none;
+}
+
+/* Task List */
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Task Card */
+.task-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: white;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--gray-100);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.task-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.task-card.overdue {
+  border-left: 4px solid var(--error-500);
+  background: linear-gradient(to right, rgba(239, 68, 68, 0.02), white);
+}
+
+.task-card.completed {
+  opacity: 0.7;
+  background: var(--gray-50);
+}
+
+.task-card.has-opportunity {
+  border-left: 4px solid var(--primary-500);
+}
+
+.task-card.has-opportunity.completed {
+  border-left-color: var(--gray-300);
+}
+
+/* Task Checkbox */
+.task-checkbox {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-lg);
+  border: 2px solid var(--gray-300);
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+  color: var(--gray-400);
+}
+
+.task-checkbox:hover {
+  border-color: var(--success-400);
+  color: var(--success-500);
+}
+
+.task-checkbox.checked {
+  background: var(--success-500);
+  border-color: var(--success-500);
+  color: white;
+}
+
+/* Task Content */
+.task-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-2);
+}
+
+.task-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gray-900);
+}
+
+.task-title.done {
+  text-decoration: line-through;
+  color: var(--gray-400);
+}
+
+.task-badges {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.task-badges .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border: 1px solid;
+}
+
+/* Task Meta */
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.task-meta .meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--gray-500);
+}
+
+.task-meta .meta-item svg {
+  flex-shrink: 0;
+}
+
+/* Opportunity Link - Special Styling */
+.task-meta .opportunity-link {
+  background: linear-gradient(135deg, var(--primary-50), var(--primary-100));
+  padding: 4px 12px;
+  border-radius: var(--radius-lg);
+  color: var(--primary-700);
+  font-weight: 500;
+}
+
+.task-meta .opportunity-link .opp-title {
+  font-weight: 600;
+}
+
+.task-meta .opportunity-link .opp-company {
+  color: var(--primary-500);
+  font-size: 12px;
+}
+
+.task-meta .opportunity-link .opp-won {
+  background: var(--success-500);
+  color: white;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-left: 4px;
+}
+
+/* Due Date Styling */
+.task-meta .due-date.overdue {
+  color: var(--error-600);
+  font-weight: 600;
+}
+
+.task-meta .due-date.today {
+  color: var(--warning-600);
+  font-weight: 600;
+}
+
+.task-meta .overdue-badge {
+  background: var(--error-100);
+  color: var(--error-700);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+/* Task Actions */
+.task-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  opacity: 0.5;
+  transition: opacity var(--transition-fast);
+}
+
+.task-card:hover .task-actions {
+  opacity: 1;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .task-card {
+    flex-wrap: wrap;
+  }
+
+  .task-content {
+    width: 100%;
+    order: 2;
+  }
+
+  .task-checkbox {
+    order: 1;
+  }
+
+  .task-actions {
+    order: 3;
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: var(--space-2);
+    opacity: 1;
+  }
+
+  .filter-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  .filter-select {
+    width: 100%;
+  }
+}
