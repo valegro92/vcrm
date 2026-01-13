@@ -3,7 +3,7 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     Line, ReferenceLine, ComposedChart, Area
 } from 'recharts';
-import { Target, TrendingUp, Receipt, Wallet, AlertTriangle, Calendar, Edit3 } from 'lucide-react';
+import { Target, TrendingUp, Receipt, Wallet, AlertTriangle, Calendar, Edit3, FolderKanban, Package } from 'lucide-react';
 import api from '../api/api';
 
 const MONTH_NAMES = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
@@ -188,6 +188,27 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
         const forfettarioProgress = (ytdIncassatoReale / forfettarioLimit) * 100;
         const forfettarioRemaining = forfettarioLimit - ytdIncassatoReale;
 
+        // === METRICHE PROGETTI (DELIVERY) ===
+        // Progetti in lavorazione
+        const projectsInProgress = wonOpportunities.filter(o =>
+            o.projectStatus === 'in_lavorazione' || !o.projectStatus
+        );
+        const projectsInProgressCount = projectsInProgress.length;
+        const projectsInProgressValue = projectsInProgress.reduce((sum, o) => sum + (parseFloat(o.value) || 0), 0);
+
+        // Progetti in revisione
+        const projectsInReview = wonOpportunities.filter(o => o.projectStatus === 'in_revisione');
+        const projectsInReviewCount = projectsInReview.length;
+
+        // Progetti consegnati (in attesa pagamento)
+        const projectsDelivered = wonOpportunities.filter(o => o.projectStatus === 'consegnato');
+        const projectsDeliveredCount = projectsDelivered.length;
+        const projectsDeliveredValue = projectsDelivered.reduce((sum, o) => sum + (parseFloat(o.value) || 0), 0);
+
+        // Progetti chiusi
+        const projectsClosed = wonOpportunities.filter(o => o.projectStatus === 'chiuso');
+        const projectsClosedCount = projectsClosed.length;
+
         return {
             monthlyData,
             cumulativeData,
@@ -199,7 +220,14 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
             ytdTarget,
             weightedPipeline,
             forfettarioProgress,
-            forfettarioRemaining
+            forfettarioRemaining,
+            // Project metrics
+            projectsInProgressCount,
+            projectsInProgressValue,
+            projectsInReviewCount,
+            projectsDeliveredCount,
+            projectsDeliveredValue,
+            projectsClosedCount
         };
     }, [opportunities, invoices, selectedYear, currentMonth, currentYear, monthlyTargets]);
 
@@ -292,6 +320,51 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                     </div>
                 </div>
             )}
+
+            {/* Sezione Delivery/Progetti */}
+            <div className="bi-delivery-section">
+                <h3><FolderKanban size={18} /> Stato Delivery</h3>
+                <div className="delivery-kpis">
+                    <div className="delivery-kpi" onClick={() => setActiveView('projects')}>
+                        <div className="delivery-kpi-icon blue">
+                            <FolderKanban size={20} />
+                        </div>
+                        <div className="delivery-kpi-content">
+                            <span className="delivery-kpi-value">{biData.projectsInProgressCount}</span>
+                            <span className="delivery-kpi-label">In Lavorazione</span>
+                            <span className="delivery-kpi-amount">{formatCurrency(biData.projectsInProgressValue)}</span>
+                        </div>
+                    </div>
+                    <div className="delivery-kpi" onClick={() => setActiveView('projects')}>
+                        <div className="delivery-kpi-icon orange">
+                            <Calendar size={20} />
+                        </div>
+                        <div className="delivery-kpi-content">
+                            <span className="delivery-kpi-value">{biData.projectsInReviewCount}</span>
+                            <span className="delivery-kpi-label">In Revisione</span>
+                        </div>
+                    </div>
+                    <div className="delivery-kpi" onClick={() => setActiveView('projects')}>
+                        <div className="delivery-kpi-icon green">
+                            <Package size={20} />
+                        </div>
+                        <div className="delivery-kpi-content">
+                            <span className="delivery-kpi-value">{biData.projectsDeliveredCount}</span>
+                            <span className="delivery-kpi-label">Consegnati</span>
+                            <span className="delivery-kpi-amount">{formatCurrency(biData.projectsDeliveredValue)}</span>
+                        </div>
+                    </div>
+                    <div className="delivery-kpi" onClick={() => setActiveView('projects')}>
+                        <div className="delivery-kpi-icon purple">
+                            <Target size={20} />
+                        </div>
+                        <div className="delivery-kpi-content">
+                            <span className="delivery-kpi-value">{biData.projectsClosedCount}</span>
+                            <span className="delivery-kpi-label">Chiusi</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {/* GRAFICO 1: Ordinato vs Target */}
             <div className="bi-chart-card">
