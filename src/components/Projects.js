@@ -2,13 +2,24 @@ import React, { useState, useMemo } from 'react';
 import {
     FolderKanban, Plus, CheckCircle, Circle, Clock, Calendar, Euro, FileText,
     ChevronDown, ChevronRight, Target, Users, Receipt, AlertTriangle,
-    Edit2, MoreHorizontal, Check, Building
+    Edit2, Archive, Check, Building, Play, Eye, Package, Lock
 } from 'lucide-react';
 import { PageHeader, KPICard, KPISection } from './ui';
+import api from '../api/api';
 
-export default function Projects({ opportunities, tasks, invoices, contacts, openAddModal, handleToggleTask }) {
+// Definizione colonne Kanban per progetti
+const PROJECT_COLUMNS = [
+    { id: 'in_lavorazione', title: 'In Lavorazione', icon: Play, color: 'blue' },
+    { id: 'in_revisione', title: 'In Revisione', icon: Eye, color: 'orange' },
+    { id: 'consegnato', title: 'Consegnato', icon: Package, color: 'green' },
+    { id: 'chiuso', title: 'Chiuso', icon: Lock, color: 'purple' }
+];
+
+export default function Projects({ opportunities, tasks, invoices, contacts, openAddModal, handleToggleTask, refreshData }) {
     const [expandedProject, setExpandedProject] = useState(null);
-    const [statusFilter, setStatusFilter] = useState('all'); // all, active, completed
+    const [showArchived, setShowArchived] = useState(false);
+    const [draggedProject, setDraggedProject] = useState(null);
+    const [dragOverColumn, setDragOverColumn] = useState(null);
 
     // Progetti = Opportunità vinte (Chiuso Vinto)
     const projects = useMemo(() => {
@@ -28,14 +39,19 @@ export default function Projects({ opportunities, tasks, invoices, contacts, ope
                 const totalInvoiced = projectInvoices.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
                 const totalPaid = paidInvoices.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
 
-                // Stato del progetto
-                const isCompleted = taskProgress === 100 && projectTasks.length > 0;
+                // Check se tutte le fatture sono pagate
+                const allInvoicesPaid = projectInvoices.length > 0 && projectInvoices.every(i => i.status === 'pagata');
+
+                // Stato overdue
                 const hasOverdueTasks = projectTasks.some(t =>
                     t.status !== 'Completata' && new Date(t.dueDate) < new Date()
                 );
 
                 // Contatto collegato
                 const contact = contacts.find(c => c.id === opp.contactId);
+
+                // Status del progetto (default: in_lavorazione)
+                const projectStatus = opp.projectStatus || 'in_lavorazione';
 
                 return {
                     ...opp,
@@ -46,36 +62,36 @@ export default function Projects({ opportunities, tasks, invoices, contacts, ope
                     paidInvoices,
                     totalInvoiced,
                     totalPaid,
-                    isCompleted,
+                    allInvoicesPaid,
                     hasOverdueTasks,
-                    contact
+                    contact,
+                    projectStatus
                 };
             })
             .sort((a, b) => new Date(b.closeDate) - new Date(a.closeDate));
     }, [opportunities, tasks, invoices, contacts]);
 
-    // Filtra progetti
-    const filteredProjects = useMemo(() => {
-        if (statusFilter === 'active') {
-            return projects.filter(p => !p.isCompleted);
-        }
-        if (statusFilter === 'completed') {
-            return projects.filter(p => p.isCompleted);
-        }
-        return projects;
-    }, [projects, statusFilter]);
+    // Progetti per colonna
+    const projectsByColumn = useMemo(() => {
+        const columns = {};
+        PROJECT_COLUMNS.forEach(col => {
+            columns[col.id] = projects.filter(p => p.projectStatus === col.id);
+        });
+        // Archiviati separati
+        columns['archiviato'] = projects.filter(p => p.projectStatus === 'archiviato');
+        return columns;
+    }, [projects]);
 
     // Stats
     const stats = useMemo(() => {
-        const active = projects.filter(p => !p.isCompleted).length;
-        const completed = projects.filter(p => p.isCompleted).length;
+        const active = projects.filter(p => p.projectStatus !== 'archiviato' && p.projectStatus !== 'chiuso').length;
+        const inProgress = projectsByColumn['in_lavorazione']?.length || 0;
+        const delivered = projectsByColumn['consegnato']?.length || 0;
         const totalValue = projects.reduce((sum, p) => sum + (parseFloat(p.value) || 0), 0);
-        const totalTasks = projects.reduce((sum, p) => sum + p.projectTasks.length, 0);
-        const completedTasksTotal = projects.reduce((sum, p) => sum + p.completedTasks.length, 0);
-        const overdue = projects.filter(p => p.hasOverdueTasks).length;
+        const overdue = projects.filter(p => p.hasOverdueTasks && p.projectStatus !== 'archiviato').length;
 
-        return { active, completed, totalValue, totalTasks, completedTasksTotal, overdue };
-    }, [projects]);
+        return { active, inProgress, delivered, totalValue, overdue };
+    }, [projects, projectsByColumn]);
 
     const formatCurrency = (value) => {
         const num = parseFloat(value) || 0;
@@ -87,13 +103,207 @@ export default function Projects({ opportunities, tasks, invoices, contacts, ope
         if (!dateStr) return '-';
         return new Date(dateStr).toLocaleDateString('it-IT', {
             day: 'numeric',
-            month: 'short',
-            year: 'numeric'
+            month: 'short'
         });
     };
 
     const toggleExpand = (projectId) => {
         setExpandedProject(expandedProject === projectId ? null : projectId);
+    };
+
+    // Drag & Drop handlers
+    const handleDragStart = (e, project) => {
+        setDraggedProject(project);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleDragEnd = () => {
+        setDraggedProject(null);
+        setDragOverColumn(null);
+    };
+
+    const handleDragOver = (e, columnId) => {
+        e.preventDefault();
+        setDragOverColumn(columnId);
+    };
+
+    const handleDragLeave = () => {
+        setDragOverColumn(null);
+    };
+
+    const handleDrop = async (e, newStatus) => {
+        e.preventDefault();
+        setDragOverColumn(null);
+
+        if (!draggedProject || draggedProject.projectStatus === newStatus) {
+            return;
+        }
+
+        try {
+            await api.updateProjectStatus(draggedProject.id, newStatus);
+            if (refreshData) {
+                refreshData();
+            }
+        } catch (error) {
+            console.error('Failed to update project status:', error);
+            alert('Errore nell\'aggiornamento dello stato del progetto');
+        }
+    };
+
+    // Render card progetto
+    const renderProjectCard = (project) => {
+        const isExpanded = expandedProject === project.id;
+
+        return (
+            <div
+                key={project.id}
+                className={`project-kanban-card ${project.hasOverdueTasks ? 'has-overdue' : ''} ${draggedProject?.id === project.id ? 'dragging' : ''}`}
+                draggable
+                onDragStart={(e) => handleDragStart(e, project)}
+                onDragEnd={handleDragEnd}
+            >
+                {/* Card Header */}
+                <div className="project-kanban-header" onClick={() => toggleExpand(project.id)}>
+                    <div className="project-kanban-title">
+                        <h4>{project.title}</h4>
+                        <span className="project-kanban-company">{project.company}</span>
+                    </div>
+                    <div className="project-kanban-expand">
+                        {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                    </div>
+                </div>
+
+                {/* Card Stats */}
+                <div className="project-kanban-stats">
+                    <div className="kanban-stat">
+                        <Euro size={12} />
+                        <span>{formatCurrency(project.value)}</span>
+                    </div>
+                    <div className="kanban-stat">
+                        <CheckCircle size={12} />
+                        <span>{project.completedTasks.length}/{project.projectTasks.length}</span>
+                    </div>
+                    <div className="kanban-stat">
+                        <Receipt size={12} />
+                        <span>{project.paidInvoices.length}/{project.projectInvoices.length}</span>
+                    </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="project-kanban-progress">
+                    <div className="progress-bar-mini">
+                        <div
+                            className="progress-fill-mini"
+                            style={{ width: `${project.taskProgress}%` }}
+                        />
+                    </div>
+                    <span className="progress-label">{project.taskProgress}%</span>
+                </div>
+
+                {/* Badges */}
+                <div className="project-kanban-badges">
+                    {project.hasOverdueTasks && (
+                        <span className="badge badge-danger">
+                            <AlertTriangle size={10} /> Scadenze
+                        </span>
+                    )}
+                    {project.allInvoicesPaid && project.projectInvoices.length > 0 && (
+                        <span className="badge badge-success">
+                            <Check size={10} /> Pagato
+                        </span>
+                    )}
+                    {project.contact && (
+                        <span className="badge badge-neutral">
+                            <Users size={10} /> {project.contact.name}
+                        </span>
+                    )}
+                </div>
+
+                {/* Expanded Content */}
+                {isExpanded && (
+                    <div className="project-kanban-details">
+                        {/* Quick Actions */}
+                        <div className="kanban-actions">
+                            <button
+                                className="kanban-action-btn"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    openAddModal('task', {
+                                        opportunityId: project.id,
+                                        title: `Task per: ${project.title}`
+                                    });
+                                }}
+                            >
+                                <Plus size={12} /> Task
+                            </button>
+                            <button
+                                className="kanban-action-btn"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    openAddModal('opportunity', project);
+                                }}
+                            >
+                                <Edit2 size={12} /> Modifica
+                            </button>
+                        </div>
+
+                        {/* Tasks mini list */}
+                        {project.projectTasks.length > 0 && (
+                            <div className="kanban-section">
+                                <div className="kanban-section-title">Attività</div>
+                                {project.projectTasks.slice(0, 3).map(task => {
+                                    const isCompleted = task.status === 'Completata';
+                                    return (
+                                        <div key={task.id} className={`kanban-task-item ${isCompleted ? 'done' : ''}`}>
+                                            <button
+                                                className="kanban-task-check"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleToggleTask(task.id);
+                                                }}
+                                            >
+                                                {isCompleted ? <CheckCircle size={14} /> : <Circle size={14} />}
+                                            </button>
+                                            <span className={isCompleted ? 'task-done' : ''}>{task.title}</span>
+                                        </div>
+                                    );
+                                })}
+                                {project.projectTasks.length > 3 && (
+                                    <div className="kanban-more">+{project.projectTasks.length - 3} altre</div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Invoices summary */}
+                        {project.projectInvoices.length > 0 && (
+                            <div className="kanban-section">
+                                <div className="kanban-section-title">Fatture</div>
+                                <div className="kanban-invoice-summary">
+                                    <span>Incassato: {formatCurrency(project.totalPaid)}</span>
+                                    <span>/ {formatCurrency(project.totalInvoiced)}</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Dates */}
+                        <div className="kanban-dates">
+                            {project.expectedInvoiceDate && (
+                                <div className="kanban-date">
+                                    <FileText size={12} />
+                                    <span>Fatt: {formatDate(project.expectedInvoiceDate)}</span>
+                                </div>
+                            )}
+                            {project.expectedPaymentDate && (
+                                <div className="kanban-date">
+                                    <Euro size={12} />
+                                    <span>Inc: {formatDate(project.expectedPaymentDate)}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
     };
 
     return (
@@ -104,42 +314,34 @@ export default function Projects({ opportunities, tasks, invoices, contacts, ope
                 subtitle={`${projects.length} progetti • ${stats.active} attivi`}
                 icon={<FolderKanban size={24} />}
             >
-                <div className="filter-tags">
-                    {[
-                        { value: 'all', label: 'Tutti' },
-                        { value: 'active', label: 'Attivi' },
-                        { value: 'completed', label: 'Completati' }
-                    ].map(f => (
-                        <button
-                            key={f.value}
-                            className={`filter-tag ${statusFilter === f.value ? 'active' : ''}`}
-                            onClick={() => setStatusFilter(f.value)}
-                        >
-                            {f.label}
-                        </button>
-                    ))}
-                </div>
+                <label className="show-archived-toggle">
+                    <input
+                        type="checkbox"
+                        checked={showArchived}
+                        onChange={(e) => setShowArchived(e.target.checked)}
+                    />
+                    <span>Mostra archiviati ({projectsByColumn['archiviato']?.length || 0})</span>
+                </label>
             </PageHeader>
 
             {/* KPI Section */}
             <KPISection>
                 <KPICard
-                    title="Progetti Attivi"
-                    value={stats.active}
-                    icon={<FolderKanban size={20} />}
+                    title="In Lavorazione"
+                    value={stats.inProgress}
+                    icon={<Play size={20} />}
                     color="blue"
+                />
+                <KPICard
+                    title="Consegnati"
+                    value={stats.delivered}
+                    icon={<Package size={20} />}
+                    color="green"
                 />
                 <KPICard
                     title="Valore Totale"
                     value={formatCurrency(stats.totalValue)}
                     icon={<Euro size={20} />}
-                    color="green"
-                />
-                <KPICard
-                    title="Task Completati"
-                    value={`${stats.completedTasksTotal}/${stats.totalTasks}`}
-                    subtitle={stats.totalTasks > 0 ? `${Math.round((stats.completedTasksTotal / stats.totalTasks) * 100)}%` : '0%'}
-                    icon={<CheckCircle size={20} />}
                     color="purple"
                 />
                 <KPICard
@@ -151,200 +353,66 @@ export default function Projects({ opportunities, tasks, invoices, contacts, ope
                 />
             </KPISection>
 
-            {/* Projects List */}
-            {filteredProjects.length === 0 ? (
-                <div className="empty-state">
-                    <FolderKanban size={64} strokeWidth={1} />
-                    <p>Nessun progetto trovato</p>
-                    <span style={{ color: 'var(--gray-500)', fontSize: '14px' }}>
-                        I progetti vengono creati automaticamente quando un'opportunità diventa "Chiuso Vinto"
-                    </span>
-                </div>
-            ) : (
-                <div className="projects-list">
-                    {filteredProjects.map(project => {
-                        const isExpanded = expandedProject === project.id;
+            {/* Kanban Board */}
+            <div className="kanban-board projects-kanban">
+                {PROJECT_COLUMNS.map(column => {
+                    const Icon = column.icon;
+                    const columnProjects = projectsByColumn[column.id] || [];
+                    const columnValue = columnProjects.reduce((sum, p) => sum + (parseFloat(p.value) || 0), 0);
 
-                        return (
-                            <div key={project.id} className={`project-card ${project.isCompleted ? 'completed' : ''} ${project.hasOverdueTasks ? 'has-overdue' : ''}`}>
-                                {/* Project Header - Always visible */}
-                                <div className="project-header" onClick={() => toggleExpand(project.id)}>
-                                    <div className="project-expand">
-                                        {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
-                                    </div>
-
-                                    <div className="project-info">
-                                        <div className="project-title-row">
-                                            <h3 className="project-title">{project.title}</h3>
-                                            {project.isCompleted && (
-                                                <span className="project-status completed">
-                                                    <Check size={12} /> Completato
-                                                </span>
-                                            )}
-                                            {project.hasOverdueTasks && !project.isCompleted && (
-                                                <span className="project-status overdue">
-                                                    <AlertTriangle size={12} /> Scadenze
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="project-meta">
-                                            <span><Building size={14} /> {project.company}</span>
-                                            {project.contact && (
-                                                <span><Users size={14} /> {project.contact.name}</span>
-                                            )}
-                                            <span><Calendar size={14} /> Vinto: {formatDate(project.closeDate)}</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="project-stats">
-                                        <div className="stat">
-                                            <span className="stat-value">{formatCurrency(project.value)}</span>
-                                            <span className="stat-label">Valore</span>
-                                        </div>
-                                        <div className="stat">
-                                            <span className="stat-value">{project.completedTasks.length}/{project.projectTasks.length}</span>
-                                            <span className="stat-label">Task</span>
-                                        </div>
-                                        <div className="stat">
-                                            <span className="stat-value">{project.paidInvoices.length}/{project.projectInvoices.length}</span>
-                                            <span className="stat-label">Fatture</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Progress Bar */}
-                                    <div className="project-progress">
-                                        <div className="progress-bar">
-                                            <div
-                                                className="progress-fill"
-                                                style={{ width: `${project.taskProgress}%` }}
-                                            />
-                                        </div>
-                                        <span className="progress-text">{project.taskProgress}%</span>
-                                    </div>
+                    return (
+                        <div
+                            key={column.id}
+                            className={`kanban-column ${dragOverColumn === column.id ? 'drag-over' : ''}`}
+                            onDragOver={(e) => handleDragOver(e, column.id)}
+                            onDragLeave={handleDragLeave}
+                            onDrop={(e) => handleDrop(e, column.id)}
+                        >
+                            <div className={`kanban-column-header ${column.color}`}>
+                                <div className="column-title">
+                                    <Icon size={16} />
+                                    <span>{column.title}</span>
+                                    <span className="column-count">{columnProjects.length}</span>
                                 </div>
-
-                                {/* Expanded Content */}
-                                {isExpanded && (
-                                    <div className="project-details">
-                                        {/* Quick Actions */}
-                                        <div className="project-actions">
-                                            <button
-                                                className="action-btn-small primary"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    openAddModal('task', {
-                                                        opportunityId: project.id,
-                                                        title: `Task per: ${project.title}`,
-                                                        description: `Attività per il progetto ${project.title} (${project.company})`
-                                                    });
-                                                }}
-                                            >
-                                                <Plus size={14} /> Nuovo Task
-                                            </button>
-                                            <button
-                                                className="action-btn-small"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    openAddModal('opportunity', project);
-                                                }}
-                                            >
-                                                <Edit2 size={14} /> Modifica Progetto
-                                            </button>
-                                        </div>
-
-                                        {/* Tasks Section */}
-                                        <div className="project-section">
-                                            <div className="section-header">
-                                                <h4><CheckCircle size={16} /> Attività ({project.projectTasks.length})</h4>
-                                            </div>
-                                            {project.projectTasks.length === 0 ? (
-                                                <div className="section-empty">
-                                                    Nessuna attività collegata
-                                                </div>
-                                            ) : (
-                                                <div className="task-list-mini">
-                                                    {project.projectTasks.map(task => {
-                                                        const isTaskCompleted = task.status === 'Completata';
-                                                        const isOverdue = !isTaskCompleted && new Date(task.dueDate) < new Date();
-
-                                                        return (
-                                                            <div
-                                                                key={task.id}
-                                                                className={`task-mini ${isTaskCompleted ? 'completed' : ''} ${isOverdue ? 'overdue' : ''}`}
-                                                            >
-                                                                <button
-                                                                    className={`task-check ${isTaskCompleted ? 'checked' : ''}`}
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleToggleTask(task.id);
-                                                                    }}
-                                                                >
-                                                                    {isTaskCompleted ? <CheckCircle size={16} /> : <Circle size={16} />}
-                                                                </button>
-                                                                <span className={`task-mini-title ${isTaskCompleted ? 'done' : ''}`}>
-                                                                    {task.title}
-                                                                </span>
-                                                                <span className={`task-mini-date ${isOverdue ? 'overdue' : ''}`}>
-                                                                    {formatDate(task.dueDate)}
-                                                                </span>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Invoices Section */}
-                                        <div className="project-section">
-                                            <div className="section-header">
-                                                <h4><Receipt size={16} /> Fatture ({project.projectInvoices.length})</h4>
-                                                <span className="section-summary">
-                                                    {formatCurrency(project.totalPaid)} / {formatCurrency(project.totalInvoiced)}
-                                                </span>
-                                            </div>
-                                            {project.projectInvoices.length === 0 ? (
-                                                <div className="section-empty">
-                                                    Nessuna fattura collegata
-                                                </div>
-                                            ) : (
-                                                <div className="invoice-list-mini">
-                                                    {project.projectInvoices.map(inv => (
-                                                        <div
-                                                            key={inv.id}
-                                                            className={`invoice-mini ${inv.status}`}
-                                                        >
-                                                            <span className="invoice-mini-num">{inv.invoiceNumber}</span>
-                                                            <span className="invoice-mini-amount">{formatCurrency(inv.amount)}</span>
-                                                            <span className={`invoice-mini-status ${inv.status}`}>
-                                                                {inv.status === 'pagata' ? 'Incassata' :
-                                                                 inv.status === 'emessa' ? 'Emessa' : 'Da emettere'}
-                                                            </span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Dates Section */}
-                                        <div className="project-dates">
-                                            {project.expectedInvoiceDate && (
-                                                <div className="date-item">
-                                                    <FileText size={14} />
-                                                    <span>Fatturazione prevista: {formatDate(project.expectedInvoiceDate)}</span>
-                                                </div>
-                                            )}
-                                            {project.expectedPaymentDate && (
-                                                <div className="date-item">
-                                                    <Euro size={14} />
-                                                    <span>Incasso previsto: {formatDate(project.expectedPaymentDate)}</span>
-                                                </div>
-                                            )}
-                                        </div>
+                                <div className="column-value">{formatCurrency(columnValue)}</div>
+                            </div>
+                            <div className="kanban-column-content">
+                                {columnProjects.length === 0 ? (
+                                    <div className="kanban-empty">
+                                        Nessun progetto
                                     </div>
+                                ) : (
+                                    columnProjects.map(project => renderProjectCard(project))
                                 )}
                             </div>
-                        );
-                    })}
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Archived Projects (if toggled) */}
+            {showArchived && projectsByColumn['archiviato']?.length > 0 && (
+                <div className="archived-section">
+                    <div className="archived-header">
+                        <Archive size={18} />
+                        <span>Progetti Archiviati ({projectsByColumn['archiviato'].length})</span>
+                    </div>
+                    <div className="archived-projects">
+                        {projectsByColumn['archiviato'].map(project => (
+                            <div key={project.id} className="archived-project-card">
+                                <div className="archived-project-info">
+                                    <strong>{project.title}</strong>
+                                    <span>{project.company}</span>
+                                </div>
+                                <div className="archived-project-value">
+                                    {formatCurrency(project.value)}
+                                </div>
+                                <div className="archived-project-date">
+                                    {formatDate(project.closeDate)}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>

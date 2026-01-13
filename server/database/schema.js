@@ -89,6 +89,8 @@ const createPostgresTables = async () => {
   // Add expectedInvoiceDate and expectedPaymentDate columns if they don't exist (for existing databases)
   await client.query(`ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS "expectedInvoiceDate" DATE`).catch(() => {});
   await client.query(`ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS "expectedPaymentDate" DATE`).catch(() => {});
+  // Add projectStatus column for project lifecycle (in_lavorazione, in_revisione, consegnato, chiuso, archiviato)
+  await client.query(`ALTER TABLE opportunities ADD COLUMN IF NOT EXISTS "projectStatus" VARCHAR(50) DEFAULT 'in_lavorazione'`).catch(() => {});
 
   // Tasks table
   await client.query(`
@@ -251,6 +253,10 @@ const createSQLiteTables = (resolve, reject) => {
       // Ignore error if column already exists
     });
     db.run(`ALTER TABLE opportunities ADD COLUMN expectedPaymentDate DATE`, (err) => {
+      // Ignore error if column already exists
+    });
+    // Add projectStatus column for project lifecycle (in_lavorazione, in_revisione, consegnato, chiuso, archiviato)
+    db.run(`ALTER TABLE opportunities ADD COLUMN projectStatus TEXT DEFAULT 'in_lavorazione'`, (err) => {
       // Ignore error if column already exists
     });
 
