@@ -143,67 +143,55 @@ export default function Header({ activeView, searchQuery, setSearchQuery, user, 
                         onFocus={() => searchQuery.length >= 2 && setShowSearchResults(true)}
                     />
                     {searchQuery && (
-                        <X size={16} style={{ cursor: 'pointer' }} onClick={() => { setSearchQuery(''); setShowSearchResults(false); }} />
+                        <X size={16} className="search-clear" onClick={() => { setSearchQuery(''); setShowSearchResults(false); }} />
                     )}
                 </div>
 
                 {showSearchResults && (
-                    <div className="search-results" style={{
-                        position: 'absolute',
-                        top: '100%',
-                        left: 0,
-                        right: 0,
-                        background: 'white',
-                        borderRadius: '12px',
-                        boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
-                        marginTop: '8px',
-                        maxHeight: '400px',
-                        overflowY: 'auto',
-                        zIndex: 1000,
-                    }}>
+                    <div className="header-dropdown search-dropdown header-dropdown-scroll">
                         {searching ? (
-                            <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>Ricerca in corso...</div>
+                            <div className="search-message">Ricerca in corso...</div>
                         ) : totalResults === 0 ? (
-                            <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>Nessun risultato per "{searchQuery}"</div>
+                            <div className="search-message">Nessun risultato per "{searchQuery}"</div>
                         ) : (
                             <>
                                 {searchResults.contacts.length > 0 && (
-                                    <div style={{ padding: '8px 0', borderBottom: '1px solid #e2e8f0' }}>
-                                        <div style={{ padding: '8px 16px', fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Contatti ({searchResults.contacts.length})</div>
+                                    <div className="search-section">
+                                        <div className="search-section-title">Contatti ({searchResults.contacts.length})</div>
                                         {searchResults.contacts.map(contact => (
-                                            <div key={contact.id} onClick={() => handleResultClick('contact', contact)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', cursor: 'pointer', transition: 'background 0.15s' }} onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                                                <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#dbeafe', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><User size={18} /></div>
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <div style={{ fontSize: '14px', fontWeight: 500, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{contact.name}</div>
-                                                    <div style={{ fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{contact.company} • {contact.email}</div>
+                                            <div key={contact.id} className="search-result-item" onClick={() => handleResultClick('contact', contact)}>
+                                                <div className="search-result-icon contact"><User size={18} /></div>
+                                                <div className="search-result-content">
+                                                    <div className="search-result-title">{contact.name}</div>
+                                                    <div className="search-result-meta">{contact.company} • {contact.email}</div>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 )}
                                 {searchResults.opportunities.length > 0 && (
-                                    <div style={{ padding: '8px 0', borderBottom: '1px solid #e2e8f0' }}>
-                                        <div style={{ padding: '8px 16px', fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Opportunità ({searchResults.opportunities.length})</div>
+                                    <div className="search-section">
+                                        <div className="search-section-title">Opportunità ({searchResults.opportunities.length})</div>
                                         {searchResults.opportunities.map(opp => (
-                                            <div key={opp.id} onClick={() => handleResultClick('opportunity', opp)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', cursor: 'pointer', transition: 'background 0.15s' }} onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                                                <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Briefcase size={18} /></div>
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <div style={{ fontSize: '14px', fontWeight: 500, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{opp.title}</div>
-                                                    <div style={{ fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{opp.company} • €{(opp.value || 0).toLocaleString()}</div>
+                                            <div key={opp.id} className="search-result-item" onClick={() => handleResultClick('opportunity', opp)}>
+                                                <div className="search-result-icon opportunity"><Briefcase size={18} /></div>
+                                                <div className="search-result-content">
+                                                    <div className="search-result-title">{opp.title}</div>
+                                                    <div className="search-result-meta">{opp.company} • €{(opp.value || 0).toLocaleString()}</div>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
                                 )}
                                 {searchResults.tasks.length > 0 && (
-                                    <div style={{ padding: '8px 0' }}>
-                                        <div style={{ padding: '8px 16px', fontSize: '11px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Attività ({searchResults.tasks.length})</div>
+                                    <div className="search-section">
+                                        <div className="search-section-title">Attività ({searchResults.tasks.length})</div>
                                         {searchResults.tasks.map(task => (
-                                            <div key={task.id} onClick={() => handleResultClick('task', task)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 16px', cursor: 'pointer', transition: 'background 0.15s' }} onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                                                <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CheckSquare size={18} /></div>
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <div style={{ fontSize: '14px', fontWeight: 500, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.title}</div>
-                                                    <div style={{ fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{task.type} • {task.priority}</div>
+                                            <div key={task.id} className="search-result-item" onClick={() => handleResultClick('task', task)}>
+                                                <div className="search-result-icon task"><CheckSquare size={18} /></div>
+                                                <div className="search-result-content">
+                                                    <div className="search-result-title">{task.title}</div>
+                                                    <div className="search-result-meta">{task.type} • {task.priority}</div>
                                                 </div>
                                             </div>
                                         ))}
@@ -217,127 +205,64 @@ export default function Header({ activeView, searchQuery, setSearchQuery, user, 
 
             <div className="header-right">
                 {/* Quick Add Button */}
-                <div className="quick-add-container" ref={quickAddRef} style={{ position: 'relative' }}>
-                    <button
-                        className="primary-btn"
-                        onClick={() => setShowQuickAdd(!showQuickAdd)}
-                        style={{ padding: '0 16px', height: '44px', borderRadius: '12px', gap: '8px' }}
-                    >
+                <div className="quick-add-container" ref={quickAddRef}>
+                    <button className="primary-btn quick-add-btn" onClick={() => setShowQuickAdd(!showQuickAdd)}>
                         <Plus size={20} />
                         <span className="hide-mobile">Nuovo</span>
                     </button>
 
                     {showQuickAdd && (
-                        <div style={{
-                            position: 'absolute',
-                            top: '100%',
-                            right: 0,
-                            width: '200px',
-                            background: 'white',
-                            borderRadius: '12px',
-                            boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
-                            marginTop: '8px',
-                            zIndex: 1000,
-                            overflow: 'hidden',
-                            padding: '8px'
-                        }}>
-                            <button
-                                onClick={() => { openAddModal('opportunity'); setShowQuickAdd(false); }}
-                                style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', color: '#1e293b', textAlign: 'left', transition: 'background 0.2s' }}
-                                onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
-                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                            >
-                                <Briefcase size={16} color="#6366f1" />
+                        <div className="header-dropdown quick-add-dropdown">
+                            <button className="quick-add-item" onClick={() => { openAddModal('opportunity'); setShowQuickAdd(false); }}>
+                                <Briefcase size={16} className="icon-primary" />
                                 Opportunità
                             </button>
-                            <button
-                                onClick={() => { openAddModal('contact'); setShowQuickAdd(false); }}
-                                style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', color: '#1e293b', textAlign: 'left', transition: 'background 0.2s' }}
-                                onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
-                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                            >
-                                <User size={16} color="#2563eb" />
+                            <button className="quick-add-item" onClick={() => { openAddModal('contact'); setShowQuickAdd(false); }}>
+                                <User size={16} className="icon-info" />
                                 Contatto
                             </button>
-                            <button
-                                onClick={() => { openAddModal('task'); setShowQuickAdd(false); }}
-                                style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%', padding: '10px 12px', border: 'none', background: 'transparent', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', color: '#1e293b', textAlign: 'left', transition: 'background 0.2s' }}
-                                onMouseEnter={e => e.currentTarget.style.background = '#f1f5f9'}
-                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                            >
-                                <CheckSquare size={16} color="#d97706" />
+                            <button className="quick-add-item" onClick={() => { openAddModal('task'); setShowQuickAdd(false); }}>
+                                <CheckSquare size={16} className="icon-warning" />
                                 Attività
                             </button>
                         </div>
                     )}
                 </div>
 
-                <div className="notif-container" ref={notifRef} style={{ position: 'relative' }}>
+                <div className="notif-container" ref={notifRef}>
                     <button className="icon-btn" onClick={() => setShowNotifications(!showNotifications)}>
                         <Bell size={20} />
                         {unreadCount > 0 && <span className="notification-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
                     </button>
 
                     {showNotifications && (
-                        <div style={{
-                            position: 'absolute',
-                            top: '100%',
-                            right: 0,
-                            width: '340px',
-                            maxWidth: 'calc(100vw - 32px)',
-                            background: 'white',
-                            borderRadius: '12px',
-                            boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
-                            marginTop: '8px',
-                            zIndex: 1000,
-                            overflow: 'hidden',
-                        }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid #e2e8f0' }}>
-                                <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>Notifiche</h3>
+                        <div className="header-dropdown notif-dropdown">
+                            <div className="notif-header">
+                                <h3>Notifiche</h3>
                                 {unreadCount > 0 && (
-                                    <button onClick={markAllRead} style={{ background: 'none', border: 'none', color: '#6366f1', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>Segna come lette</button>
+                                    <button className="notif-mark-read" onClick={markAllRead}>Segna come lette</button>
                                 )}
                             </div>
-                            <div style={{ maxHeight: '320px', overflowY: 'auto' }}>
+                            <div className="notif-list">
                                 {notifications.length === 0 ? (
-                                    <div style={{ padding: '32px', textAlign: 'center', color: '#64748b', fontSize: '14px' }}>
-                                        <Check size={24} style={{ marginBottom: 8, color: '#10b981' }} />
+                                    <div className="notif-empty">
+                                        <Check size={24} />
                                         <div>Nessuna notifica</div>
                                     </div>
                                 ) : (
                                     notifications.map(notif => (
                                         <div
                                             key={notif.id}
+                                            className={`notif-item ${!notif.isRead ? 'unread' : ''}`}
                                             onClick={() => handleNotificationClick(notif)}
-                                            style={{
-                                                display: 'flex',
-                                                gap: '12px',
-                                                padding: '12px 16px',
-                                                cursor: 'pointer',
-                                                transition: 'background 0.15s',
-                                                borderLeft: !notif.isRead ? '3px solid #6366f1' : '3px solid transparent',
-                                                background: !notif.isRead ? '#eef2ff' : 'transparent',
-                                            }}
-                                            onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
-                                            onMouseLeave={e => e.currentTarget.style.background = !notif.isRead ? '#eef2ff' : 'transparent'}
                                         >
-                                            <div style={{
-                                                width: '36px',
-                                                height: '36px',
-                                                borderRadius: '8px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                flexShrink: 0,
-                                                background: notif.type === 'overdue' ? '#fee2e2' : notif.type === 'due_today' ? '#fef3c7' : '#dbeafe',
-                                                color: notif.type === 'overdue' ? '#dc2626' : notif.type === 'due_today' ? '#d97706' : '#2563eb',
-                                            }}>
+                                            <div className={`notif-icon ${notif.type === 'overdue' ? 'overdue' : notif.type === 'due_today' ? 'due-today' : 'default'}`}>
                                                 {notif.type === 'overdue' ? <AlertCircle size={18} /> : <Clock size={18} />}
                                             </div>
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontSize: '13px', fontWeight: 500, color: '#1e293b', marginBottom: '2px' }}>{notif.title}</div>
-                                                <div style={{ fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{notif.message}</div>
-                                                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>
+                                            <div className="notif-content">
+                                                <div className="notif-title">{notif.title}</div>
+                                                <div className="notif-message">{notif.message}</div>
+                                                <div className="notif-time">
                                                     {notif.createdAt ? new Date(notif.createdAt).toLocaleDateString('it-IT') : ''}
                                                 </div>
                                             </div>

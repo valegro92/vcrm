@@ -603,6 +603,320 @@ body {
   box-shadow: var(--shadow-lg);
 }
 
+/* Header Dropdowns */
+.header-dropdown {
+  position: absolute;
+  top: 100%;
+  background: white;
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  margin-top: var(--space-2);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.header-dropdown-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Search Results Dropdown */
+.search-dropdown {
+  left: 0;
+  right: 0;
+}
+
+.search-message {
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--slate-500);
+  font-size: 14px;
+}
+
+.search-section {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--slate-200);
+}
+
+.search-section:last-child {
+  border-bottom: none;
+}
+
+.search-section-title {
+  padding: var(--space-2) var(--space-4);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--slate-400);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px var(--space-4);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.search-result-item:hover {
+  background: var(--slate-100);
+}
+
+.search-result-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.search-result-icon.contact {
+  background: var(--primary-100);
+  color: var(--primary-600);
+}
+
+.search-result-icon.opportunity {
+  background: var(--emerald-100);
+  color: var(--emerald-600);
+}
+
+.search-result-icon.task {
+  background: var(--amber-100);
+  color: var(--amber-600);
+}
+
+.search-result-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.search-result-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--slate-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-result-meta {
+  font-size: 12px;
+  color: var(--slate-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Quick Add Dropdown */
+.quick-add-container {
+  position: relative;
+}
+
+.quick-add-dropdown {
+  right: 0;
+  width: 200px;
+  padding: var(--space-2);
+}
+
+.quick-add-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px var(--space-3);
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--slate-800);
+  text-align: left;
+  transition: background var(--transition-fast);
+}
+
+.quick-add-item:hover {
+  background: var(--slate-100);
+}
+
+.quick-add-item svg {
+  flex-shrink: 0;
+}
+
+/* Notifications Dropdown */
+.notif-container {
+  position: relative;
+}
+
+.notif-dropdown {
+  right: 0;
+  width: 340px;
+  max-width: calc(100vw - 32px);
+}
+
+.notif-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--slate-200);
+}
+
+.notif-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--slate-900);
+  margin: 0;
+}
+
+.notif-mark-read {
+  background: none;
+  border: none;
+  color: var(--primary-500);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+}
+
+.notif-mark-read:hover {
+  color: var(--primary-600);
+  text-decoration: underline;
+}
+
+.notif-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.notif-empty {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--slate-500);
+  font-size: 14px;
+}
+
+.notif-empty svg {
+  margin-bottom: var(--space-2);
+  color: var(--emerald-500);
+}
+
+.notif-item {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  border-left: 3px solid transparent;
+}
+
+.notif-item:hover {
+  background: var(--slate-50);
+}
+
+.notif-item.unread {
+  background: var(--primary-50);
+  border-left-color: var(--primary-500);
+}
+
+.notif-item.unread:hover {
+  background: var(--primary-100);
+}
+
+.notif-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notif-icon.overdue {
+  background: var(--rose-100);
+  color: var(--rose-600);
+}
+
+.notif-icon.due-today {
+  background: var(--amber-100);
+  color: var(--amber-600);
+}
+
+.notif-icon.default {
+  background: var(--primary-100);
+  color: var(--primary-600);
+}
+
+.notif-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--slate-800);
+  margin-bottom: 2px;
+}
+
+.notif-message {
+  font-size: 12px;
+  color: var(--slate-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notif-time {
+  font-size: 11px;
+  color: var(--slate-400);
+  margin-top: var(--space-1);
+}
+
+/* Search Clear Button */
+.search-clear {
+  cursor: pointer;
+  color: var(--slate-400);
+  transition: color var(--transition-fast);
+}
+
+.search-clear:hover {
+  color: var(--slate-600);
+}
+
+/* Quick Add Button */
+.quick-add-btn {
+  padding: 0 var(--space-4);
+  height: 44px;
+  border-radius: var(--radius-md);
+  gap: var(--space-2);
+}
+
+/* Icon Colors */
+.icon-primary {
+  color: var(--primary-500);
+}
+
+.icon-info {
+  color: var(--primary-600);
+}
+
+.icon-warning {
+  color: var(--amber-600);
+}
+
+.icon-success {
+  color: var(--emerald-600);
+}
+
+.icon-danger {
+  color: var(--rose-600);
+}
+
 /* =========================================
    Bottom Navigation (Mobile)
    ========================================= */
