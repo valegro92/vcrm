@@ -1,7 +1,5 @@
 # vCRM - CRM Valentino
 
-Un CRM completamente funzionante ispirato a YDEA CRM, con backend Node.js/Express e database SQLite.
-
 ## 📦 Installazione
 
 ### 1. Installa dipendenze frontend
