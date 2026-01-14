@@ -12,14 +12,19 @@ if (!OPENROUTER_API_KEY) {
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 
 // Free models with fallback - ordered by preference
+// 3 Fast/Flash models + 2 Reasoning models + extras for redundancy
 const FREE_MODELS = [
-    'deepseek/deepseek-r1:free',
+    // Fast models (priorità per risposte veloci)
     'google/gemini-2.0-flash-exp:free',
+    'deepseek/deepseek-chat-v3-0324:free',
+    'meta-llama/llama-3.3-70b-instruct:free',
+    // Reasoning models (per domande complesse)
+    'deepseek/deepseek-r1:free',
+    'google/gemini-2.0-flash-thinking-exp:free',
+    // Backup models
+    'qwen/qwq-32b:free',
     'meta-llama/llama-4-maverick:free',
-    'qwen/qwen-2.5-72b-instruct:free',
-    'mistralai/mistral-small-3.1-24b-instruct:free',
-    'deepseek/deepseek-chat:free',
-    'google/gemini-2.5-flash-preview-05-20:free'
+    'deepseek/deepseek-r1-distill-llama-70b:free'
 ];
 
 /**
