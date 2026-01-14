@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { User, Lock, Bell, Palette, Database, Shield, Save, Check, Download, AlertTriangle } from 'lucide-react';
+import { User, Lock, Bell, Palette, Database, Shield, Save, Check, Download, AlertTriangle, RotateCcw, Wand2 } from 'lucide-react';
 import api from '../api/api';
+import { useUIConfig } from '../context/UIConfigContext';
 
 export default function Settings({ user, contacts, opportunities, tasks, onUserUpdate, currentTheme, onThemeChange }) {
   const [activeTab, setActiveTab] = useState('profile');
@@ -8,6 +9,10 @@ export default function Settings({ user, contacts, opportunities, tasks, onUserU
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
+  const [resetting, setResetting] = useState(false);
+
+  // UI Config for reset functionality
+  const { config, resetConfig, isDefault } = useUIConfig();
 
   const [profile, setProfile] = useState({
     fullName: user?.fullName || '',
@@ -121,6 +126,27 @@ export default function Settings({ user, contacts, opportunities, tasks, onUserU
     localStorage.setItem('compactMode', appearance.compactMode.toString());
     localStorage.setItem('language', appearance.language);
     showSuccess();
+  };
+
+  const handleResetUIConfig = async () => {
+    if (!window.confirm('Sei sicuro di voler ripristinare le impostazioni predefinite dell\'interfaccia?')) {
+      return;
+    }
+    setResetting(true);
+    try {
+      const result = await resetConfig();
+      if (result.success) {
+        showSuccess();
+        // Refresh the page to apply default theme
+        window.location.reload();
+      } else {
+        showError(result.error || 'Errore durante il reset');
+      }
+    } catch (err) {
+      showError(err.message || 'Errore durante il reset');
+    } finally {
+      setResetting(false);
+    }
   };
 
   const handleExport = async (format) => {
@@ -437,6 +463,36 @@ export default function Settings({ user, contacts, opportunities, tasks, onUserU
                     <span className="toggle-slider"></span>
                   </label>
                 </div>
+
+                {/* AI Builder Reset Section */}
+                <div className="ui-config-section" style={{ marginTop: '24px', padding: '20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                    <Wand2 size={20} style={{ color: '#8b5cf6' }} />
+                    <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: '#1e293b' }}>Personalizzazione AI</h4>
+                  </div>
+                  <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>
+                    {isDefault
+                      ? 'Stai usando le impostazioni predefinite. Usa AI Builder per personalizzare l\'interfaccia.'
+                      : 'Hai personalizzato l\'interfaccia tramite AI Builder. Puoi ripristinare le impostazioni predefinite.'}
+                  </p>
+                  {config?.theme?.primaryColor && !isDefault && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', fontSize: '13px', color: '#64748b' }}>
+                      <span>Colore attuale:</span>
+                      <div style={{ width: '20px', height: '20px', borderRadius: '6px', background: config.theme.primaryColor, border: '2px solid rgba(0,0,0,0.1)' }}></div>
+                      <span>{config.theme.primaryColor}</span>
+                    </div>
+                  )}
+                  <button
+                    className="btn btn-secondary"
+                    onClick={handleResetUIConfig}
+                    disabled={resetting || isDefault}
+                    style={{ opacity: isDefault ? 0.5 : 1 }}
+                  >
+                    <RotateCcw size={16} />
+                    {resetting ? 'Ripristino...' : 'Ripristina Predefiniti'}
+                  </button>
+                </div>
+
                 <div className="settings-footer">
                   <button className="btn btn-primary" onClick={handleSaveAppearance}>
                     <Save size={18} />
