@@ -17,12 +17,56 @@ import Settings from './components/Settings';
 import Calendar from './components/Calendar';
 import AiChat from './components/AiChat';
 
-// Icons for Bottom Navigation
-import { TrendingUp, Target, Users, Euro, CheckSquare, MoreHorizontal } from 'lucide-react';
+// UI Configuration Context
+import { UIConfigProvider, useUIConfig } from './context/UIConfigContext';
 
+// Icons for Bottom Navigation
+import { TrendingUp, Target, Users, Euro, CheckSquare } from 'lucide-react';
+
+// Main App wrapper with UIConfigProvider
 export default function YdeaCRM() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+
+  // Check authentication on mount
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+    if (token && savedUser) {
+      setUser(JSON.parse(savedUser));
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    setIsAuthenticated(false);
+  };
+
+  if (!isAuthenticated) {
+    return <Login onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  return (
+    <UIConfigProvider isAuthenticated={isAuthenticated}>
+      <YdeaCRMContent
+        user={user}
+        onLoginSuccess={handleLoginSuccess}
+        onLogout={handleLogout}
+      />
+    </UIConfigProvider>
+  );
+}
+
+// Inner component with all CRM functionality
+function YdeaCRMContent({ user, onLoginSuccess, onLogout }) {
   const [activeView, setActiveView] = useState('dashboard');
   const [contacts, setContacts] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
@@ -38,35 +82,34 @@ export default function YdeaCRM() {
   // Mobile sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Theme state
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  // Get UI config - theme is already applied by UIConfigProvider
+  const { config, updateTheme } = useUIConfig();
 
-  // Apply theme
+  // Local theme state for backward compatibility (synced with UIConfig)
+  const [theme, setTheme] = useState(config?.theme?.mode || localStorage.getItem('theme') || 'light');
+
+  // Sync local theme with config theme when it changes
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+    if (config?.theme?.mode) {
+      setTheme(config.theme.mode);
+    }
+  }, [config?.theme?.mode]);
 
-  const toggleTheme = (newTheme) => {
+  // Toggle theme - updates both local state and UIConfig
+  const toggleTheme = async (newTheme) => {
     setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+    // Also update in UIConfig (non-blocking)
+    updateTheme({ mode: newTheme }).catch(err => {
+      console.warn('[Theme] Failed to persist theme to config:', err);
+    });
   };
 
-  // Check authentication on mount
+  // Load data on mount (already authenticated at this point)
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-    if (token && savedUser) {
-      setUser(JSON.parse(savedUser));
-      setIsAuthenticated(true);
-    }
+    loadAllData();
   }, []);
-
-  // Load data when authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadAllData();
-    }
-  }, [isAuthenticated]);
 
   // Close sidebar when view changes (mobile)
   useEffect(() => {
@@ -105,20 +148,13 @@ export default function YdeaCRM() {
     }
   };
 
-  const handleLoginSuccess = (userData) => {
-    setUser(userData);
-    setIsAuthenticated(true);
-  };
-
+  // Wrap onLogout to also clear local data
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    setIsAuthenticated(false);
     setContacts([]);
     setOpportunities([]);
     setTasks([]);
     setInvoices([]);
+    onLogout();
   };
 
   // Mobile navigation handler
@@ -237,10 +273,6 @@ export default function YdeaCRM() {
     setShowAddModal(true);
   };
 
-  if (!isAuthenticated) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
-  }
-
   // Bottom navigation items (mobile only)
   const bottomNavItems = [
     { id: 'dashboard', icon: TrendingUp, label: 'Home' },
@@ -352,7 +384,7 @@ export default function YdeaCRM() {
               contacts={contacts}
               opportunities={opportunities}
               tasks={tasks}
-              onUserUpdate={handleLoginSuccess}
+              onUserUpdate={onLoginSuccess}
               currentTheme={theme}
               onThemeChange={toggleTheme}
             />
