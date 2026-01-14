@@ -113,6 +113,26 @@ export function UIConfigProvider({ children, isAuthenticated }) {
       };
       root.style.setProperty('--density-scale', densityMap[theme.density] || '1');
     }
+
+    // Apply font size
+    if (theme.fontSize) {
+      const fontSizeMap = {
+        small: '13px',
+        medium: '14px',
+        large: '16px'
+      };
+      root.style.setProperty('--font-size-base', fontSizeMap[theme.fontSize] || '14px');
+    }
+
+    // Apply font family
+    if (theme.fontFamily) {
+      const fontFamilyMap = {
+        system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        inter: '"Inter", -apple-system, sans-serif',
+        roboto: '"Roboto", -apple-system, sans-serif'
+      };
+      root.style.setProperty('--font-family', fontFamilyMap[theme.fontFamily] || fontFamilyMap.system);
+    }
   }, []);
 
   // Update theme

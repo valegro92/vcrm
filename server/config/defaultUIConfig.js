@@ -5,23 +5,62 @@
  */
 
 const DEFAULT_UI_CONFIG = {
-  version: "1.0",
-  
+  version: "2.0",
+
   theme: {
     mode: "light",
     primaryColor: "#6366f1",
     accentColor: "#8b5cf6",
-    borderRadius: "medium",
-    density: "normal"
+    borderRadius: "medium",      // none, small, medium, large
+    density: "normal",            // compact, normal, comfortable
+    fontSize: "medium",           // small, medium, large
+    fontFamily: "system"          // system, inter, roboto
   },
-  
+
   navigation: {
-    position: "sidebar",
+    position: "sidebar",          // sidebar, top
     collapsed: false,
-    showLabels: true
+    showLabels: true,
+    showIcons: true,
+    visibleItems: ["dashboard", "pipeline", "contacts", "opportunities", "projects", "tasks", "invoices", "calendar", "settings"]
   },
-  
+
   homePage: "dashboard",
+
+  dashboard: {
+    layout: "default",            // default, compact, minimal
+    visibleCards: ["kpi", "forfettario", "activities", "pipeline-mini"],
+    cardOrder: ["kpi", "forfettario", "activities", "pipeline-mini"],
+    kpiCards: ["revenue", "pipeline", "contacts", "tasks"]
+  },
+
+  tables: {
+    contacts: {
+      visibleColumns: ["name", "company", "email", "phone", "type", "value"],
+      sortBy: "name",
+      sortOrder: "asc"
+    },
+    opportunities: {
+      visibleColumns: ["title", "company", "value", "stage", "probability", "closeDate"],
+      sortBy: "value",
+      sortOrder: "desc"
+    },
+    tasks: {
+      visibleColumns: ["title", "dueDate", "priority", "status", "contact"],
+      sortBy: "dueDate",
+      sortOrder: "asc"
+    },
+    invoices: {
+      visibleColumns: ["number", "client", "amount", "status", "dueDate"],
+      sortBy: "dueDate",
+      sortOrder: "desc"
+    }
+  },
+
+  quickActions: {
+    enabled: true,
+    items: ["add-contact", "add-task", "add-opportunity"]
+  },
   
   pages: {
     dashboard: {
