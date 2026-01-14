@@ -339,6 +339,42 @@
   padding: 16px;
 }
 
+.ai-builder-current-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.ai-builder-current-header .ai-builder-section-label {
+  margin-bottom: 0;
+}
+
+.ai-builder-reset-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #ef4444;
+  background: transparent;
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ai-builder-reset-btn:hover:not(:disabled) {
+  background: #ef4444;
+  color: white;
+}
+
+.ai-builder-reset-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .ai-builder-current-info {
   display: flex;
   flex-direction: column;

@@ -10,10 +10,10 @@ import {
   Loader2,
   Check,
   Undo2,
+  RotateCcw,
   Palette,
   Layout,
   Eye,
-  EyeOff,
   Sparkles,
   AlertCircle
 } from 'lucide-react';
@@ -41,7 +41,8 @@ export default function AIBuilder() {
   const [preview, setPreview] = useState(null);
   const [history, setHistory] = useState([]);
 
-  const { config, updateTheme, reloadConfig } = useUIConfig();
+  const { config, updateTheme, reloadConfig, resetConfig } = useUIConfig();
+  const [resetting, setResetting] = useState(false);
 
   // Generate UI modification via AI
   const handleGenerate = useCallback(async (customPrompt = null) => {
@@ -123,6 +124,30 @@ export default function AIBuilder() {
     setPreview(null);
     setError(null);
   }, []);
+
+  // Reset to default config
+  const handleReset = useCallback(async () => {
+    if (!window.confirm('Vuoi ripristinare la configurazione predefinita? Tutte le personalizzazioni andranno perse.')) {
+      return;
+    }
+
+    setResetting(true);
+    setError(null);
+    try {
+      const result = await resetConfig();
+      if (result.success) {
+        setHistory([]);
+        setPreview(null);
+        setPrompt('');
+      } else {
+        setError(result.error || 'Errore nel reset');
+      }
+    } catch (err) {
+      setError('Errore nel ripristino della configurazione');
+    } finally {
+      setResetting(false);
+    }
+  }, [resetConfig]);
 
   // Handle quick action
   const handleQuickAction = useCallback((actionPrompt) => {
@@ -295,7 +320,22 @@ export default function AIBuilder() {
 
               {/* Current Config Summary */}
               <div className="ai-builder-current">
-                <p className="ai-builder-section-label">Configurazione attuale</p>
+                <div className="ai-builder-current-header">
+                  <p className="ai-builder-section-label">Configurazione attuale</p>
+                  <button
+                    className="ai-builder-reset-btn"
+                    onClick={handleReset}
+                    disabled={loading || resetting}
+                    title="Ripristina configurazione predefinita"
+                  >
+                    {resetting ? (
+                      <Loader2 size={14} className="spinning" />
+                    ) : (
+                      <RotateCcw size={14} />
+                    )}
+                    <span>Reset</span>
+                  </button>
+                </div>
                 <div className="ai-builder-current-info">
                   <div className="ai-builder-current-item">
                     <span>Tema:</span>
