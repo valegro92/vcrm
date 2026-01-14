@@ -12,18 +12,24 @@ if (!OPENROUTER_API_KEY) {
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 
 // Free models with fallback - ordered by preference
-// 3 Fast/Flash models + 2 Reasoning models + extras for redundancy
+// Best free models for chatbot (2025-2026)
 const FREE_MODELS = [
-    // Fast models (priorità per risposte veloci)
-    'google/gemini-2.0-flash-exp:free',
-    'deepseek/deepseek-chat-v3-0324:free',
-    'meta-llama/llama-3.3-70b-instruct:free',
-    // Reasoning models (per domande complesse)
-    'deepseek/deepseek-r1:free',
+    // TOP TIER - Best quality
+    'xiaomi/mimo-v2-flash:free',              // 309B params, excellent reasoning
+    'meta-llama/llama-3.3-70b-instruct:free', // 70B, multilingual (italiano!)
+    'google/gemini-2.0-flash-exp:free',       // Fastest, 1M context
+
+    // HIGH TIER - Agent & reasoning
+    'z-ai/glm-4.5-air:free',                  // Agent-centric, thinking mode
+    'openai/gpt-oss-20b:free',                // Low latency, good quality
+
+    // REASONING MODELS
+    'deepseek/deepseek-r1:free',              // Strong reasoning
     'google/gemini-2.0-flash-thinking-exp:free',
-    // Backup models
+
+    // BACKUP MODELS
+    'deepseek/deepseek-chat-v3-0324:free',
     'qwen/qwq-32b:free',
-    'meta-llama/llama-4-maverick:free',
     'deepseek/deepseek-r1-distill-llama-70b:free'
 ];
 
