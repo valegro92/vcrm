@@ -172,6 +172,21 @@ const createPostgresTables = async () => {
     )
   `);
 
+  // UI Configs table (Schema-driven UI per utente)
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS ui_configs (
+      id SERIAL PRIMARY KEY,
+      "userId" INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      name VARCHAR(100) DEFAULT 'default',
+      version VARCHAR(20) DEFAULT '1.0',
+      config JSONB NOT NULL,
+      "isActive" BOOLEAN DEFAULT true,
+      "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE("userId", name)
+    )
+  `);
+
   // Drop old yearly_targets if exists and migrate
   await client.query(`DROP TABLE IF EXISTS yearly_targets`).catch(() => {});
 };
@@ -344,6 +359,22 @@ const createSQLiteTables = (resolve, reject) => {
         updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL,
         UNIQUE(year, month, userId)
+      )
+    `);
+
+    // UI Configs table (Schema-driven UI per utente)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS ui_configs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        userId INTEGER,
+        name TEXT DEFAULT 'default',
+        version TEXT DEFAULT '1.0',
+        config TEXT NOT NULL,
+        isActive INTEGER DEFAULT 1,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE(userId, name)
       )
     `);
 

@@ -519,6 +519,71 @@ const api = {
       body: JSON.stringify({ queryType })
     });
     return handleResponse(response);
+  },
+
+  // UI Configuration (Schema-driven UI)
+  getUIConfig: async () => {
+    const response = await fetch(`${API_URL}/ui-config/me`, {
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return handleResponse(response);
+  },
+
+  getDefaultUIConfig: async () => {
+    const response = await fetch(`${API_URL}/ui-config/default`, {
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return handleResponse(response);
+  },
+
+  saveUIConfig: async (config, name = 'default') => {
+    const response = await fetch(`${API_URL}/ui-config`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({ config, name })
+    });
+    return handleResponse(response);
+  },
+
+  updateUITheme: async (theme) => {
+    const response = await fetch(`${API_URL}/ui-config/theme`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({ theme })
+    });
+    return handleResponse(response);
+  },
+
+  togglePageVisibility: async (pageId, visible) => {
+    const response = await fetch(`${API_URL}/ui-config/pages/${pageId}/visibility`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({ visible })
+    });
+    return handleResponse(response);
+  },
+
+  resetUIConfig: async () => {
+    const response = await fetch(`${API_URL}/ui-config/reset`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return handleResponse(response);
   }
 };
 
