@@ -15,6 +15,7 @@ import Invoices from './components/Invoices';
 import AddModal from './components/AddModal';
 import Settings from './components/Settings';
 import Calendar from './components/Calendar';
+import AiChat from './components/AiChat';
 
 // Icons for Bottom Navigation
 import { TrendingUp, Target, Users, Euro, CheckSquare, MoreHorizontal } from 'lucide-react';
@@ -403,6 +404,9 @@ export default function YdeaCRM() {
         contacts={contacts}
         opportunities={opportunities}
       />
+
+      {/* AI Chatbot */}
+      <AiChat />
     </div>
   );
 }

@@ -485,6 +485,40 @@ const api = {
       }
     });
     return handleResponse(response);
+  },
+
+  // AI Chatbot
+  sendChatMessage: async (message, conversationHistory = []) => {
+    const response = await fetch(`${API_URL}/chatbot/message`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({ message, conversationHistory })
+    });
+    return handleResponse(response);
+  },
+
+  getChatSuggestions: async () => {
+    const response = await fetch(`${API_URL}/chatbot/suggestions`, {
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    });
+    return handleResponse(response);
+  },
+
+  sendQuickQuery: async (queryType) => {
+    const response = await fetch(`${API_URL}/chatbot/quick-query`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({ queryType })
+    });
+    return handleResponse(response);
   }
 };
 
