@@ -6,14 +6,7 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth');
 const aiChatbot = require('../services/aiChatbot');
-
-// Get database helper
-const getDb = () => {
-    if (process.env.USE_POSTGRES === 'true') {
-        return require('../database/postgres');
-    }
-    return require('../database/sqlite');
-};
+const { getAll } = require('../database/helpers');
 
 /**
  * POST /api/chatbot/message
@@ -22,7 +15,7 @@ const getDb = () => {
 router.post('/message', authMiddleware, async (req, res) => {
     try {
         const { message, conversationHistory = [] } = req.body;
-        const userId = req.user.id;
+        const userId = req.userId;
 
         if (!message || typeof message !== 'string') {
             return res.status(400).json({ error: 'Message is required' });
@@ -35,12 +28,11 @@ router.post('/message', authMiddleware, async (req, res) => {
         console.log(`[Chatbot] User ${userId} asked: "${message.substring(0, 100)}..."`);
 
         // Fetch all CRM data for context
-        const db = getDb();
         const [contacts, opportunities, tasks, invoices] = await Promise.all([
-            db.getContacts(userId),
-            db.getOpportunities(userId),
-            db.getTasks(userId),
-            db.getInvoices(userId)
+            getAll('SELECT * FROM contacts WHERE "userId" = ? OR "userId" IS NULL', [userId]),
+            getAll('SELECT * FROM opportunities WHERE "userId" = ? OR "userId" IS NULL', [userId]),
+            getAll('SELECT * FROM tasks WHERE "userId" = ? OR "userId" IS NULL', [userId]),
+            getAll('SELECT * FROM invoices WHERE "userId" = ? OR "userId" IS NULL', [userId])
         ]);
 
         const crmData = { contacts, opportunities, tasks, invoices };
@@ -73,14 +65,13 @@ router.post('/message', authMiddleware, async (req, res) => {
  */
 router.get('/suggestions', authMiddleware, async (req, res) => {
     try {
-        const userId = req.user.id;
-        const db = getDb();
+        const userId = req.userId;
 
         const [contacts, opportunities, tasks, invoices] = await Promise.all([
-            db.getContacts(userId),
-            db.getOpportunities(userId),
-            db.getTasks(userId),
-            db.getInvoices(userId)
+            getAll('SELECT * FROM contacts WHERE "userId" = ? OR "userId" IS NULL', [userId]),
+            getAll('SELECT * FROM opportunities WHERE "userId" = ? OR "userId" IS NULL', [userId]),
+            getAll('SELECT * FROM tasks WHERE "userId" = ? OR "userId" IS NULL', [userId]),
+            getAll('SELECT * FROM invoices WHERE "userId" = ? OR "userId" IS NULL', [userId])
         ]);
 
         const crmData = { contacts, opportunities, tasks, invoices };
@@ -112,7 +103,7 @@ router.get('/models', authMiddleware, (req, res) => {
 router.post('/quick-query', authMiddleware, async (req, res) => {
     try {
         const { queryType } = req.body;
-        const userId = req.user.id;
+        const userId = req.userId;
 
         const quickQueries = {
             'fatturato-anno': 'Quanto ho fatturato quest\'anno? Dammi il dettaglio mensile.',
@@ -131,12 +122,11 @@ router.post('/quick-query', authMiddleware, async (req, res) => {
         }
 
         // Fetch CRM data
-        const db = getDb();
         const [contacts, opportunities, tasks, invoices] = await Promise.all([
-            db.getContacts(userId),
-            db.getOpportunities(userId),
-            db.getTasks(userId),
-            db.getInvoices(userId)
+            getAll('SELECT * FROM contacts WHERE "userId" = ? OR "userId" IS NULL', [userId]),
+            getAll('SELECT * FROM opportunities WHERE "userId" = ? OR "userId" IS NULL', [userId]),
+            getAll('SELECT * FROM tasks WHERE "userId" = ? OR "userId" IS NULL', [userId]),
+            getAll('SELECT * FROM invoices WHERE "userId" = ? OR "userId" IS NULL', [userId])
         ]);
 
         const crmData = { contacts, opportunities, tasks, invoices };
