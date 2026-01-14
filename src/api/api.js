@@ -584,6 +584,19 @@ const api = {
       }
     });
     return handleResponse(response);
+  },
+
+  // AI Builder - Generate UI Config via natural language
+  generateUIConfig: async (prompt, currentConfig) => {
+    const response = await fetch(`${API_URL}/ui-config/ai-generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      },
+      body: JSON.stringify({ prompt, currentConfig })
+    });
+    return handleResponse(response);
   }
 };
 
