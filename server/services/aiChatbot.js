@@ -3,7 +3,12 @@
  * Integrates with OpenRouter to provide intelligent CRM assistance
  */
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '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';
+// IMPORTANT: Set OPENROUTER_API_KEY in your .env file
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+
+if (!OPENROUTER_API_KEY) {
+    console.warn('[AI Chatbot] WARNING: OPENROUTER_API_KEY not set in environment variables');
+}
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 
 // Free models with fallback - ordered by preference
