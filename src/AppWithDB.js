@@ -16,7 +16,6 @@ import AddModal from './components/AddModal';
 import Settings from './components/Settings';
 import Calendar from './components/Calendar';
 import AiChat from './components/AiChat';
-import AIBuilder from './components/AIBuilder';
 
 // UI Configuration Context
 import { UIConfigProvider, useUIConfig } from './context/UIConfigContext';
@@ -440,9 +439,6 @@ function YdeaCRMContent({ user, onLoginSuccess, onLogout }) {
 
       {/* AI Chatbot */}
       <AiChat />
-
-      {/* AI Builder - UI Customization */}
-      <AIBuilder />
     </div>
   );
 }

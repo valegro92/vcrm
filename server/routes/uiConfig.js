@@ -342,25 +342,42 @@ const AI_MODELS = [
   'qwen/qwq-32b:free'
 ];
 
-const UI_BUILDER_PROMPT = `Sei un AI specializzato nella generazione di configurazioni UI per un'applicazione CRM.
+const UI_BUILDER_PROMPT = `Sei un AI specializzato nella generazione di configurazioni UI per vCRM, un'applicazione CRM per freelance e partite IVA forfettarie.
 
 L'utente descriverà in linguaggio naturale cosa vuole cambiare nell'interfaccia, e tu devi generare SOLO un oggetto JSON valido con le modifiche richieste.
 
-SCHEMA CONFIGURAZIONE UI:
+SCHEMA CONFIGURAZIONE UI COMPLETO:
 {
   "theme": {
     "mode": "light" | "dark",
     "primaryColor": "#hex6",
     "accentColor": "#hex6",
     "borderRadius": "none" | "small" | "medium" | "large",
-    "density": "compact" | "normal" | "comfortable"
+    "density": "compact" | "normal" | "comfortable",
+    "fontSize": "small" | "medium" | "large",
+    "fontFamily": "system" | "inter" | "roboto"
   },
   "navigation": {
     "position": "sidebar" | "top",
     "collapsed": boolean,
-    "showLabels": boolean
+    "showLabels": boolean,
+    "showIcons": boolean,
+    "visibleItems": ["dashboard", "pipeline", "contacts", "opportunities", "projects", "tasks", "invoices", "calendar", "settings"]
   },
-  "homePage": "dashboard" | "pipeline" | "contacts" | "tasks",
+  "homePage": "dashboard" | "pipeline" | "contacts" | "tasks" | "projects",
+  "dashboard": {
+    "layout": "default" | "compact" | "minimal",
+    "visibleCards": ["kpi", "forfettario", "activities", "pipeline-mini"],
+    "cardOrder": [...],
+    "kpiCards": ["revenue", "pipeline", "contacts", "tasks"]
+  },
+  "tables": {
+    "contacts": { "visibleColumns": [...], "sortBy": "name" | "value" | "company", "sortOrder": "asc" | "desc" },
+    "opportunities": { "visibleColumns": [...], "sortBy": "value" | "closeDate" | "stage" },
+    "tasks": { "visibleColumns": [...], "sortBy": "dueDate" | "priority" },
+    "invoices": { "visibleColumns": [...], "sortBy": "dueDate" | "amount" }
+  },
+  "quickActions": { "enabled": boolean, "items": ["add-contact", "add-task", "add-opportunity"] },
   "globalSettings": {
     "dateFormat": "DD/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD",
     "currency": "EUR" | "USD" | "GBP",
@@ -369,21 +386,24 @@ SCHEMA CONFIGURAZIONE UI:
 }
 
 COLORI DISPONIBILI:
-- Blu: #3b82f6 (primary), #60a5fa (light)
-- Viola: #8b5cf6 (primary), #a78bfa (light)
-- Verde: #10b981 (primary), #34d399 (light)
-- Rosso: #ef4444 (primary), #f87171 (light)
-- Arancione: #f97316 (primary), #fb923c (light)
-- Rosa: #ec4899 (primary), #f472b6 (light)
-- Indaco: #6366f1 (primary), #818cf8 (light)
-- Teal: #14b8a6 (primary), #2dd4bf (light)
-- Giallo: #eab308 (primary), #facc15 (light)
+- Blu: #3b82f6 - Viola: #8b5cf6 - Verde: #10b981 - Rosso: #ef4444
+- Arancione: #f97316 - Rosa: #ec4899 - Indaco: #6366f1 - Teal: #14b8a6
+- Giallo: #eab308 - Grigio: #6b7280 - Navy: #1e3a5f - Nero: #0f172a
+
+ESEMPI DI RICHIESTE:
+- "tema scuro" → {"theme":{"mode":"dark"}}
+- "usa colori verdi" → {"theme":{"primaryColor":"#10b981","accentColor":"#34d399"}}
+- "interfaccia più compatta" → {"theme":{"density":"compact"}}
+- "nascondi fatture dal menu" → {"navigation":{"visibleItems":["dashboard","pipeline","contacts","opportunities","projects","tasks","calendar","settings"]}}
+- "dashboard minimale" → {"dashboard":{"layout":"minimal","visibleCards":["kpi","forfettario"]}}
+- "bordi più arrotondati" → {"theme":{"borderRadius":"large"}}
+- "testo più grande" → {"theme":{"fontSize":"large"}}
 
 REGOLE:
-1. Rispondi SOLO con JSON valido, nessun testo aggiuntivo
-2. Includi SOLO le proprietà che devono cambiare
-3. Per tema scuro usa mode: "dark", per chiaro mode: "light"
-4. Usa colori hex validi a 6 cifre
+1. Rispondi SOLO con JSON valido, niente altro
+2. Includi SOLO le proprietà da modificare
+3. Per nascondere voci menu, rimuovile dall'array visibleItems
+4. Per nascondere card dashboard, rimuovile da visibleCards
 
 CONFIGURAZIONE ATTUALE:
 `;
@@ -477,16 +497,50 @@ function generateDescription(changes) {
       parts.push(changes.theme.mode === 'dark' ? 'Tema scuro' : 'Tema chiaro');
     }
     if (changes.theme.primaryColor) {
-      parts.push(`Colore primario: ${changes.theme.primaryColor}`);
+      const colorNames = {
+        '#3b82f6': 'blu', '#8b5cf6': 'viola', '#10b981': 'verde', '#ef4444': 'rosso',
+        '#f97316': 'arancione', '#ec4899': 'rosa', '#6366f1': 'indaco', '#14b8a6': 'teal',
+        '#eab308': 'giallo', '#6b7280': 'grigio', '#1e3a5f': 'navy', '#0f172a': 'nero'
+      };
+      const colorName = colorNames[changes.theme.primaryColor] || changes.theme.primaryColor;
+      parts.push(`Colore ${colorName}`);
     }
     if (changes.theme.density) {
       const densityMap = { compact: 'compatta', normal: 'normale', comfortable: 'spaziosa' };
       parts.push(`Densità ${densityMap[changes.theme.density]}`);
     }
     if (changes.theme.borderRadius) {
-      const radiusMap = { none: 'nessuno', small: 'piccoli', medium: 'medi', large: 'grandi' };
+      const radiusMap = { none: 'squadrati', small: 'piccoli', medium: 'medi', large: 'arrotondati' };
       parts.push(`Bordi ${radiusMap[changes.theme.borderRadius]}`);
     }
+    if (changes.theme.fontSize) {
+      const sizeMap = { small: 'piccolo', medium: 'medio', large: 'grande' };
+      parts.push(`Testo ${sizeMap[changes.theme.fontSize]}`);
+    }
+  }
+
+  if (changes.navigation) {
+    if (changes.navigation.visibleItems) {
+      parts.push('Menu aggiornato');
+    }
+    if (changes.navigation.collapsed !== undefined) {
+      parts.push(changes.navigation.collapsed ? 'Sidebar compressa' : 'Sidebar espansa');
+    }
+  }
+
+  if (changes.dashboard) {
+    if (changes.dashboard.layout) {
+      const layoutMap = { default: 'standard', compact: 'compatto', minimal: 'minimale' };
+      parts.push(`Dashboard ${layoutMap[changes.dashboard.layout]}`);
+    }
+    if (changes.dashboard.visibleCards) {
+      parts.push('Card dashboard aggiornate');
+    }
+  }
+
+  if (changes.homePage) {
+    const pageNames = { dashboard: 'Dashboard', pipeline: 'Pipeline', contacts: 'Contatti', tasks: 'Attività', projects: 'Progetti' };
+    parts.push(`Home: ${pageNames[changes.homePage] || changes.homePage}`);
   }
 
   return parts.length > 0 ? parts.join(', ') : 'Modifiche applicate';
@@ -503,6 +557,18 @@ function mergeConfigs(base, changes) {
   }
   if (changes.homePage) {
     result.homePage = changes.homePage;
+  }
+  if (changes.dashboard) {
+    result.dashboard = { ...result.dashboard, ...changes.dashboard };
+  }
+  if (changes.tables) {
+    result.tables = result.tables || {};
+    for (const table in changes.tables) {
+      result.tables[table] = { ...result.tables[table], ...changes.tables[table] };
+    }
+  }
+  if (changes.quickActions) {
+    result.quickActions = { ...result.quickActions, ...changes.quickActions };
   }
   if (changes.globalSettings) {
     result.globalSettings = { ...result.globalSettings, ...changes.globalSettings };
