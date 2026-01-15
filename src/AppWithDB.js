@@ -145,11 +145,14 @@ export default function VAIBApp() {
 
 // Inner component with all VAIB functionality
 function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, showTour, onCloseTour }) {
+  // Initialize with demo data if in demo mode
+  const initialDemoData = isDemoMode ? getAllDemoData() : null;
+
   const [activeView, setActiveView] = useState('dashboard');
-  const [contacts, setContacts] = useState([]);
-  const [opportunities, setOpportunities] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [invoices, setInvoices] = useState([]);
+  const [contacts, setContacts] = useState(initialDemoData?.contacts || []);
+  const [opportunities, setOpportunities] = useState(initialDemoData?.opportunities || []);
+  const [tasks, setTasks] = useState(initialDemoData?.tasks || []);
+  const [invoices, setInvoices] = useState(initialDemoData?.invoices || []);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [modalType, setModalType] = useState('');
@@ -218,16 +221,11 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, sh
   };
 
   // Load data on mount (already authenticated at this point)
+  // Demo data is loaded in useState initialization, so skip for demo mode
   useEffect(() => {
     if (isDemoMode) {
-      // Load demo data directly to avoid closure issues
-      const demoData = getAllDemoData();
-      setContacts(demoData.contacts);
-      setOpportunities(demoData.opportunities);
-      setTasks(demoData.tasks);
-      setInvoices(demoData.invoices);
+      // Data already loaded from initialization
       setDataLoaded(true);
-      setLoading(false);
     } else {
       loadAllData();
     }

@@ -113,17 +113,18 @@ export const demoContacts = [
 ];
 
 // Demo opportunities with realistic pipeline stages
+// Stages: 'Lead', 'In contatto', 'Follow Up da fare', 'Revisionare offerta', 'Chiuso Vinto', 'Chiuso Perso'
 export const demoOpportunities = [
   {
     id: 'demo-o1',
     title: 'Redesign Sito TechStartup',
     company: 'TechStartup Milano',
     value: 8500,
-    stage: 'In corso',
+    stage: 'Revisionare offerta',
     expectedClose: randomDate(0, 30),
     owner: 'Marco Rossi',
     contactId: 'demo-c1',
-    probability: 90,
+    probability: 75,
     notes: 'Progetto avviato, consegna prevista fine mese'
   },
   {
@@ -131,7 +132,7 @@ export const demoOpportunities = [
     title: 'SEO + Content Strategy',
     company: 'Studio Verdi & Associati',
     value: 4800,
-    stage: 'Vinta',
+    stage: 'Chiuso Vinto',
     expectedClose: randomDate(30),
     owner: 'Marco Rossi',
     contactId: 'demo-c2',
@@ -143,11 +144,11 @@ export const demoOpportunities = [
     title: 'Landing Page Nuovo Prodotto',
     company: 'Ferrari Design Studio',
     value: 3500,
-    stage: 'Proposta',
+    stage: 'Follow Up da fare',
     expectedClose: randomDate(0, 15),
     owner: 'Marco Rossi',
     contactId: 'demo-c3',
-    probability: 60,
+    probability: 50,
     notes: 'Preventivo inviato, in attesa di feedback'
   },
   {
@@ -155,7 +156,7 @@ export const demoOpportunities = [
     title: 'Sistema Prenotazioni Online',
     company: 'Ristorante Bella Italia',
     value: 2800,
-    stage: 'Vinta',
+    stage: 'Chiuso Vinto',
     expectedClose: randomDate(60),
     owner: 'Marco Rossi',
     contactId: 'demo-c4',
@@ -167,7 +168,7 @@ export const demoOpportunities = [
     title: 'Consulenza Digital Strategy',
     company: 'Moretti Business Consulting',
     value: 5000,
-    stage: 'Contatto',
+    stage: 'In contatto',
     expectedClose: randomDate(0, 45),
     owner: 'Marco Rossi',
     contactId: 'demo-c5',
@@ -179,11 +180,11 @@ export const demoOpportunities = [
     title: 'Manutenzione E-commerce 2024',
     company: 'E-commerce Italia Srl',
     value: 18500,
-    stage: 'In corso',
+    stage: 'Chiuso Vinto',
     expectedClose: randomDate(0, 90),
     owner: 'Marco Rossi',
     contactId: 'demo-c6',
-    probability: 95,
+    probability: 100,
     notes: 'Contratto annuale in corso'
   },
   {
@@ -191,11 +192,11 @@ export const demoOpportunities = [
     title: 'Portfolio + Configuratore 3D',
     company: 'Studio Architetti Milano',
     value: 4200,
-    stage: 'Qualificato',
+    stage: 'Lead',
     expectedClose: randomDate(0, 25),
     owner: 'Marco Rossi',
     contactId: 'demo-c7',
-    probability: 50,
+    probability: 10,
     notes: 'Interessati, richiesta demo configuratore'
   },
   {
@@ -203,11 +204,11 @@ export const demoOpportunities = [
     title: 'App Mobile Delivery',
     company: 'Ristorante Bella Italia',
     value: 6500,
-    stage: 'Proposta',
+    stage: 'Revisionare offerta',
     expectedClose: randomDate(0, 40),
     owner: 'Marco Rossi',
     contactId: 'demo-c4',
-    probability: 45,
+    probability: 75,
     notes: 'Upselling cliente esistente'
   }
 ];
