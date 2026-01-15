@@ -6817,6 +6817,91 @@ body {
     font-size: 13px;
   }
 
+  /* Pipeline opportunity cards mobile */
+  .opp-card {
+    height: auto !important;
+    min-height: auto !important;
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .opp-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .opp-card-title {
+    font-size: 13px;
+    height: auto;
+    -webkit-line-clamp: 2;
+    flex: 1;
+  }
+
+  .opp-card-value {
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .opp-card-body {
+    gap: 4px;
+  }
+
+  .opp-card-company {
+    font-size: 12px;
+  }
+
+  .opp-card-date {
+    position: static;
+    font-size: 11px;
+    margin-top: 4px;
+  }
+
+  .opp-card-forecast {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .forecast-item {
+    font-size: 10px;
+  }
+
+  .opp-card-actions {
+    padding-top: 10px;
+    gap: 6px;
+  }
+
+  .opp-action-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Kanban columns mobile */
+  .kanban-column {
+    border-radius: 12px;
+  }
+
+  .column-header {
+    padding: 12px 14px;
+  }
+
+  .column-count {
+    font-size: 12px;
+    padding: 2px 8px;
+  }
+
+  .column-value {
+    font-size: 12px;
+    padding: 8px 14px;
+  }
+
+  .column-content {
+    padding: 12px;
+    gap: 10px;
+  }
+
   /* Modal mobile - full screen bottom sheet style */
   .modal-overlay,
   .unified-modal-overlay {
