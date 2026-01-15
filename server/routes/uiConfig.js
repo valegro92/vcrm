@@ -342,7 +342,7 @@ const AI_MODELS = [
   'qwen/qwq-32b:free'
 ];
 
-const UI_BUILDER_PROMPT = `Sei un AI specializzato nella generazione di configurazioni UI per vCRM, un'applicazione CRM per freelance e partite IVA forfettarie.
+const UI_BUILDER_PROMPT = `Sei un AI specializzato nella generazione di configurazioni UI per VAIB, il business assistant AI per freelance e partite IVA forfettarie.
 
 L'utente descriverà in linguaggio naturale cosa vuole cambiare nell'interfaccia, e tu devi generare SOLO un oggetto JSON valido con le modifiche richieste.
 

@@ -8,7 +8,7 @@ import initialContacts from './data/initialContacts';
 import initialOpportunities from './data/initialOpportunities';
 import pipelineStages from './constants/pipelineStages';
 import COLORS from './constants/colors';
-export default function YdeaCRM() {
+export default function VAIBApp() {
   const [activeView, setActiveView] = useState('dashboard');
   // Initialize state from localStorage or default to initial data
   const [contacts, setContacts] = useState(() => {

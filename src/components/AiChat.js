@@ -22,7 +22,7 @@ export default function AiChat() {
     const [messages, setMessages] = useState([
         {
             role: 'assistant',
-            content: 'Ciao! Sono il tuo assistente AI per vCRM. Posso aiutarti a:\n\n- Analizzare fatturato e budget\n- Controllare task e scadenze\n- Monitorare la pipeline\n- Rispondere a domande sui tuoi dati\n\nCosa posso fare per te?'
+            content: 'Ciao! Sono il tuo assistente AI VAIB. Posso aiutarti a:\n\n- Analizzare fatturato e budget\n- Controllare task e scadenze\n- Monitorare la pipeline\n- Rispondere a domande sui tuoi dati\n\nCosa posso fare per te?'
         }
     ]);
     const [inputValue, setInputValue] = useState('');
@@ -194,7 +194,7 @@ export default function AiChat() {
                                 <Bot size={20} />
                             </div>
                             <div>
-                                <h3>Assistente vCRM</h3>
+                                <h3>Assistente VAIB</h3>
                                 <span className="ai-chat-status">
                                     <Zap size={10} /> AI Powered
                                 </span>

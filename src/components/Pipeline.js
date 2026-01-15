@@ -5,7 +5,7 @@ import api from '../api/api';
 import { PageHeader, KPICard, KPISection } from './ui';
 import WonModal from './WonModal';
 
-// Colori per gli header delle colonne stile Ydea
+// Colori per gli header delle colonne pipeline
 const STAGE_COLORS = {
     'Lead': '#fbbf24',           // Giallo/Oro (Analisi esigenze)
     'In contatto': '#60a5fa',    // Azzurro (Inviare offerta)

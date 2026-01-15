@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Landing from './components/Landing';
 import Login from './components/Login';
 import Onboarding from './components/Onboarding';
 import api from './api/api';
@@ -25,9 +26,11 @@ import { UIConfigProvider, useUIConfig } from './context/UIConfigContext';
 import { TrendingUp, Target, Users, Euro, CheckSquare } from 'lucide-react';
 
 // Main App wrapper with UIConfigProvider
-export default function YdeaCRM() {
+export default function VAIBApp() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const [authView, setAuthView] = useState('landing'); // 'landing' | 'login' | 'register'
+  const [isNewUser, setIsNewUser] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -39,8 +42,9 @@ export default function YdeaCRM() {
     }
   }, []);
 
-  const handleLoginSuccess = (userData) => {
+  const handleLoginSuccess = (userData, newUser = false) => {
     setUser(userData);
+    setIsNewUser(newUser);
     setIsAuthenticated(true);
   };
 
@@ -49,16 +53,36 @@ export default function YdeaCRM() {
     localStorage.removeItem('user');
     setUser(null);
     setIsAuthenticated(false);
+    setAuthView('landing');
+    setIsNewUser(false);
   };
 
+  // Not authenticated - show landing or login/register
   if (!isAuthenticated) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
+    if (authView === 'landing') {
+      return (
+        <Landing
+          onLogin={() => setAuthView('login')}
+          onRegister={() => setAuthView('register')}
+        />
+      );
+    }
+
+    return (
+      <Login
+        onLoginSuccess={handleLoginSuccess}
+        mode={authView}
+        onBack={() => setAuthView('landing')}
+        onSwitchMode={(mode) => setAuthView(mode)}
+      />
+    );
   }
 
   return (
     <UIConfigProvider isAuthenticated={isAuthenticated}>
-      <YdeaCRMContent
+      <VAIBContent
         user={user}
+        isNewUser={isNewUser}
         onLoginSuccess={handleLoginSuccess}
         onLogout={handleLogout}
       />
@@ -66,8 +90,8 @@ export default function YdeaCRM() {
   );
 }
 
-// Inner component with all CRM functionality
-function YdeaCRMContent({ user, onLoginSuccess, onLogout }) {
+// Inner component with all VAIB functionality
+function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout }) {
   const [activeView, setActiveView] = useState('dashboard');
   const [contacts, setContacts] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
@@ -88,21 +112,24 @@ function YdeaCRMContent({ user, onLoginSuccess, onLogout }) {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
 
-  // Check if onboarding is needed (only for NEW users with no data)
+  // Check if onboarding is needed (only for NEW users who just registered)
   useEffect(() => {
     if (!dataLoaded) return;
 
     const onboardingComplete = localStorage.getItem('vaib_onboarding_complete');
     const hasExistingData = contacts.length > 0 || opportunities.length > 0 || tasks.length > 0 || invoices.length > 0;
 
-    // Only show onboarding for new users (no data and not completed before)
-    if (!onboardingComplete && !hasExistingData) {
+    // Show onboarding for new registrations (isNewUser flag) or new users without data
+    if (isNewUser && !onboardingComplete) {
+      setShowOnboarding(true);
+    } else if (!onboardingComplete && !hasExistingData) {
+      // Fallback: also show for users without data who haven't completed onboarding
       setShowOnboarding(true);
     } else if (hasExistingData && !onboardingComplete) {
-      // Existing user - mark as complete automatically
+      // Existing user with data - mark as complete automatically
       localStorage.setItem('vaib_onboarding_complete', 'true');
     }
-  }, [dataLoaded, contacts.length, opportunities.length, tasks.length, invoices.length]);
+  }, [dataLoaded, isNewUser, contacts.length, opportunities.length, tasks.length, invoices.length]);
 
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
