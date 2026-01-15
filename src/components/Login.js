@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
-import { Lock, User, AlertCircle, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Lock, User, AlertCircle, Eye, EyeOff, Loader2, Mail, ArrowLeft, Building } from 'lucide-react';
 import api from '../api/api';
 
-export default function Login({ onLoginSuccess }) {
+export default function Login({ onLoginSuccess, mode = 'login', onBack, onSwitchMode }) {
+  const [isRegister, setIsRegister] = useState(mode === 'register');
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [company, setCompany] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -12,12 +17,12 @@ export default function Login({ onLoginSuccess }) {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     if (!username.trim() || !password.trim()) {
       setError('Inserisci username e password');
       return;
     }
-    
+
     setLoading(true);
 
     try {
@@ -27,6 +32,45 @@ export default function Login({ onLoginSuccess }) {
       onLoginSuccess(response.user);
     } catch (err) {
       setError(err.message || 'Login fallito. Verifica le credenziali.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!email.trim() || !password.trim() || !fullName.trim()) {
+      setError('Compila tutti i campi obbligatori');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Le password non coincidono');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('La password deve essere di almeno 6 caratteri');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await api.register({
+        email,
+        password,
+        fullName,
+        company
+      });
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      // New user - don't set onboarding complete, let them see it
+      onLoginSuccess(response.user, true); // true = isNewUser
+    } catch (err) {
+      setError(err.message || 'Registrazione fallita. Riprova.');
     } finally {
       setLoading(false);
     }
@@ -348,9 +392,32 @@ export default function Login({ onLoginSuccess }) {
 
       <div className="login-right">
         <div className="login-card">
+          {onBack && (
+            <button
+              onClick={onBack}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'none',
+                border: 'none',
+                color: '#64748b',
+                fontSize: '14px',
+                cursor: 'pointer',
+                marginBottom: '20px',
+                padding: 0
+              }}
+            >
+              <ArrowLeft size={18} />
+              Torna alla home
+            </button>
+          )}
+
           <div className="login-header">
-            <h2 className="login-title">Bentornato! 👋</h2>
-            <p className="login-subtitle">Accedi al tuo account per continuare</p>
+            <h2 className="login-title">{isRegister ? 'Crea il tuo account' : 'Bentornato!'} 👋</h2>
+            <p className="login-subtitle">
+              {isRegister ? 'Inizia a usare VAIB gratuitamente' : 'Accedi al tuo account per continuare'}
+            </p>
           </div>
 
           {error && (
@@ -360,102 +427,178 @@ export default function Login({ onLoginSuccess }) {
             </div>
           )}
 
-          <form onSubmit={handleLogin}>
-            <div className="form-group">
-              <label className="form-label">Username o Email</label>
-              <div className="input-wrapper">
-                <User size={20} className="input-icon" />
-                <input
-                  type="text"
-                  className="form-input"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Inserisci username o email"
-                  autoComplete="username"
-                  autoFocus
-                />
+          {isRegister ? (
+            <form onSubmit={handleRegister}>
+              <div className="form-group">
+                <label className="form-label">Nome completo *</label>
+                <div className="input-wrapper">
+                  <User size={20} className="input-icon" />
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Mario Rossi"
+                    autoFocus
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="form-group">
-              <label className="form-label">Password</label>
-              <div className="input-wrapper">
-                <Lock size={20} className="input-icon" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  className="form-input"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Inserisci password"
-                  autoComplete="current-password"
-                />
-                <button 
-                  type="button"
-                  className="password-toggle"
-                  onClick={() => setShowPassword(!showPassword)}
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
+              <div className="form-group">
+                <label className="form-label">Email *</label>
+                <div className="input-wrapper">
+                  <Mail size={20} className="input-icon" />
+                  <input
+                    type="email"
+                    className="form-input"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="mario@example.com"
+                    autoComplete="email"
+                  />
+                </div>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              className="login-button"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 size={20} className="spinner" />
-                  Accesso in corso...
-                </>
-              ) : (
-                'Accedi'
-              )}
-            </button>
-          </form>
+              <div className="form-group">
+                <label className="form-label">Azienda / P.IVA (opzionale)</label>
+                <div className="input-wrapper">
+                  <Building size={20} className="input-icon" />
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={company}
+                    onChange={(e) => setCompany(e.target.value)}
+                    placeholder="Studio Rossi"
+                  />
+                </div>
+              </div>
 
-          <div style={{ 
-            marginTop: '24px', 
-            paddingTop: '24px', 
+              <div className="form-group">
+                <label className="form-label">Password *</label>
+                <div className="input-wrapper">
+                  <Lock size={20} className="input-icon" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    className="form-input"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Minimo 6 caratteri"
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Conferma Password *</label>
+                <div className="input-wrapper">
+                  <Lock size={20} className="input-icon" />
+                  <input
+                    type="password"
+                    className="form-input"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Ripeti la password"
+                    autoComplete="new-password"
+                  />
+                </div>
+              </div>
+
+              <button type="submit" className="login-button" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 size={20} className="spinner" />
+                    Registrazione...
+                  </>
+                ) : (
+                  'Crea Account'
+                )}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleLogin}>
+              <div className="form-group">
+                <label className="form-label">Username o Email</label>
+                <div className="input-wrapper">
+                  <User size={20} className="input-icon" />
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Inserisci username o email"
+                    autoComplete="username"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Password</label>
+                <div className="input-wrapper">
+                  <Lock size={20} className="input-icon" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    className="form-input"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Inserisci password"
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+
+              <button type="submit" className="login-button" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 size={20} className="spinner" />
+                    Accesso in corso...
+                  </>
+                ) : (
+                  'Accedi'
+                )}
+              </button>
+            </form>
+          )}
+
+          <div style={{
+            marginTop: '24px',
+            paddingTop: '24px',
             borderTop: '1px solid #e2e8f0',
             textAlign: 'center'
           }}>
-            <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '12px' }}>
-              Vuoi provare il CRM con dati di esempio?
+            <p style={{ fontSize: '14px', color: '#64748b' }}>
+              {isRegister ? 'Hai già un account?' : 'Non hai un account?'}{' '}
+              <button
+                type="button"
+                onClick={() => setIsRegister(!isRegister)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#6366f1',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+              >
+                {isRegister ? 'Accedi' : 'Registrati gratis'}
+              </button>
             </p>
-            <button
-              type="button"
-              onClick={() => {
-                setUsername('demo');
-                setPassword('demo123');
-              }}
-              style={{
-                background: 'linear-gradient(135deg, #f1f5f9, #e2e8f0)',
-                border: '2px solid #e2e8f0',
-                borderRadius: '12px',
-                padding: '12px 24px',
-                fontSize: '14px',
-                fontWeight: 600,
-                color: '#475569',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#3b82f6';
-                e.currentTarget.style.color = '#3b82f6';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#e2e8f0';
-                e.currentTarget.style.color = '#475569';
-              }}
-            >
-              🎮 Usa credenziali Demo
-            </button>
           </div>
         </div>
       </div>
