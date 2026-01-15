@@ -17,12 +17,56 @@ const QUICK_QUERIES = [
     { id: 'riepilogo-generale', label: 'Riepilogo', icon: Sparkles },
 ];
 
-export default function AiChat() {
+// Parse actions from AI response
+const parseActions = (message) => {
+    const actionRegex = /\[ACTION:(\w+):(\{.*?\})\]/g;
+    const actions = [];
+    let match;
+
+    while ((match = actionRegex.exec(message)) !== null) {
+        try {
+            actions.push({
+                type: match[1],
+                data: JSON.parse(match[2])
+            });
+        } catch (e) {
+            console.error('Failed to parse action:', match[0], e);
+        }
+    }
+
+    // Remove action tags from message for display
+    const cleanMessage = message.replace(actionRegex, '').trim();
+
+    return { actions, cleanMessage };
+};
+
+// Process date placeholders
+const processDate = (dateStr) => {
+    if (!dateStr) return null;
+    const today = new Date();
+
+    switch (dateStr) {
+        case 'TODAY':
+            return today.toISOString().split('T')[0];
+        case 'TOMORROW':
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            return tomorrow.toISOString().split('T')[0];
+        case 'NEXT_WEEK':
+            const nextWeek = new Date(today);
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            return nextWeek.toISOString().split('T')[0];
+        default:
+            return dateStr; // Already a date string
+    }
+};
+
+export default function AiChat({ onCreateContact, onCreateOpportunity, onCreateTask, isDemoMode }) {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
         {
             role: 'assistant',
-            content: 'Ciao! Sono il tuo assistente AI VAIB. Posso aiutarti a:\n\n- Analizzare fatturato e budget\n- Controllare task e scadenze\n- Monitorare la pipeline\n- Rispondere a domande sui tuoi dati\n\nCosa posso fare per te?'
+            content: 'Ciao! Sono il tuo assistente AI VAIB. Posso aiutarti a:\n\n- **Aggiungere dati**: "Aggiungi contatto Mario Rossi di TechCorp"\n- **Creare task**: "Crea task: chiamare cliente domani"\n- **Nuove opportunità**: "Nuova opportunità 5000€ per Ferrari Design"\n- **Analizzare dati**: "Quanto ho fatturato questo mese?"\n\nCosa posso fare per te?'
         }
     ]);
     const [inputValue, setInputValue] = useState('');
@@ -54,6 +98,69 @@ export default function AiChat() {
         }
     };
 
+    // Execute parsed actions
+    const executeActions = (actions) => {
+        const results = [];
+
+        for (const action of actions) {
+            try {
+                switch (action.type) {
+                    case 'create_contact':
+                        if (onCreateContact) {
+                            const contactData = {
+                                name: action.data.name,
+                                email: action.data.email || '',
+                                phone: action.data.phone || '',
+                                company: action.data.company || '',
+                                status: action.data.status || 'Lead',
+                                notes: action.data.notes || ''
+                            };
+                            onCreateContact(contactData);
+                            results.push({ success: true, type: 'contact', name: action.data.name });
+                        }
+                        break;
+
+                    case 'create_opportunity':
+                        if (onCreateOpportunity) {
+                            const oppData = {
+                                title: action.data.title,
+                                company: action.data.company || '',
+                                value: action.data.value || 0,
+                                stage: action.data.stage || 'Lead',
+                                expectedClose: processDate(action.data.expectedClose) || '',
+                                notes: action.data.notes || ''
+                            };
+                            onCreateOpportunity(oppData);
+                            results.push({ success: true, type: 'opportunity', name: action.data.title });
+                        }
+                        break;
+
+                    case 'create_task':
+                        if (onCreateTask) {
+                            const taskData = {
+                                title: action.data.title,
+                                description: action.data.description || '',
+                                dueDate: processDate(action.data.dueDate) || '',
+                                priority: action.data.priority || 'Media',
+                                contactName: action.data.contactName || ''
+                            };
+                            onCreateTask(taskData);
+                            results.push({ success: true, type: 'task', name: action.data.title });
+                        }
+                        break;
+
+                    default:
+                        console.warn('Unknown action type:', action.type);
+                }
+            } catch (err) {
+                console.error('Error executing action:', action, err);
+                results.push({ success: false, type: action.type, error: err.message });
+            }
+        }
+
+        return results;
+    };
+
     const sendMessage = async (messageText) => {
         if (!messageText.trim() || isLoading) return;
 
@@ -72,10 +179,20 @@ export default function AiChat() {
 
             const response = await api.sendChatMessage(messageText, conversationHistory);
 
+            // Parse actions from response
+            const { actions, cleanMessage } = parseActions(response.message);
+
+            // Execute any actions found
+            if (actions.length > 0) {
+                const results = executeActions(actions);
+                console.log('Executed actions:', results);
+            }
+
             const assistantMessage = {
                 role: 'assistant',
-                content: response.message,
-                model: response.model
+                content: cleanMessage || response.message,
+                model: response.model,
+                hadActions: actions.length > 0
             };
 
             setMessages(prev => [...prev, assistantMessage]);
