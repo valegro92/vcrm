@@ -333,33 +333,6 @@ export default function Settings({ user, contacts, opportunities, tasks, onUserU
     .password-strength-bar.medium { width: 66%; background: #f59e0b; }
     .password-strength-bar.strong { width: 100%; background: #10b981; }
     @media (max-width: 768px) { .settings-container { flex-direction: column; } .settings-sidebar { width: 100%; } .form-row { grid-template-columns: 1fr; } .data-stats { grid-template-columns: 1fr; } }
-
-    /* AI Builder Chat Styles */
-    .ai-chat-container { display: flex; flex-direction: column; height: 500px; background: #f8fafc; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; }
-    .ai-chat-messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-    .ai-chat-message { max-width: 85%; display: flex; flex-direction: column; gap: 4px; }
-    .ai-chat-message.user { align-self: flex-end; }
-    .ai-chat-message.assistant { align-self: flex-start; }
-    .ai-chat-message-content { padding: 12px 16px; border-radius: 16px; font-size: 14px; line-height: 1.5; }
-    .ai-chat-message.user .ai-chat-message-content { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border-bottom-right-radius: 4px; }
-    .ai-chat-message.assistant .ai-chat-message-content { background: white; color: #1e293b; border-bottom-left-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .ai-chat-message.assistant.error .ai-chat-message-content { background: #fef2f2; color: #dc2626; }
-    .ai-chat-message-time { font-size: 11px; color: #9ca3af; padding: 0 4px; }
-    .ai-chat-message.user .ai-chat-message-time { text-align: right; }
-    .ai-chat-message-changes { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-    .ai-chat-color-badge { width: 20px; height: 20px; border-radius: 6px; border: 2px solid rgba(255,255,255,0.3); }
-    .ai-chat-input-area { display: flex; gap: 12px; padding: 16px; background: white; border-top: 1px solid #e2e8f0; }
-    .ai-chat-input { flex: 1; padding: 12px 16px; border-radius: 24px; border: 2px solid #e2e8f0; font-size: 14px; outline: none; transition: all 0.2s; }
-    .ai-chat-input:focus { border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1); }
-    .ai-chat-send-btn { width: 48px; height: 48px; border-radius: 50%; border: none; background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
-    .ai-chat-send-btn:hover:not(:disabled) { transform: scale(1.05); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); }
-    .ai-chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .ai-suggestions { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px; background: white; border-top: 1px solid #e2e8f0; }
-    .ai-suggestion-btn { padding: 8px 14px; border-radius: 20px; border: 1px solid #e2e8f0; background: white; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s; }
-    .ai-suggestion-btn:hover { border-color: #8b5cf6; color: #8b5cf6; background: rgba(139, 92, 246, 0.05); }
-    .ai-config-bar { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: rgba(139, 92, 246, 0.05); border-bottom: 1px solid #e2e8f0; }
-    .ai-config-color { width: 16px; height: 16px; border-radius: 4px; border: 1px solid #e2e8f0; }
-    .ai-config-text { font-size: 12px; color: #64748b; }
     .spinning { animation: spin 1s linear infinite; }
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   `;
@@ -616,108 +589,136 @@ export default function Settings({ user, contacts, opportunities, tasks, onUserU
           {activeTab === 'personalize' && (
             <>
               <div className="settings-header">
-                <h2 className="settings-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Sparkles size={24} style={{ color: '#8b5cf6' }} />
-                  Personalizza con AI
-                </h2>
+                <h2 className="settings-title">Personalizza con AI</h2>
                 <p className="settings-description">
-                  Descrivi come vuoi modificare l'interfaccia e l'AI applicherà le modifiche in tempo reale
+                  Descrivi le modifiche che vuoi apportare all'interfaccia
                 </p>
               </div>
 
-              <div className="ai-chat-container">
-                {/* Current config indicator */}
-                <div className="ai-config-bar">
-                  <span className="ai-config-color" style={{ backgroundColor: config?.theme?.primaryColor || '#6366f1' }} />
-                  <span className="ai-config-text">
-                    {config?.theme?.mode === 'dark' ? 'Tema scuro' : 'Tema chiaro'} ·
-                    {config?.theme?.density === 'compact' ? ' Compatto' : config?.theme?.density === 'comfortable' ? ' Spazioso' : ' Normale'}
-                  </span>
+              <div className="settings-form">
+                {/* Current Configuration */}
+                <div className="toggle-group">
+                  <div className="toggle-info">
+                    <h4>Configurazione Attuale</h4>
+                    <p style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: config?.theme?.primaryColor || '#6366f1' }}></span>
+                      {config?.theme?.mode === 'dark' ? 'Tema scuro' : 'Tema chiaro'} ·
+                      {config?.theme?.density === 'compact' ? ' Compatto' : config?.theme?.density === 'comfortable' ? ' Spazioso' : ' Normale'}
+                    </p>
+                  </div>
                   {!isDefault && (
-                    <button
-                      onClick={handleResetUIConfig}
-                      disabled={resetting}
-                      style={{ marginLeft: 'auto', padding: '4px 12px', borderRadius: '6px', border: '1px solid #e2e8f0', background: 'white', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
-                    >
-                      <RotateCcw size={12} />
+                    <button className="btn btn-secondary" onClick={handleResetUIConfig} disabled={resetting} style={{ padding: '8px 16px' }}>
+                      <RotateCcw size={16} />
                       Reset
                     </button>
                   )}
                 </div>
 
-                {/* Messages */}
-                <div className="ai-chat-messages">
-                  {aiMessages.map((msg, idx) => (
-                    <div key={idx} className={`ai-chat-message ${msg.role} ${msg.isError ? 'error' : ''}`}>
-                      <div className="ai-chat-message-content">
-                        {msg.content}
-                        {msg.changes?.theme && (
-                          <div className="ai-chat-message-changes">
-                            {msg.changes.theme.primaryColor && (
-                              <span className="ai-chat-color-badge" style={{ backgroundColor: msg.changes.theme.primaryColor }} />
-                            )}
-                            {msg.changes.theme.mode && (
-                              <span>{msg.changes.theme.mode === 'dark' ? '🌙' : '☀️'}</span>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      <span className="ai-chat-message-time">
-                        {new Date(msg.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-                  ))}
-                  {aiLoading && (
-                    <div className="ai-chat-message assistant">
-                      <div className="ai-chat-message-content" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Loader2 size={16} className="spinning" />
-                        Sto applicando le modifiche...
-                      </div>
-                    </div>
-                  )}
-                  <div ref={aiMessagesEndRef} />
+                {/* AI Input */}
+                <div className="form-group">
+                  <label className="form-label">Cosa vuoi modificare?</label>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <input
+                      ref={aiInputRef}
+                      type="text"
+                      className="form-input"
+                      style={{ flex: 1 }}
+                      placeholder="Es: tema scuro con colori verdi, interfaccia più compatta..."
+                      value={aiInput}
+                      onChange={(e) => setAiInput(e.target.value)}
+                      onKeyDown={handleAiKeyDown}
+                      disabled={aiLoading}
+                    />
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => handleAiSend()}
+                      disabled={aiLoading || !aiInput.trim()}
+                      style={{ padding: '12px 20px' }}
+                    >
+                      {aiLoading ? <Loader2 size={18} className="spinning" /> : <Send size={18} />}
+                      {!aiLoading && 'Applica'}
+                    </button>
+                  </div>
                 </div>
 
-                {/* Quick suggestions */}
-                {aiMessages.length <= 2 && !aiLoading && (
-                  <div className="ai-suggestions">
-                    {['Tema scuro blu', 'Colori verdi', 'Interfaccia compatta', 'Bordi arrotondati'].map((s, i) => (
-                      <button key={i} className="ai-suggestion-btn" onClick={() => handleAiSend(s)}>{s}</button>
+                {/* Quick Actions */}
+                <div className="form-group">
+                  <label className="form-label">Suggerimenti rapidi</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {[
+                      { label: 'Tema scuro', value: 'tema scuro' },
+                      { label: 'Colori blu', value: 'usa colori blu' },
+                      { label: 'Colori verdi', value: 'usa colori verdi' },
+                      { label: 'Più compatto', value: 'interfaccia più compatta' },
+                      { label: 'Più spazioso', value: 'interfaccia più spaziosa' },
+                      { label: 'Bordi arrotondati', value: 'bordi più arrotondati' }
+                    ].map((suggestion, i) => (
+                      <button
+                        key={i}
+                        onClick={() => handleAiSend(suggestion.value)}
+                        disabled={aiLoading}
+                        style={{
+                          padding: '8px 14px',
+                          borderRadius: '8px',
+                          border: '1px solid #e2e8f0',
+                          background: 'white',
+                          color: '#475569',
+                          fontSize: '13px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseOver={(e) => { e.target.style.borderColor = '#3b82f6'; e.target.style.color = '#3b82f6'; }}
+                        onMouseOut={(e) => { e.target.style.borderColor = '#e2e8f0'; e.target.style.color = '#475569'; }}
+                      >
+                        {suggestion.label}
+                      </button>
                     ))}
+                  </div>
+                </div>
+
+                {/* Recent Changes / Messages */}
+                {aiMessages.length > 1 && (
+                  <div className="form-group">
+                    <label className="form-label">Cronologia modifiche</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto' }}>
+                      {aiMessages.slice(1).reverse().map((msg, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            padding: '12px 16px',
+                            borderRadius: '10px',
+                            background: msg.role === 'user' ? '#f1f5f9' : (msg.isError ? '#fef2f2' : '#f0fdf4'),
+                            border: `1px solid ${msg.role === 'user' ? '#e2e8f0' : (msg.isError ? '#fecaca' : '#bbf7d0')}`,
+                            fontSize: '13px',
+                            color: msg.isError ? '#dc2626' : '#1e293b',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                          }}
+                        >
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {msg.role === 'user' ? '→' : (msg.isError ? '✗' : '✓')} {msg.content}
+                            {msg.changes?.theme?.primaryColor && (
+                              <span style={{ width: '14px', height: '14px', borderRadius: '4px', background: msg.changes.theme.primaryColor, border: '1px solid rgba(0,0,0,0.1)' }}></span>
+                            )}
+                          </span>
+                          <span style={{ fontSize: '11px', color: '#9ca3af' }}>
+                            {new Date(msg.timestamp).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      ))}
+                      <div ref={aiMessagesEndRef} />
+                    </div>
                   </div>
                 )}
 
-                {/* Input */}
-                <div className="ai-chat-input-area">
-                  <input
-                    ref={aiInputRef}
-                    type="text"
-                    className="ai-chat-input"
-                    placeholder="Es: 'usa colori più caldi' o 'rendi tutto più compatto'..."
-                    value={aiInput}
-                    onChange={(e) => setAiInput(e.target.value)}
-                    onKeyDown={handleAiKeyDown}
-                    disabled={aiLoading}
-                  />
-                  <button
-                    className="ai-chat-send-btn"
-                    onClick={() => handleAiSend()}
-                    disabled={aiLoading || !aiInput.trim()}
-                  >
-                    {aiLoading ? <Loader2 size={20} className="spinning" /> : <Send size={20} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Info box */}
-              <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(139, 92, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
-                <h4 style={{ margin: '0 0 8px', fontSize: '14px', fontWeight: '600', color: '#6366f1' }}>💡 Cosa puoi chiedere</h4>
-                <ul style={{ margin: 0, padding: '0 0 0 20px', fontSize: '13px', color: '#64748b', lineHeight: '1.8' }}>
-                  <li>Cambiare tema: "tema scuro", "colori blu"</li>
-                  <li>Densità: "più compatto", "più spazioso"</li>
-                  <li>Stile: "bordi più arrotondati", "stile minimal"</li>
-                  <li>Colori: "usa il verde", "colori più caldi"</li>
-                </ul>
+                {/* Loading State */}
+                {aiLoading && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '16px', background: '#f8fafc', borderRadius: '10px', color: '#64748b' }}>
+                    <Loader2 size={18} className="spinning" />
+                    Sto applicando le modifiche...
+                  </div>
+                )}
               </div>
             </>
           )}
