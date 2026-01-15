@@ -219,9 +219,11 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, sh
 
   // Load data on mount (already authenticated at this point)
   useEffect(() => {
+    console.log('[VAIBContent] useEffect running, isDemoMode:', isDemoMode);
     if (isDemoMode) {
       // Load demo data directly to avoid closure issues
       const demoData = getAllDemoData();
+      console.log('[VAIBContent] Loading demo data:', demoData);
       setContacts(demoData.contacts);
       setOpportunities(demoData.opportunities);
       setTasks(demoData.tasks);
