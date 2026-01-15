@@ -10,9 +10,14 @@ const handleResponse = async (response) => {
 
   if (!response.ok) {
     if (response.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Only redirect if there was a token (real session expired)
+      // In demo mode there's no token, so don't redirect
+      const hadToken = localStorage.getItem('token');
+      if (hadToken) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
     throw new Error(data.error || 'Something went wrong');
   }
