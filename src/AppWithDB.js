@@ -86,14 +86,23 @@ function YdeaCRMContent({ user, onLoginSuccess, onLogout }) {
 
   // Onboarding state
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
-  // Check if onboarding is needed
+  // Check if onboarding is needed (only for NEW users with no data)
   useEffect(() => {
+    if (!dataLoaded) return;
+
     const onboardingComplete = localStorage.getItem('vaib_onboarding_complete');
-    if (!onboardingComplete) {
+    const hasExistingData = contacts.length > 0 || opportunities.length > 0 || tasks.length > 0 || invoices.length > 0;
+
+    // Only show onboarding for new users (no data and not completed before)
+    if (!onboardingComplete && !hasExistingData) {
       setShowOnboarding(true);
+    } else if (hasExistingData && !onboardingComplete) {
+      // Existing user - mark as complete automatically
+      localStorage.setItem('vaib_onboarding_complete', 'true');
     }
-  }, []);
+  }, [dataLoaded, contacts.length, opportunities.length, tasks.length, invoices.length]);
 
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
@@ -167,6 +176,7 @@ function YdeaCRMContent({ user, onLoginSuccess, onLogout }) {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
+      setDataLoaded(true);
     }
   };
 
