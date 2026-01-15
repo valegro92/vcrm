@@ -39,10 +39,20 @@ const createPostgresTables = async () => {
       phone VARCHAR(50),
       company VARCHAR(255),
       role VARCHAR(50) DEFAULT 'user',
+      "emailVerified" BOOLEAN DEFAULT false,
+      "verificationToken" VARCHAR(255),
+      "resetToken" VARCHAR(255),
+      "resetExpires" TIMESTAMP,
       "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  // Add email verification and password reset columns if they don't exist
+  await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "emailVerified" BOOLEAN DEFAULT false`).catch(() => {});
+  await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "verificationToken" VARCHAR(255)`).catch(() => {});
+  await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "resetToken" VARCHAR(255)`).catch(() => {});
+  await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS "resetExpires" TIMESTAMP`).catch(() => {});
 
   // Contacts table
   await client.query(`
@@ -217,6 +227,11 @@ const createSQLiteTables = (resolve, reject) => {
     db.run(`ALTER TABLE users ADD COLUMN company TEXT`, (err) => {
       // Ignore error if column already exists
     });
+    // Add email verification and password reset columns
+    db.run(`ALTER TABLE users ADD COLUMN emailVerified INTEGER DEFAULT 0`, (err) => {});
+    db.run(`ALTER TABLE users ADD COLUMN verificationToken TEXT`, (err) => {});
+    db.run(`ALTER TABLE users ADD COLUMN resetToken TEXT`, (err) => {});
+    db.run(`ALTER TABLE users ADD COLUMN resetExpires DATETIME`, (err) => {});
 
     // Contacts table
     db.run(`

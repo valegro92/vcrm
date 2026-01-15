@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Lock, User, AlertCircle, Eye, EyeOff, Loader2, Mail, ArrowLeft, Building } from 'lucide-react';
 import api from '../api/api';
 
-export default function Login({ onLoginSuccess, mode = 'login', onBack, onSwitchMode }) {
+export default function Login({ onLoginSuccess, mode = 'login', onBack, onSwitchMode, onForgotPassword }) {
   const [isRegister, setIsRegister] = useState(mode === 'register');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -573,6 +573,24 @@ export default function Login({ onLoginSuccess, mode = 'login', onBack, onSwitch
                   'Accedi'
                 )}
               </button>
+
+              {!isRegister && onForgotPassword && (
+                <button
+                  type="button"
+                  onClick={onForgotPassword}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#64748b',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    marginTop: '16px',
+                    textDecoration: 'underline'
+                  }}
+                >
+                  Password dimenticata?
+                </button>
+              )}
             </form>
           )}
 

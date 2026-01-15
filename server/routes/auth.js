@@ -1,10 +1,15 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { runQuery, getOne, getReturningClause } = require('../database/helpers');
 const auth = require('../middleware/auth');
+const { sendVerificationEmail, sendPasswordResetEmail } = require('../services/emailService');
 
 const router = express.Router();
+
+// Generate secure random token
+const generateToken = () => crypto.randomBytes(32).toString('hex');
 
 // Login
 router.post('/login', async (req, res) => {
@@ -176,6 +181,144 @@ router.get('/me', auth, async (req, res) => {
     res.json(user);
   } catch (err) {
     console.error('Get profile error:', err);
+    return res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Forgot Password - Request reset link
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  try {
+    const user = await getOne('SELECT id, email, "fullName" FROM users WHERE email = ?', [email]);
+
+    // Don't reveal if user exists or not for security
+    if (!user) {
+      return res.json({ message: 'Se l\'email esiste, riceverai le istruzioni per il reset' });
+    }
+
+    const resetToken = generateToken();
+    const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+
+    await runQuery(
+      'UPDATE users SET "resetToken" = ?, "resetExpires" = ? WHERE id = ?',
+      [resetToken, resetExpires.toISOString(), user.id]
+    );
+
+    // Send email (non-blocking)
+    sendPasswordResetEmail(user.email, resetToken, user.fullName).catch(err => {
+      console.error('Failed to send password reset email:', err);
+    });
+
+    res.json({ message: 'Se l\'email esiste, riceverai le istruzioni per il reset' });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    return res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Reset Password - Set new password with token
+router.post('/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+
+  if (!token || !password) {
+    return res.status(400).json({ error: 'Token e nuova password sono obbligatori' });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'La password deve essere di almeno 6 caratteri' });
+  }
+
+  try {
+    const user = await getOne(
+      'SELECT id, "resetExpires" FROM users WHERE "resetToken" = ?',
+      [token]
+    );
+
+    if (!user) {
+      return res.status(400).json({ error: 'Token non valido o scaduto' });
+    }
+
+    const expiry = new Date(user.resetExpires);
+    if (expiry < new Date()) {
+      return res.status(400).json({ error: 'Token scaduto. Richiedi un nuovo reset.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await runQuery(
+      'UPDATE users SET password = ?, "resetToken" = NULL, "resetExpires" = NULL WHERE id = ?',
+      [hashedPassword, user.id]
+    );
+
+    res.json({ message: 'Password aggiornata con successo' });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    return res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Verify Email
+router.get('/verify-email/:token', async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    const user = await getOne(
+      'SELECT id FROM users WHERE "verificationToken" = ?',
+      [token]
+    );
+
+    if (!user) {
+      return res.status(400).json({ error: 'Token di verifica non valido' });
+    }
+
+    await runQuery(
+      'UPDATE users SET "emailVerified" = ?, "verificationToken" = NULL WHERE id = ?',
+      [true, user.id]
+    );
+
+    res.json({ message: 'Email verificata con successo!' });
+  } catch (err) {
+    console.error('Email verification error:', err);
+    return res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Resend verification email
+router.post('/resend-verification', auth, async (req, res) => {
+  const userId = req.user.userId;
+
+  try {
+    const user = await getOne(
+      'SELECT id, email, "fullName", "emailVerified" FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.emailVerified) {
+      return res.json({ message: 'Email già verificata' });
+    }
+
+    const verificationToken = generateToken();
+    await runQuery(
+      'UPDATE users SET "verificationToken" = ? WHERE id = ?',
+      [verificationToken, user.id]
+    );
+
+    sendVerificationEmail(user.email, verificationToken, user.fullName).catch(err => {
+      console.error('Failed to send verification email:', err);
+    });
+
+    res.json({ message: 'Email di verifica inviata' });
+  } catch (err) {
+    console.error('Resend verification error:', err);
     return res.status(500).json({ error: 'Database error' });
   }
 });
