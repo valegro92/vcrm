@@ -26,7 +26,7 @@ import { UIConfigProvider, useUIConfig } from './context/UIConfigContext';
 import { TrendingUp, Target, Users, Euro, CheckSquare } from 'lucide-react';
 
 // Main App wrapper with UIConfigProvider
-export default function YdeaCRM() {
+export default function VAIBApp() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [authView, setAuthView] = useState('landing'); // 'landing' | 'login' | 'register'
@@ -80,7 +80,7 @@ export default function YdeaCRM() {
 
   return (
     <UIConfigProvider isAuthenticated={isAuthenticated}>
-      <YdeaCRMContent
+      <VAIBContent
         user={user}
         isNewUser={isNewUser}
         onLoginSuccess={handleLoginSuccess}
@@ -90,8 +90,8 @@ export default function YdeaCRM() {
   );
 }
 
-// Inner component with all CRM functionality
-function YdeaCRMContent({ user, isNewUser, onLoginSuccess, onLogout }) {
+// Inner component with all VAIB functionality
+function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout }) {
   const [activeView, setActiveView] = useState('dashboard');
   const [contacts, setContacts] = useState([]);
   const [opportunities, setOpportunities] = useState([]);

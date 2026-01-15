@@ -363,10 +363,10 @@ export default function Login({ onLoginSuccess, mode = 'login', onBack, onSwitch
       <div className="login-left">
         <div className="login-branding">
           <div className="login-logo">V</div>
-          <h1 className="login-brand-title">vCRM Suite</h1>
+          <h1 className="login-brand-title">VAIB</h1>
           <p className="login-brand-subtitle">
-            La piattaforma CRM moderna per gestire i tuoi contatti, 
-            opportunità e pipeline di vendita in modo semplice ed efficace.
+            Il business assistant AI per freelancer e partite IVA forfettarie.
+            Gestisci clienti, progetti e fatture parlando.
           </p>
         </div>
         

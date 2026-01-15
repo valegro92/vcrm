@@ -155,7 +155,7 @@ ${pendingInvoices.slice(0, 5).map(i => `- ${i.invoiceNumber || 'N/A'} - ${i.clie
 /**
  * System prompt for the AI assistant
  */
-const SYSTEM_PROMPT = `Sei l'assistente AI di vCRM, un sistema CRM/PM progettato per freelancer italiani in regime forfettario.
+const SYSTEM_PROMPT = `Sei l'assistente AI di VAIB, il business assistant AI per freelancer italiani in regime forfettario.
 
 Il tuo ruolo è:
 1. Rispondere a domande sui dati del CRM (fatture, contatti, opportunità, progetti, task)

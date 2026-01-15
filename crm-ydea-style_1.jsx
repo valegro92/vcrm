@@ -41,7 +41,7 @@ const pipelineStages = ['Qualificazione', 'Proposta', 'Negoziazione', 'Chiusura'
 
 const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
 
-export default function YdeaCRM() {
+export default function VAIBApp() {
   const [activeView, setActiveView] = useState('dashboard');
   const [contacts, setContacts] = useState(initialContacts);
   const [opportunities, setOpportunities] = useState(initialOpportunities);

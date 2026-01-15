@@ -22,7 +22,7 @@ export default function Sidebar({ activeView, setActiveView, handleLogout, isOpe
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                     <div className="logo" style={{ marginBottom: 0 }}>
                         <div className="logo-icon">V</div>
-                        <span className="logo-text">vCRM Suite</span>
+                        <span className="logo-text">VAIB</span>
                     </div>
                     <button
                         className="mobile-close-btn"
