@@ -836,19 +836,138 @@ export default function Landing({ onLogin, onRegister, onDemo }) {
       .problems-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 600px) {
-      .landing-nav { padding: 16px 20px; }
+      .landing-nav {
+        padding: 12px 16px;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .landing-logo {
+        font-size: 22px;
+      }
+      .landing-logo-icon {
+        width: 36px;
+        height: 36px;
+      }
+      .landing-nav-buttons {
+        gap: 8px;
+      }
       .nav-link { display: none; }
-      .landing-hero { padding: 40px 20px 60px; }
-      .hero-title { font-size: 36px; }
-      .hero-cta { flex-direction: column; }
-      .features-grid { grid-template-columns: 1fr; }
+      .btn-ghost {
+        padding: 8px 12px;
+        font-size: 13px;
+      }
+      .btn-primary {
+        padding: 10px 16px;
+        font-size: 13px;
+      }
+      .landing-hero {
+        padding: 32px 16px 48px;
+        gap: 24px;
+      }
+      .hero-eyebrow {
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+      .hero-title {
+        font-size: 28px;
+        line-height: 1.2;
+      }
+      .hero-subtitle {
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      .hero-cta {
+        flex-direction: column;
+        gap: 12px;
+      }
+      .hero-cta button {
+        width: 100%;
+        justify-content: center;
+      }
+      .btn-large {
+        padding: 14px 20px;
+        font-size: 15px;
+      }
+      .btn-demo {
+        padding: 12px 20px;
+        font-size: 14px;
+      }
+      .hero-social-proof {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .features-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .feature-card {
+        padding: 20px;
+      }
+      .feature-icon {
+        width: 44px;
+        height: 44px;
+      }
+      .feature-title {
+        font-size: 16px;
+      }
+      .feature-desc {
+        font-size: 13px;
+      }
       .problems-grid { grid-template-columns: 1fr; }
-      .landing-ai { padding: 60px 20px; }
-      .ai-title { font-size: 32px; }
-      .problem-title, .solution-title, .forfettario-title, .pricing-title { font-size: 32px; }
-      .cta-title { font-size: 32px; }
-      .cta-buttons { flex-direction: column; align-items: center; }
-      .pricing-card { padding: 32px 24px; }
+      .landing-ai { padding: 48px 16px; }
+      .ai-title { font-size: 26px; }
+      .ai-subtitle { font-size: 14px; }
+      .problem-title, .solution-title, .forfettario-title, .pricing-title {
+        font-size: 26px;
+        line-height: 1.3;
+      }
+      .cta-section {
+        padding: 48px 16px;
+      }
+      .cta-title { font-size: 26px; }
+      .cta-subtitle { font-size: 14px; }
+      .cta-buttons {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      .cta-buttons button {
+        width: 100%;
+        justify-content: center;
+      }
+      .pricing-card {
+        padding: 24px 20px;
+      }
+      .price-amount {
+        font-size: 36px;
+      }
+      .landing-footer {
+        padding: 32px 16px;
+      }
+      .footer-bottom {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+      }
+    }
+
+    /* Extra small mobile */
+    @media (max-width: 380px) {
+      .landing-nav-buttons {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .hero-title {
+        font-size: 24px;
+      }
+      .btn-ghost {
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+      .btn-primary {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
     }
   `;
 

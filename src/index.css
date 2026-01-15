@@ -6597,6 +6597,496 @@ body {
   }
 }
 
+/* ===========================================
+   MOBILE OPTIMIZATION - Complete Overhaul
+   =========================================== */
+
+/* Mobile Base - 768px and below */
+@media (max-width: 768px) {
+  /* Fix body scrolling */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Header mobile optimization */
+  .header {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+
+  .header-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .page-title {
+    font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .header-actions {
+    gap: 4px;
+  }
+
+  .header-actions button {
+    padding: 8px;
+    min-width: 40px;
+  }
+
+  .header-actions button span {
+    display: none;
+  }
+
+  /* Search bar mobile */
+  .search-container {
+    display: none;
+  }
+
+  /* User profile compact */
+  .user-profile {
+    padding: 6px 10px;
+  }
+
+  .user-profile span {
+    display: none;
+  }
+
+  /* Dashboard mobile */
+  .bi-dashboard {
+    padding: 16px;
+  }
+
+  .bi-header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .bi-title {
+    font-size: 20px;
+  }
+
+  .bi-subtitle {
+    font-size: 13px;
+  }
+
+  .date-range-selector {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* KPI Cards - 2 columns on mobile */
+  .bi-kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px;
+  }
+
+  .bi-kpi-card {
+    padding: 14px;
+  }
+
+  .bi-kpi-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .bi-kpi-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .bi-kpi-label {
+    font-size: 11px;
+  }
+
+  .bi-kpi-value {
+    font-size: 18px;
+  }
+
+  .bi-kpi-trend {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+
+  /* Unified KPI cards mobile */
+  .unified-kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px;
+  }
+
+  .unified-kpi-card {
+    padding: 14px;
+  }
+
+  .kpi-card-value {
+    font-size: 20px;
+  }
+
+  .kpi-card-title {
+    font-size: 12px;
+  }
+
+  /* Charts mobile */
+  .bi-chart-card {
+    padding: 16px;
+  }
+
+  .bi-chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .bi-chart-title {
+    font-size: 14px;
+  }
+
+  .bi-chart-content {
+    min-height: 200px;
+  }
+
+  /* Quick actions mobile */
+  .quick-actions {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .quick-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .quick-action-btn {
+    flex-shrink: 0;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  /* Tables mobile - horizontal scroll */
+  .contacts-table-container,
+  .opportunities-table-container,
+  .invoices-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .contacts-table,
+  .opportunities-table,
+  .invoices-table {
+    min-width: 600px;
+  }
+
+  /* Cards list view on mobile */
+  .contact-card,
+  .opportunity-card,
+  .task-card {
+    padding: 14px;
+  }
+
+  .contact-card-header,
+  .opportunity-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  /* Pipeline mobile */
+  .pipeline-container {
+    padding: 16px;
+  }
+
+  .pipeline-columns {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .pipeline-column {
+    min-width: 100%;
+  }
+
+  .pipeline-column-header {
+    padding: 12px;
+  }
+
+  .pipeline-column-title {
+    font-size: 13px;
+  }
+
+  /* Modal mobile - full screen bottom sheet style */
+  .modal-overlay,
+  .unified-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal,
+  .unified-modal {
+    max-width: 100% !important;
+    width: 100%;
+    max-height: 90vh;
+    border-radius: 20px 20px 0 0;
+    margin: 0;
+  }
+
+  .modal-header {
+    padding: 16px;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .modal-header h2 {
+    font-size: 18px;
+  }
+
+  .modal-body {
+    padding: 16px;
+    max-height: calc(90vh - 140px);
+    overflow-y: auto;
+  }
+
+  .modal-footer {
+    padding: 16px;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-footer button {
+    width: 100%;
+  }
+
+  /* Form inputs mobile */
+  .form-group input,
+  .form-group select,
+  .form-group textarea,
+  .modal-form input,
+  .modal-form select,
+  .modal-form textarea {
+    font-size: 16px !important; /* Prevents iOS zoom */
+    padding: 14px;
+    min-height: 48px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Buttons mobile - larger touch targets */
+  .btn,
+  button {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+
+  .btn-sm {
+    min-height: 36px;
+    padding: 8px 12px;
+  }
+
+  /* Bottom nav optimization */
+  .bottom-nav {
+    padding: 8px 12px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  .bottom-nav-item {
+    padding: 8px 4px;
+    font-size: 10px;
+  }
+
+  .bottom-nav-item svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* AI Chat button - above bottom nav */
+  .ai-chat-toggle {
+    bottom: calc(var(--bottom-nav-height) + 16px);
+    right: 16px;
+  }
+
+  /* Calendar mobile */
+  .calendar-container {
+    padding: 12px;
+  }
+
+  .calendar-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .calendar-grid {
+    font-size: 12px;
+  }
+
+  /* Settings mobile */
+  .settings-container {
+    padding: 16px;
+  }
+
+  .settings-section {
+    padding: 16px;
+  }
+
+  .setting-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .setting-item > div:last-child {
+    width: 100%;
+  }
+
+  /* Projects mobile */
+  .projects-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Invoices mobile */
+  .invoice-card {
+    padding: 14px;
+  }
+
+  .invoice-header {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Tasks mobile */
+  .tasks-container {
+    padding: 16px;
+  }
+
+  .task-item {
+    padding: 12px;
+  }
+
+  .task-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+/* Small mobile - 480px and below */
+@media (max-width: 480px) {
+  /* Even smaller KPI values */
+  .bi-kpi-value {
+    font-size: 16px;
+  }
+
+  .kpi-card-value {
+    font-size: 18px;
+  }
+
+  /* Single column for very small screens if needed */
+  .bi-kpi-grid.single-col-xs {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Welcome section compact */
+  .welcome-title {
+    font-size: 20px;
+  }
+
+  .welcome-subtitle {
+    font-size: 13px;
+  }
+
+  /* Chatbot full screen */
+  .ai-chat-window {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+    z-index: 10000;
+  }
+
+  .ai-chat-header {
+    padding: 16px;
+    padding-top: max(16px, env(safe-area-inset-top));
+  }
+
+  .ai-chat-messages {
+    padding: 12px;
+  }
+
+  .ai-chat-input-container {
+    padding: 12px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .ai-chat-input-container textarea {
+    font-size: 16px;
+  }
+
+  /* Quick queries horizontal scroll */
+  .ai-quick-queries {
+    padding: 12px;
+  }
+
+  .ai-quick-queries-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ai-quick-query-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  /* Bottom nav smaller */
+  .bottom-nav-item span {
+    font-size: 9px;
+  }
+}
+
+/* Fix for iOS safe areas */
+@supports (padding: max(0px)) {
+  .bottom-nav {
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  .ai-chat-input-container {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .modal,
+  .unified-modal {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Landscape mobile */
+@media (max-width: 896px) and (orientation: landscape) {
+  .ai-chat-window {
+    height: 100%;
+    max-height: 100%;
+  }
+
+  .modal,
+  .unified-modal {
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .bi-kpi-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+}
+
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
   .ai-chat-window {
