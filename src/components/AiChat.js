@@ -17,25 +17,68 @@ const QUICK_QUERIES = [
     { id: 'riepilogo-generale', label: 'Riepilogo', icon: Sparkles },
 ];
 
-// Parse actions from AI response
+// Parse actions from AI response - robust parser for nested JSON
 const parseActions = (message) => {
-    const actionRegex = /\[ACTION:(\w+):(\{.*?\})\]/g;
     const actions = [];
+    const actionStartRegex = /\[ACTION:(\w+):/g;
     let match;
 
-    while ((match = actionRegex.exec(message)) !== null) {
-        try {
-            actions.push({
-                type: match[1],
-                data: JSON.parse(match[2])
-            });
-        } catch (e) {
-            console.error('Failed to parse action:', match[0], e);
+    while ((match = actionStartRegex.exec(message)) !== null) {
+        const actionType = match[1];
+        const jsonStart = match.index + match[0].length;
+
+        // Find matching closing brace by counting
+        let braceCount = 0;
+        let jsonEnd = -1;
+        let inString = false;
+        let escapeNext = false;
+
+        for (let i = jsonStart; i < message.length; i++) {
+            const char = message[i];
+
+            if (escapeNext) {
+                escapeNext = false;
+                continue;
+            }
+            if (char === '\\' && inString) {
+                escapeNext = true;
+                continue;
+            }
+            if (char === '"' && !escapeNext) {
+                inString = !inString;
+                continue;
+            }
+            if (!inString) {
+                if (char === '{') braceCount++;
+                else if (char === '}') {
+                    braceCount--;
+                    if (braceCount === 0) {
+                        jsonEnd = i + 1;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (jsonEnd > jsonStart) {
+            const jsonStr = message.substring(jsonStart, jsonEnd);
+            try {
+                const data = JSON.parse(jsonStr);
+                actions.push({ type: actionType, data });
+                console.log('✅ Parsed action:', actionType, data);
+            } catch (e) {
+                console.error('❌ Failed to parse action JSON:', jsonStr, e);
+            }
         }
     }
 
     // Remove action tags from message for display
-    const cleanMessage = message.replace(actionRegex, '').trim();
+    let cleanMessage = message;
+    // Match [ACTION:type:{...}] including the closing ]
+    cleanMessage = cleanMessage.replace(/\[ACTION:\w+:\{[^[\]]*\}\]/g, '');
+    // Also try multiline
+    cleanMessage = cleanMessage.replace(/\[ACTION:\w+:[\s\S]*?\}\]/g, '');
+    cleanMessage = cleanMessage.trim();
 
     return { actions, cleanMessage };
 };
