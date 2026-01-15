@@ -31,12 +31,42 @@ const api = {
     return handleResponse(response);
   },
 
-  register: async (username, email, password, fullName) => {
+  register: async ({ email, password, fullName, company }) => {
+    // Use email as username for simplicity
     const response = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password, fullName })
+      body: JSON.stringify({
+        username: email,
+        email,
+        password,
+        fullName,
+        company
+      })
     });
+    return handleResponse(response);
+  },
+
+  forgotPassword: async (email) => {
+    const response = await fetch(`${API_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    return handleResponse(response);
+  },
+
+  resetPassword: async (token, password) => {
+    const response = await fetch(`${API_URL}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password })
+    });
+    return handleResponse(response);
+  },
+
+  verifyEmail: async (token) => {
+    const response = await fetch(`${API_URL}/auth/verify-email/${token}`);
     return handleResponse(response);
   },
 

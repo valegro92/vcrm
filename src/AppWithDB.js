@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Landing from './components/Landing';
 import Login from './components/Login';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 import Onboarding from './components/Onboarding';
 import api from './api/api';
 
@@ -29,16 +31,27 @@ import { TrendingUp, Target, Users, Euro, CheckSquare } from 'lucide-react';
 export default function VAIBApp() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
-  const [authView, setAuthView] = useState('landing'); // 'landing' | 'login' | 'register'
+  const [authView, setAuthView] = useState('landing'); // 'landing' | 'login' | 'register' | 'forgot-password' | 'reset-password'
   const [isNewUser, setIsNewUser] = useState(false);
+  const [resetToken, setResetToken] = useState(null);
 
-  // Check authentication on mount
+  // Check authentication and URL params on mount
   useEffect(() => {
     const token = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
     if (token && savedUser) {
       setUser(JSON.parse(savedUser));
       setIsAuthenticated(true);
+    }
+
+    // Check for reset-password token in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const resetTokenParam = urlParams.get('reset-token');
+    if (resetTokenParam) {
+      setResetToken(resetTokenParam);
+      setAuthView('reset-password');
+      // Clean URL
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
@@ -57,7 +70,7 @@ export default function VAIBApp() {
     setIsNewUser(false);
   };
 
-  // Not authenticated - show landing or login/register
+  // Not authenticated - show landing or login/register/forgot/reset
   if (!isAuthenticated) {
     if (authView === 'landing') {
       return (
@@ -68,12 +81,33 @@ export default function VAIBApp() {
       );
     }
 
+    if (authView === 'forgot-password') {
+      return (
+        <ForgotPassword
+          onBack={() => setAuthView('login')}
+        />
+      );
+    }
+
+    if (authView === 'reset-password' && resetToken) {
+      return (
+        <ResetPassword
+          token={resetToken}
+          onSuccess={() => {
+            setResetToken(null);
+            setAuthView('login');
+          }}
+        />
+      );
+    }
+
     return (
       <Login
         onLoginSuccess={handleLoginSuccess}
         mode={authView}
         onBack={() => setAuthView('landing')}
         onSwitchMode={(mode) => setAuthView(mode)}
+        onForgotPassword={() => setAuthView('forgot-password')}
       />
     );
   }
