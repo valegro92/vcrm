@@ -66,7 +66,7 @@ export default function AiChat({ onCreateContact, onCreateOpportunity, onCreateT
     const [messages, setMessages] = useState([
         {
             role: 'assistant',
-            content: 'Ciao! Sono il tuo assistente AI VAIB. Posso aiutarti a:\n\n- **Aggiungere dati**: "Aggiungi contatto Mario Rossi di TechCorp"\n- **Creare task**: "Crea task: chiamare cliente domani"\n- **Nuove opportunità**: "Nuova opportunità 5000€ per Ferrari Design"\n- **Analizzare dati**: "Quanto ho fatturato questo mese?"\n\nCosa posso fare per te?'
+            content: 'Ciao! Sono VAIB, il tuo assistente AI. **Raccontami** cosa succede e popolo io il CRM!\n\n**Esempi:**\n- "Ho parlato con Marco di TechCorp, interessato a un sito da 5000€"\n- "Domani devo chiamare il cliente della pizzeria"\n- "Quanto ho fatturato questo mese?"\n\nCapisco dal contesto e creo contatti, opportunità e task automaticamente!'
         }
     ]);
     const [inputValue, setInputValue] = useState('');
@@ -259,7 +259,7 @@ export default function AiChat({ onCreateContact, onCreateOpportunity, onCreateT
     const clearChat = () => {
         setMessages([{
             role: 'assistant',
-            content: 'Chat resettata. Come posso aiutarti?'
+            content: 'Pronto! Raccontami cosa sta succedendo nel tuo business e popolo il CRM per te.'
         }]);
         setShowQuickQueries(true);
     };
