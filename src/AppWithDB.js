@@ -158,9 +158,6 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, sh
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(user);
 
-  // Get demo data if in demo mode
-  const demoData = isDemoMode ? getAllDemoData() : null;
-
   // Mobile sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -222,13 +219,15 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, sh
 
   // Load data on mount (already authenticated at this point)
   useEffect(() => {
-    if (isDemoMode && demoData) {
-      // Load demo data
+    if (isDemoMode) {
+      // Load demo data directly to avoid closure issues
+      const demoData = getAllDemoData();
       setContacts(demoData.contacts);
       setOpportunities(demoData.opportunities);
       setTasks(demoData.tasks);
       setInvoices(demoData.invoices);
       setDataLoaded(true);
+      setLoading(false);
     } else {
       loadAllData();
     }
