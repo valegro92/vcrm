@@ -11,7 +11,7 @@ import {
   ChevronRight, Play, Euro, Calendar, PieChart
 } from 'lucide-react';
 
-export default function Landing({ onLogin, onRegister }) {
+export default function Landing({ onLogin, onRegister, onDemo }) {
   const styles = `
     .landing {
       min-height: 100vh;
@@ -175,6 +175,27 @@ export default function Landing({ onLogin, onRegister }) {
     .btn-secondary:hover {
       border-color: #6366f1;
       color: #6366f1;
+    }
+    .btn-demo {
+      padding: 16px 32px;
+      border: 2px solid #10b981;
+      background: rgba(16, 185, 129, 0.1);
+      color: #059669;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-demo:hover {
+      background: #10b981;
+      color: white;
+      border-color: #10b981;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
     }
     .hero-social-proof {
       display: flex;
@@ -857,6 +878,7 @@ export default function Landing({ onLogin, onRegister }) {
           VAIB
         </div>
         <div className="landing-nav-buttons">
+          <button className="btn-ghost" onClick={onDemo}>Prova Demo</button>
           <button className="btn-ghost" onClick={onLogin}>Accedi</button>
           <button className="btn-primary" onClick={onRegister}>
             Prova Gratis
@@ -885,9 +907,9 @@ export default function Landing({ onLogin, onRegister }) {
               Inizia Gratis - 14 giorni
               <ArrowRight size={20} />
             </button>
-            <button className="btn-secondary" onClick={onLogin}>
+            <button className="btn-demo" onClick={onDemo}>
               <Play size={18} />
-              Vedi come funziona
+              Prova Demo
             </button>
           </div>
           <div className="hero-social-proof">

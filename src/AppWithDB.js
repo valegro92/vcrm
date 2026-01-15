@@ -4,7 +4,9 @@ import Login from './components/Login';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import Onboarding from './components/Onboarding';
+import GuidedTour from './components/GuidedTour';
 import api from './api/api';
+import { getAllDemoData } from './services/demoData';
 
 // Components
 import Sidebar from './components/Sidebar';
@@ -34,6 +36,8 @@ export default function VAIBApp() {
   const [authView, setAuthView] = useState('landing'); // 'landing' | 'login' | 'register' | 'forgot-password' | 'reset-password'
   const [isNewUser, setIsNewUser] = useState(false);
   const [resetToken, setResetToken] = useState(null);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
   // Check authentication and URL params on mount
   useEffect(() => {
@@ -59,6 +63,7 @@ export default function VAIBApp() {
     setUser(userData);
     setIsNewUser(newUser);
     setIsAuthenticated(true);
+    setIsDemoMode(false);
   };
 
   const handleLogout = () => {
@@ -68,6 +73,16 @@ export default function VAIBApp() {
     setIsAuthenticated(false);
     setAuthView('landing');
     setIsNewUser(false);
+    setIsDemoMode(false);
+    setShowTour(false);
+  };
+
+  const handleStartDemo = () => {
+    const demoData = getAllDemoData();
+    setUser(demoData.user);
+    setIsDemoMode(true);
+    setIsAuthenticated(true);
+    setShowTour(true);
   };
 
   // Not authenticated - show landing or login/register/forgot/reset
@@ -77,6 +92,7 @@ export default function VAIBApp() {
         <Landing
           onLogin={() => setAuthView('login')}
           onRegister={() => setAuthView('register')}
+          onDemo={handleStartDemo}
         />
       );
     }
@@ -119,13 +135,16 @@ export default function VAIBApp() {
         isNewUser={isNewUser}
         onLoginSuccess={handleLoginSuccess}
         onLogout={handleLogout}
+        isDemoMode={isDemoMode}
+        showTour={showTour}
+        onCloseTour={() => setShowTour(false)}
       />
     </UIConfigProvider>
   );
 }
 
 // Inner component with all VAIB functionality
-function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout }) {
+function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, showTour, onCloseTour }) {
   const [activeView, setActiveView] = useState('dashboard');
   const [contacts, setContacts] = useState([]);
   const [opportunities, setOpportunities] = useState([]);
@@ -138,6 +157,9 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout }) {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState(user);
+
+  // Get demo data if in demo mode
+  const demoData = isDemoMode ? getAllDemoData() : null;
 
   // Mobile sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -200,8 +222,17 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout }) {
 
   // Load data on mount (already authenticated at this point)
   useEffect(() => {
-    loadAllData();
-  }, []);
+    if (isDemoMode && demoData) {
+      // Load demo data
+      setContacts(demoData.contacts);
+      setOpportunities(demoData.opportunities);
+      setTasks(demoData.tasks);
+      setInvoices(demoData.invoices);
+      setDataLoaded(true);
+    } else {
+      loadAllData();
+    }
+  }, [isDemoMode]);
 
   // Close sidebar when view changes (mobile)
   useEffect(() => {
@@ -255,7 +286,7 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout }) {
     setActiveView(view);
   };
 
-  // CRUD Operations
+  // CRUD Operations - In demo mode, only update local state
   const handleAddItem = async () => {
     try {
       if (modalType === 'contact') {
@@ -266,12 +297,21 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout }) {
           lastContact: newItem.lastContact || new Date().toISOString().split('T')[0]
         };
 
-        if (isEditing) {
-          const updated = await api.updateContact(newItem.id, contactData);
-          setContacts(contacts.map(c => c.id === updated.id ? updated : c));
+        if (isDemoMode) {
+          // Demo mode: update local state only
+          if (isEditing) {
+            setContacts(contacts.map(c => c.id === newItem.id ? { ...c, ...contactData } : c));
+          } else {
+            setContacts([...contacts, { id: `demo-new-${Date.now()}`, ...contactData }]);
+          }
         } else {
-          const created = await api.createContact(contactData);
-          setContacts([...contacts, created]);
+          if (isEditing) {
+            const updated = await api.updateContact(newItem.id, contactData);
+            setContacts(contacts.map(c => c.id === updated.id ? updated : c));
+          } else {
+            const created = await api.createContact(contactData);
+            setContacts([...contacts, created]);
+          }
         }
       } else if (modalType === 'opportunity') {
         const oppData = {
@@ -280,12 +320,20 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout }) {
           owner: newItem.owner || user.fullName || user.username
         };
 
-        if (isEditing) {
-          const updated = await api.updateOpportunity(newItem.id, oppData);
-          setOpportunities(opportunities.map(o => o.id === updated.id ? updated : o));
+        if (isDemoMode) {
+          if (isEditing) {
+            setOpportunities(opportunities.map(o => o.id === newItem.id ? { ...o, ...oppData } : o));
+          } else {
+            setOpportunities([...opportunities, { id: `demo-new-${Date.now()}`, ...oppData }]);
+          }
         } else {
-          const created = await api.createOpportunity(oppData);
-          setOpportunities([...opportunities, created]);
+          if (isEditing) {
+            const updated = await api.updateOpportunity(newItem.id, oppData);
+            setOpportunities(opportunities.map(o => o.id === updated.id ? updated : o));
+          } else {
+            const created = await api.createOpportunity(oppData);
+            setOpportunities([...opportunities, created]);
+          }
         }
       } else if (modalType === 'task') {
         const taskData = {
@@ -293,12 +341,20 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout }) {
           contactName: contacts.find(c => c.id === newItem.contactId)?.name
         };
 
-        if (isEditing) {
-          const updated = await api.updateTask(newItem.id, taskData);
-          setTasks(tasks.map(t => t.id === updated.id ? updated : t));
+        if (isDemoMode) {
+          if (isEditing) {
+            setTasks(tasks.map(t => t.id === newItem.id ? { ...t, ...taskData } : t));
+          } else {
+            setTasks([...tasks, { id: `demo-new-${Date.now()}`, ...taskData }]);
+          }
         } else {
-          const created = await api.createTask(taskData);
-          setTasks([...tasks, created]);
+          if (isEditing) {
+            const updated = await api.updateTask(newItem.id, taskData);
+            setTasks(tasks.map(t => t.id === updated.id ? updated : t));
+          } else {
+            const created = await api.createTask(taskData);
+            setTasks([...tasks, created]);
+          }
         }
       }
 
@@ -312,6 +368,10 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout }) {
 
   const handleDeleteContact = async (id) => {
     if (window.confirm('Sei sicuro di voler eliminare questo contatto?')) {
+      if (isDemoMode) {
+        setContacts(contacts.filter(c => c.id !== id));
+        return;
+      }
       try {
         await api.deleteContact(id);
         setContacts(contacts.filter(c => c.id !== id));
@@ -323,6 +383,10 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout }) {
 
   const handleDeleteOpportunity = async (id) => {
     if (window.confirm('Sei sicuro di voler eliminare questa opportunità?')) {
+      if (isDemoMode) {
+        setOpportunities(opportunities.filter(o => o.id !== id));
+        return;
+      }
       try {
         await api.deleteOpportunity(id);
         setOpportunities(opportunities.filter(o => o.id !== id));
@@ -334,6 +398,10 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout }) {
 
   const handleDeleteTask = async (id) => {
     if (window.confirm('Sei sicuro di voler eliminare questa attività?')) {
+      if (isDemoMode) {
+        setTasks(tasks.filter(t => t.id !== id));
+        return;
+      }
       try {
         await api.deleteTask(id);
         setTasks(tasks.filter(t => t.id !== id));
@@ -344,6 +412,10 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout }) {
   };
 
   const handleToggleTask = async (id) => {
+    if (isDemoMode) {
+      setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+      return;
+    }
     try {
       const updated = await api.toggleTask(id);
       setTasks(tasks.map(t => t.id === updated.id ? updated : t));
@@ -377,8 +449,23 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout }) {
 
   return (
     <div className="crm-app">
+      {/* Demo Mode Banner */}
+      {isDemoMode && (
+        <div className="demo-banner">
+          <span>Modalita Demo - Dati fittizi</span>
+          <button onClick={onLogout}>Esci dalla demo</button>
+        </div>
+      )}
+
+      {/* Guided Tour */}
+      <GuidedTour
+        isActive={showTour}
+        onClose={onCloseTour}
+        onNavigate={setActiveView}
+      />
+
       {/* Onboarding Wizard */}
-      {showOnboarding && (
+      {showOnboarding && !isDemoMode && (
         <Onboarding
           user={currentUser}
           onComplete={handleOnboardingComplete}
