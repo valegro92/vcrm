@@ -129,7 +129,7 @@ export default function VAIBApp() {
   }
 
   return (
-    <UIConfigProvider isAuthenticated={isAuthenticated}>
+    <UIConfigProvider isAuthenticated={isAuthenticated} isDemoMode={isDemoMode}>
       <VAIBContent
         user={user}
         isNewUser={isNewUser}

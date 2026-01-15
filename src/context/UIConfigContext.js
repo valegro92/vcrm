@@ -36,15 +36,15 @@ const DEFAULT_CONFIG = {
 
 const UIConfigContext = createContext(null);
 
-export function UIConfigProvider({ children, isAuthenticated }) {
+export function UIConfigProvider({ children, isAuthenticated, isDemoMode = false }) {
   const [config, setConfig] = useState(DEFAULT_CONFIG);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isDefault, setIsDefault] = useState(true);
 
-  // Load config from API
+  // Load config from API (skip in demo mode)
   const loadConfig = useCallback(async () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || isDemoMode) return;
 
     setLoading(true);
     setError(null);
@@ -64,7 +64,7 @@ export function UIConfigProvider({ children, isAuthenticated }) {
       setLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isDemoMode]);
 
   // Apply theme CSS variables
   const applyTheme = useCallback((theme) => {
@@ -135,25 +135,39 @@ export function UIConfigProvider({ children, isAuthenticated }) {
     }
   }, []);
 
-  // Update theme
+  // Update theme (in demo mode, only update local state)
   const updateTheme = useCallback(async (newTheme) => {
+    const updatedConfig = {
+      ...config,
+      theme: { ...config.theme, ...newTheme }
+    };
+    setConfig(updatedConfig);
+    applyTheme(updatedConfig.theme);
+
+    // Skip API call in demo mode
+    if (isDemoMode) {
+      return { success: true };
+    }
+
     try {
       await api.updateUITheme(newTheme);
-      const updatedConfig = {
-        ...config,
-        theme: { ...config.theme, ...newTheme }
-      };
-      setConfig(updatedConfig);
-      applyTheme(updatedConfig.theme);
       return { success: true };
     } catch (err) {
       console.error('[UIConfig] Failed to update theme:', err);
       return { success: false, error: err.message };
     }
-  }, [config, applyTheme]);
+  }, [config, applyTheme, isDemoMode]);
 
   // Reset to default
   const resetConfig = useCallback(async () => {
+    // In demo mode, just reset to defaults locally
+    if (isDemoMode) {
+      setConfig(DEFAULT_CONFIG);
+      setIsDefault(true);
+      applyTheme(DEFAULT_CONFIG.theme);
+      return { success: true };
+    }
+
     try {
       const data = await api.resetUIConfig();
       if (data && data.config) {
@@ -166,7 +180,7 @@ export function UIConfigProvider({ children, isAuthenticated }) {
       console.error('[UIConfig] Failed to reset config:', err);
       return { success: false, error: err.message };
     }
-  }, [applyTheme]);
+  }, [applyTheme, isDemoMode]);
 
   // Load config when authenticated
   useEffect(() => {
