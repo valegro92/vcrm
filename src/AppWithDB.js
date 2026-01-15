@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Login from './components/Login';
+import Onboarding from './components/Onboarding';
 import api from './api/api';
 
 // Components
@@ -78,9 +79,30 @@ function YdeaCRMContent({ user, onLoginSuccess, onLogout }) {
   const [newItem, setNewItem] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(user);
 
   // Mobile sidebar state
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Onboarding state
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Check if onboarding is needed
+  useEffect(() => {
+    const onboardingComplete = localStorage.getItem('vaib_onboarding_complete');
+    if (!onboardingComplete) {
+      setShowOnboarding(true);
+    }
+  }, []);
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+  };
+
+  const handleUserUpdate = (updatedUser) => {
+    setCurrentUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
 
   // Get UI config - theme is already applied by UIConfigProvider
   const { config, updateTheme } = useUIConfig();
@@ -284,6 +306,15 @@ function YdeaCRMContent({ user, onLoginSuccess, onLogout }) {
 
   return (
     <div className="crm-app">
+      {/* Onboarding Wizard */}
+      {showOnboarding && (
+        <Onboarding
+          user={currentUser}
+          onComplete={handleOnboardingComplete}
+          onUserUpdate={handleUserUpdate}
+        />
+      )}
+
       {/* Mobile Sidebar Overlay */}
       <div
         className={`sidebar-overlay ${sidebarOpen ? 'visible' : ''}`}
