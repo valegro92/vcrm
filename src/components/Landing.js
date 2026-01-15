@@ -255,30 +255,29 @@ export default function Landing({ onLogin, onRegister, onDemo }) {
       border-radius: 12px;
       padding: 24px;
     }
-    .mockup-stat {
+    .mockup-chat {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 0;
-      border-bottom: 1px solid #f1f5f9;
+      flex-direction: column;
+      gap: 12px;
     }
-    .mockup-stat:last-child { border: none; }
-    .stat-label { color: #64748b; font-size: 14px; }
-    .stat-value { font-weight: 700; color: #0f172a; font-size: 18px; }
-    .stat-value.green { color: #10b981; }
-    .stat-value.orange { color: #f97316; }
-    .progress-bar {
-      height: 8px;
-      background: #e2e8f0;
-      border-radius: 4px;
-      margin-top: 8px;
-      overflow: hidden;
+    .chat-msg {
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 13px;
+      line-height: 1.5;
+      max-width: 90%;
     }
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #10b981, #6366f1);
-      border-radius: 4px;
-      width: 62%;
+    .user-msg {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
+    }
+    .ai-msg {
+      background: #f1f5f9;
+      color: #334155;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
     }
 
     /* Problem Section */
@@ -602,60 +601,48 @@ export default function Landing({ onLogin, onRegister, onDemo }) {
       padding: 32px;
       box-shadow: 0 10px 40px rgba(0,0,0,0.06);
     }
-    .forfettario-gauge {
-      text-align: center;
-      margin-bottom: 24px;
+    .ai-chat-demo {
+      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      border-radius: 16px;
+      overflow: hidden;
     }
-    .gauge-circle {
-      width: 180px;
-      height: 180px;
-      border-radius: 50%;
-      background: conic-gradient(#10b981 0deg 223deg, #e2e8f0 223deg 360deg);
+    .chat-demo-header {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      padding: 16px 20px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      margin: 0 auto;
-      position: relative;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 15px;
     }
-    .gauge-inner {
-      width: 140px;
-      height: 140px;
-      background: white;
-      border-radius: 50%;
+    .chat-demo-messages {
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      gap: 12px;
+      max-height: 320px;
+      overflow-y: auto;
     }
-    .gauge-value {
-      font-size: 32px;
-      font-weight: 800;
-      color: #0f172a;
+    .demo-msg {
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.5;
+      max-width: 85%;
     }
-    .gauge-label {
-      font-size: 13px;
-      color: #64748b;
+    .demo-msg.user {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      align-self: flex-end;
+      border-bottom-right-radius: 4px;
     }
-    .forfettario-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-    .forfettario-stat {
-      background: #f8fafc;
-      padding: 16px;
-      border-radius: 12px;
-      text-align: center;
-    }
-    .forfettario-stat-value {
-      font-size: 24px;
-      font-weight: 700;
-      color: #0f172a;
-    }
-    .forfettario-stat-label {
-      font-size: 13px;
-      color: #64748b;
-      margin-top: 4px;
+    .demo-msg.ai {
+      background: white;
+      color: #334155;
+      align-self: flex-start;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
     .forfettario-text { }
     .forfettario-title {
@@ -895,12 +882,12 @@ export default function Landing({ onLogin, onRegister, onDemo }) {
             AI Business Assistant
           </div>
           <h1 className="hero-title">
-            Stop al caos.<br />
-            <span className="highlight">Parla, organizza, fattura.</span>
+            Tutto in un posto.<br />
+            <span className="highlight">Chiedi, lui risponde.</span>
           </h1>
           <p className="hero-subtitle">
-            VAIB è l'assistente AI che gestisce clienti, progetti e fatture per <strong>freelancer in regime forfettario</strong>.
-            Descrivi cosa vuoi, lui si adatta. Chiedi, lui risponde sui tuoi dati.
+            Clienti, progetti, fatture, task: <strong>tutto insieme</strong>.
+            L'AI chatbot risponde sui tuoi dati. L'interfaccia si personalizza scrivendogli cosa vuoi.
           </p>
           <div className="hero-cta">
             <button className="btn-primary btn-large" onClick={onRegister}>
@@ -932,20 +919,11 @@ export default function Landing({ onLogin, onRegister, onDemo }) {
               <span className="mockup-dot green"></span>
             </div>
             <div className="mockup-content">
-              <div className="mockup-stat">
-                <span className="stat-label">Fatturato 2024</span>
-                <span className="stat-value">€52.340</span>
-              </div>
-              <div className="mockup-stat">
-                <span className="stat-label">Limite forfettario</span>
-                <span className="stat-value green">62% utilizzato</span>
-              </div>
-              <div className="progress-bar">
-                <div className="progress-fill"></div>
-              </div>
-              <div className="mockup-stat">
-                <span className="stat-label">Task in scadenza</span>
-                <span className="stat-value orange">3 questa settimana</span>
+              <div className="mockup-chat">
+                <div className="chat-msg user-msg">Quanto ho fatturato questo mese?</div>
+                <div className="chat-msg ai-msg">Questo mese hai fatturato €4.850 da 3 clienti. Il cliente più attivo è TechStartup Milano.</div>
+                <div className="chat-msg user-msg">Metti il tema scuro</div>
+                <div className="chat-msg ai-msg">Fatto! Ho applicato il tema scuro. Vuoi che modifichi anche i colori?</div>
               </div>
             </div>
           </div>
@@ -959,10 +937,10 @@ export default function Landing({ onLogin, onRegister, onDemo }) {
             <AlertTriangle size={14} />
             Il problema
           </div>
-          <h2 className="problem-title">Stai gestendo la tua attività con Excel e post-it?</h2>
+          <h2 className="problem-title">Stai gestendo la tua attività con 10 strumenti diversi?</h2>
           <p className="problem-subtitle">
-            La maggior parte dei freelancer perde ore ogni settimana tra fogli sparsi, email,
-            e la paura di sforare il limite dei €85.000.
+            Clienti su Excel, fatture su Drive, task su Notion, appunti su WhatsApp.
+            E quando ti serve un dato, devi cercarlo ovunque.
           </p>
           <div className="problems-grid">
             <div className="problem-card">
@@ -987,9 +965,9 @@ export default function Landing({ onLogin, onRegister, onDemo }) {
               <div className="problem-icon">
                 <AlertTriangle size={24} />
               </div>
-              <h3 className="problem-card-title">Paura del limite €85K</h3>
+              <h3 className="problem-card-title">Nessuna visione d'insieme</h3>
               <p className="problem-card-text">
-                Controlli a mano il fatturato. E se sbagli i conti e superi il limite forfettario?
+                "Quanto ho fatturato a marzo?" "Quali task scadono?" Ogni risposta richiede 10 minuti di ricerca.
               </p>
             </div>
           </div>
@@ -1003,19 +981,58 @@ export default function Landing({ onLogin, onRegister, onDemo }) {
             <Sparkles size={14} />
             La soluzione
           </div>
-          <h2 className="solution-title">Un posto per tutto. Che si adatta a te.</h2>
+          <h2 className="solution-title">Un posto per tutto. Un'AI che ti risponde.</h2>
           <p className="solution-subtitle">
-            VAIB unisce CRM, project management e tracking forfettario in un'unica app intelligente.
+            Tutto quello che ti serve in un'unica app. E un assistente AI che conosce i tuoi dati.
           </p>
         </div>
         <div className="features-grid">
           <div className="feature-card">
+            <div className="feature-icon indigo">
+              <MessageCircle size={28} />
+            </div>
+            <h3 className="feature-title">Chatbot sui tuoi dati</h3>
+            <p className="feature-description">
+              "Quanto ho fatturato a marzo?" "Chi sono i clienti migliori?" L'AI risponde istantaneamente.
+            </p>
+            <div className="feature-benefit">
+              <Check size={16} />
+              Risposte in secondi, non in minuti
+            </div>
+          </div>
+          <div className="feature-card">
             <div className="feature-icon purple">
+              <Wand2 size={28} />
+            </div>
+            <h3 className="feature-title">Personalizza scrivendo</h3>
+            <p className="feature-description">
+              "Metti il tema scuro" "Nascondi il calendario" "Colori più vivaci". Scrivi e l'interfaccia si adatta.
+            </p>
+            <div className="feature-benefit">
+              <Check size={16} />
+              Zero configurazione manuale
+            </div>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon blue">
+              <LayoutDashboard size={28} />
+            </div>
+            <h3 className="feature-title">Tutto in un posto</h3>
+            <p className="feature-description">
+              Clienti, opportunità, task, fatture. Tutto collegato. Mai più cercare tra 10 app diverse.
+            </p>
+            <div className="feature-benefit">
+              <Check size={16} />
+              Un'unica fonte di verità
+            </div>
+          </div>
+          <div className="feature-card">
+            <div className="feature-icon green">
               <Users size={28} />
             </div>
             <h3 className="feature-title">Gestione Clienti</h3>
             <p className="feature-description">
-              Tutti i tuoi contatti in un posto. Con storico, note, valore e opportunità associate.
+              Contatti con storico, note, valore generato. Vedi tutto di ogni cliente a colpo d'occhio.
             </p>
             <div className="feature-benefit">
               <Check size={16} />
@@ -1023,68 +1040,29 @@ export default function Landing({ onLogin, onRegister, onDemo }) {
             </div>
           </div>
           <div className="feature-card">
-            <div className="feature-icon blue">
+            <div className="feature-icon orange">
               <Target size={28} />
             </div>
             <h3 className="feature-title">Pipeline Vendite</h3>
             <p className="feature-description">
-              Visualizza opportunità in stile Kanban. Trascina per aggiornare lo stato. Vedi il valore totale.
+              Visualizza opportunità in stile Kanban. Trascina, aggiorna, monitora il valore totale.
             </p>
             <div className="feature-benefit">
               <Check size={16} />
-              Previsione fatturato sempre aggiornata
-            </div>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon green">
-              <PieChart size={28} />
-            </div>
-            <h3 className="feature-title">Tracker €85.000</h3>
-            <p className="feature-description">
-              Monitoraggio in tempo reale del limite forfettario. Alert automatici prima di sforare.
-            </p>
-            <div className="feature-benefit">
-              <Check size={16} />
-              Zero sorprese a fine anno
-            </div>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon orange">
-              <Calendar size={28} />
-            </div>
-            <h3 className="feature-title">Task & Scadenze</h3>
-            <p className="feature-description">
-              Gestisci attività con scadenze, priorità e collegamento a clienti e progetti.
-            </p>
-            <div className="feature-benefit">
-              <Check size={16} />
-              Mai più deadline dimenticate
+              Previsione fatturato sempre chiara
             </div>
           </div>
           <div className="feature-card">
             <div className="feature-icon pink">
               <Receipt size={28} />
             </div>
-            <h3 className="feature-title">Fatture & Reminder</h3>
+            <h3 className="feature-title">Fatture & Task</h3>
             <p className="feature-description">
-              Tieni traccia delle fatture emesse, stato pagamento e scadenze. Ricevi promemoria.
+              Traccia fatture emesse e scadenze. Gestisci task collegati a clienti e progetti.
             </p>
             <div className="feature-benefit">
               <Check size={16} />
-              Cashflow sotto controllo
-            </div>
-          </div>
-          <div className="feature-card">
-            <div className="feature-icon indigo">
-              <MessageCircle size={28} />
-            </div>
-            <h3 className="feature-title">Chatbot AI</h3>
-            <p className="feature-description">
-              Chiedi al tuo assistente: "Quanto ho fatturato a marzo?" "Quali task scadono domani?"
-            </p>
-            <div className="feature-benefit">
-              <Check size={16} />
-              Risposte istantanee sui tuoi dati
+              Mai più deadline dimenticate
             </div>
           </div>
         </div>
@@ -1146,55 +1124,51 @@ export default function Landing({ onLogin, onRegister, onDemo }) {
         </div>
       </section>
 
-      {/* Forfettario Section */}
+      {/* AI Chatbot Section */}
       <section className="landing-forfettario">
         <div className="forfettario-content">
           <div className="forfettario-visual">
-            <div className="forfettario-gauge">
-              <div className="gauge-circle">
-                <div className="gauge-inner">
-                  <div className="gauge-value">62%</div>
-                  <div className="gauge-label">del limite</div>
-                </div>
+            <div className="ai-chat-demo">
+              <div className="chat-demo-header">
+                <Sparkles size={20} />
+                <span>VAIB Assistant</span>
               </div>
-            </div>
-            <div className="forfettario-stats">
-              <div className="forfettario-stat">
-                <div className="forfettario-stat-value">€52.340</div>
-                <div className="forfettario-stat-label">Fatturato 2024</div>
-              </div>
-              <div className="forfettario-stat">
-                <div className="forfettario-stat-value">€32.660</div>
-                <div className="forfettario-stat-label">Disponibile</div>
+              <div className="chat-demo-messages">
+                <div className="demo-msg user">Chi è il mio cliente migliore?</div>
+                <div className="demo-msg ai">Il tuo cliente più redditizio è TechStartup Milano con €18.500 di fatturato totale.</div>
+                <div className="demo-msg user">Quali task scadono questa settimana?</div>
+                <div className="demo-msg ai">Hai 3 task in scadenza: consegna mockup (domani), call con Studio Verdi (giovedì), fattura Q3 (venerdì).</div>
+                <div className="demo-msg user">Quante opportunità ho aperte?</div>
+                <div className="demo-msg ai">Hai 5 opportunità aperte per un valore totale di €24.500. La più vicina alla chiusura è il progetto Ferrari Design.</div>
               </div>
             </div>
           </div>
           <div className="forfettario-text">
             <div className="section-eyebrow green">
-              <Target size={14} />
-              Per forfettari
+              <MessageCircle size={14} />
+              AI Chatbot
             </div>
-            <h2 className="forfettario-title">Il limite €85.000 non sarà più un problema</h2>
+            <h2 className="forfettario-title">Chiedi qualsiasi cosa sui tuoi dati</h2>
             <p className="forfettario-subtitle">
-              VAIB è costruito specificamente per chi lavora in regime forfettario.
-              Monitora automaticamente il tuo fatturato e ti avvisa prima che sia troppo tardi.
+              Non cercare più tra menu e tabelle. Chiedi all'AI in linguaggio naturale
+              e ottieni risposte istantanee basate sui TUOI dati reali.
             </p>
             <ul className="forfettario-features">
               <li>
                 <CheckCircle size={20} />
-                <span>Dashboard con percentuale limite sempre visibile</span>
+                <span>"Quanto ho fatturato questo trimestre?"</span>
               </li>
               <li>
                 <CheckCircle size={20} />
-                <span>Alert automatici al 70%, 85% e 95% del limite</span>
+                <span>"Quali clienti non sento da più di un mese?"</span>
               </li>
               <li>
                 <CheckCircle size={20} />
-                <span>Proiezione a fine anno basata sui trend</span>
+                <span>"Mostrami le opportunità sopra i €5.000"</span>
               </li>
               <li>
                 <CheckCircle size={20} />
-                <span>Suggerimenti per ottimizzare il fatturato</span>
+                <span>"Qual è il mio tasso di conversione?"</span>
               </li>
             </ul>
           </div>
@@ -1214,12 +1188,12 @@ export default function Landing({ onLogin, onRegister, onDemo }) {
           </div>
           <p className="pricing-description">Tutto quello che ti serve per gestire la tua attività</p>
           <ul className="pricing-features">
+            <li><Check size={18} /> Chatbot AI sui tuoi dati</li>
+            <li><Check size={18} /> Personalizza scrivendo all'AI</li>
             <li><Check size={18} /> Clienti e contatti illimitati</li>
             <li><Check size={18} /> Pipeline vendite con Kanban</li>
-            <li><Check size={18} /> Tracker forfettario €85K</li>
-            <li><Check size={18} /> Task e project management</li>
-            <li><Check size={18} /> AI Builder per personalizzazione</li>
-            <li><Check size={18} /> Chatbot AI per i tuoi dati</li>
+            <li><Check size={18} /> Task e fatture</li>
+            <li><Check size={18} /> Dashboard completa</li>
             <li><Check size={18} /> Supporto via chat</li>
           </ul>
           <button className="btn-primary btn-large" style={{width: '100%', justifyContent: 'center'}} onClick={onRegister}>
@@ -1232,9 +1206,9 @@ export default function Landing({ onLogin, onRegister, onDemo }) {
       {/* Final CTA */}
       <section className="landing-cta">
         <div className="cta-content">
-          <h2 className="cta-title">Pronto a semplificare la tua vita da freelancer?</h2>
+          <h2 className="cta-title">Tutto in un posto. Un'AI che ti capisce.</h2>
           <p className="cta-subtitle">
-            Unisciti a centinaia di professionisti che hanno scelto VAIB per gestire la loro attività.
+            Smetti di cercare dati tra 10 app diverse. Chiedi a VAIB e lui risponde.
             14 giorni gratis, nessuna carta richiesta.
           </p>
           <div className="cta-buttons">
