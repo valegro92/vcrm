@@ -51,7 +51,7 @@ router.post('/login', async (req, res) => {
 
 // Register
 router.post('/register', async (req, res) => {
-  const { username, email, password, fullName } = req.body;
+  const { username, email, password, fullName, company } = req.body;
 
   if (!username || !email || !password) {
     return res.status(400).json({ error: 'Username, email, and password are required' });
@@ -62,8 +62,8 @@ router.post('/register', async (req, res) => {
     const avatar = fullName ? fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : username.substring(0, 2).toUpperCase();
 
     const result = await runQuery(
-      `INSERT INTO users (username, email, password, fullName, avatar) VALUES (?, ?, ?, ?, ?) ${getReturningClause()}`,
-      [username, email, hashedPassword, fullName, avatar]
+      `INSERT INTO users (username, email, password, "fullName", avatar, company) VALUES (?, ?, ?, ?, ?, ?) ${getReturningClause()}`,
+      [username, email, hashedPassword, fullName, avatar, company || null]
     );
 
     const userId = result.lastID || (result.rows && result.rows[0]?.id);
@@ -82,6 +82,7 @@ router.post('/register', async (req, res) => {
         email,
         fullName,
         avatar,
+        company,
         role: 'user'
       }
     });
