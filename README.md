@@ -1,183 +1,203 @@
-# vCRM - CRM Valentino
+# VAIB - Il CRM che si adatta parlandoci
 
-## 📦 Installazione
+<p align="center">
+  <img src="https://img.shields.io/badge/version-2.0.0-blue.svg" alt="Version">
+  <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License">
+  <img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg" alt="Node">
+  <img src="https://img.shields.io/badge/react-18.2.0-61dafb.svg" alt="React">
+</p>
 
-### 1. Installa dipendenze frontend
+<p align="center">
+  <strong>Il primo CRM pensato per freelancer e partite IVA forfettarie italiane.</strong><br>
+  Personalizza l'interfaccia semplicemente descrivendola. Nessuna configurazione complessa.
+</p>
+
+---
+
+## ✨ Cosa rende VAIB diverso
+
+### 🪄 AI-First Customization
+Descrivi come vuoi l'interfaccia e VAIB si adatta:
+- *"Usa un tema scuro con colori verdi"*
+- *"Nascondi le fatture dalla dashboard"*
+- *"Rendi tutto più compatto"*
+
+### 📊 Forfettario-Native
+Monitoraggio automatico del limite €85.000 con alert intelligenti.
+
+### 🚀 Zero Learning Curve
+Setup conversazionale. Inizia a usarlo in 2 minuti.
+
+---
+
+## 🛠️ Stack Tecnologico
+
+| Layer | Tecnologia |
+|-------|------------|
+| Frontend | React 18, Recharts, Lucide Icons |
+| Backend | Node.js, Express |
+| Database | PostgreSQL |
+| AI | OpenRouter (modelli gratuiti con fallback) |
+| Auth | JWT + bcrypt |
+
+---
+
+## 📦 Quick Start
+
+### Prerequisiti
+- Node.js >= 18.0.0
+- PostgreSQL (o usa il database cloud)
+
+### Installazione
+
 ```bash
+# 1. Clona il repository
+git clone https://github.com/valegro92/vcrm.git
+cd vcrm
+
+# 2. Installa dipendenze
 npm install
-```
-
-### 2. Installa dipendenze backend
-```bash
 npm run install:server
-```
 
-### 3. Inizializza database
-```bash
-npm run server:init
-```
+# 3. Configura environment
+cp .env.example .env
+# Modifica .env con le tue credenziali
 
-Questo creerà il database SQLite e inserirà dati di esempio.
-
-## 🎯 Utilizzo
-
-### Avvio rapido (frontend + backend)
-```bash
+# 4. Avvia in development
 npm run dev
 ```
 
-Questo avvierà:
-- Frontend su http://localhost:3000
-- Backend su http://localhost:5001
-
-### Avvio separato
-
-**Solo Frontend:**
-```bash
-npm start
+### Credenziali Demo
 ```
-
-**Solo Backend:**
-```bash
-npm run server
-```
-
-**Backend in modalità sviluppo (con auto-restart):**
-```bash
-npm run server:dev
-```
-
-## 🔑 Credenziali Demo
-
-```
-Username: admin
+Email: admin@example.com
 Password: admin123
 ```
 
-## 🗂️ Struttura Progetto
+---
+
+## 🏗️ Architettura
 
 ```
-vCRM/
-├── public/              # File statici
-├── src/                 # Frontend React
-│   ├── api/            # Client API
-│   ├── components/     # Componenti React
-│   ├── constants/      # Costanti
-│   ├── data/           # Dati iniziali
-│   └── AppWithDB.js    # App principale con DB
-├── server/             # Backend Node.js
-│   ├── database/       # Database e schema
-│   ├── middleware/     # Middleware Express
-│   ├── routes/         # API routes
-│   ├── scripts/        # Script utilità
-│   └── server.js       # Server principale
-└── README.md
+vaib/
+├── src/                    # Frontend React
+│   ├── api/               # API client
+│   ├── components/        # UI Components
+│   ├── context/           # React Context (UIConfig, Auth)
+│   └── AppWithDB.js       # Main App
+├── server/                 # Backend Node.js
+│   ├── config/            # Configurazioni (UI defaults)
+│   ├── database/          # Schema e migrations
+│   ├── middleware/        # Auth, error handling
+│   ├── routes/            # API endpoints
+│   └── server.js          # Entry point
+└── docs/                   # Documentazione
 ```
 
-## 📊 Funzionalità Principali
+---
 
-### Dashboard
-- KPI in tempo reale (Pipeline totale, tasso conversione, ecc.)
-- Grafici vendite mensili
-- Distribuzione pipeline per fase
-- Lista opportunità e attività recenti
+## 🎯 Funzionalità
 
-### Pipeline Vendite
-- Visualizzazione Kanban con 7 fasi
-- Drag & drop per spostare opportunità
-- Filtro per anno
-- Statistiche per ogni fase
+### Core CRM
+- **Dashboard** - KPI, grafici, panoramica attività
+- **Pipeline** - Kanban drag & drop per opportunità
+- **Contatti** - Gestione clienti e prospect
+- **Progetti** - Tracking progetti attivi
+- **Fatture** - Gestione fatturazione con stati
+- **Attività** - Task management con priorità
 
-### Gestione Contatti
-- Creazione, modifica, eliminazione contatti
-- Ricerca e filtri
-- Informazioni dettagliate (email, telefono, azienda)
+### AI Features
+- **AI Chatbot** - Interroga i tuoi dati in linguaggio naturale
+- **AI Builder** - Personalizza l'interfaccia parlandoci
+- **Schema-Driven UI** - Configurazione per-user persistente
 
-### Gestione Opportunità
-- CRUD completo
-- Associazione con contatti
-- Tracking probabilità e valore
-- Date apertura/chiusura
+### Forfettario Tools
+- **Limite Tracker** - Monitoraggio €85.000
+- **Alert Automatici** - Notifiche soglie
+- **Report Fiscali** - Export per commercialista
 
-### Gestione Attività
-- Creazione attività (chiamate, email, meeting, documenti)
-- Priorità e scadenze
-- Toggle completamento
-- Associazione con contatti
+---
 
-## 🔧 API Endpoints
+## 🔌 API Reference
 
-### Autenticazione
-- `POST /api/auth/login` - Login
-- `POST /api/auth/register` - Registrazione
+### Authentication
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | Login utente |
+| POST | `/api/auth/register` | Registrazione |
 
-### Contatti
-- `GET /api/contacts` - Lista contatti
-- `GET /api/contacts/:id` - Dettaglio contatto
-- `POST /api/contacts` - Crea contatto
-- `PUT /api/contacts/:id` - Aggiorna contatto
-- `DELETE /api/contacts/:id` - Elimina contatto
+### Resources
+| Resource | Endpoints |
+|----------|-----------|
+| Contacts | `GET/POST/PUT/DELETE /api/contacts` |
+| Opportunities | `GET/POST/PUT/DELETE /api/opportunities` |
+| Tasks | `GET/POST/PUT/DELETE /api/tasks` |
+| Projects | `GET/POST/PUT/DELETE /api/projects` |
+| Invoices | `GET/POST/PUT/DELETE /api/invoices` |
 
-### Opportunità
-- `GET /api/opportunities` - Lista opportunità
-- `GET /api/opportunities/:id` - Dettaglio opportunità
-- `POST /api/opportunities` - Crea opportunità
-- `PUT /api/opportunities/:id` - Aggiorna opportunità
-- `DELETE /api/opportunities/:id` - Elimina opportunità
-- `PATCH /api/opportunities/:id/stage` - Aggiorna fase
+### AI & Config
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/ui-config` | Get user UI config |
+| POST | `/api/ui-config/generate` | AI generate config |
+| PUT | `/api/ui-config/theme` | Update theme |
+| POST | `/api/chat` | AI chatbot |
 
-### Attività
-- `GET /api/tasks` - Lista attività
-- `GET /api/tasks/:id` - Dettaglio attività
-- `POST /api/tasks` - Crea attività
-- `PUT /api/tasks/:id` - Aggiorna attività
-- `DELETE /api/tasks/:id` - Elimina attività
-- `PATCH /api/tasks/:id/toggle` - Toggle completamento
+---
 
-## 🛠️ Tecnologie Utilizzate
+## 🔒 Sicurezza
 
-### Frontend
-- React 18
-- Recharts (grafici)
-- Lucide React (icone)
-- Date-fns (date)
+- ✅ Autenticazione JWT
+- ✅ Password hashing (bcrypt)
+- ✅ CORS configurato
+- ✅ SQL injection protection
+- ✅ Input validation
+- ✅ Rate limiting
 
-### Backend
-- Node.js
-- Express
-- SQLite3
-- JWT (autenticazione)
-- Bcrypt (password hashing)
+---
 
-## 📝 Note
+## 🗺️ Roadmap
 
-- I dati sono persistenti nel database SQLite (`server/database/crm.db`)
-- Le password sono hashate con bcrypt
-- JWT token valido per 24 ore
-- Il backend include middleware di autenticazione per tutte le route protette
+### v2.1 (In Progress)
+- [ ] Onboarding guidato con AI
+- [ ] Dark mode completo
+- [ ] Mobile app (React Native)
 
-## 🔐 Sicurezza
+### v2.2
+- [ ] Integrazione email
+- [ ] Calendario sincronizzato
+- [ ] Notifiche push
 
-- Autenticazione JWT
-- Password hashate con bcrypt
-- CORS configurato
-- Validazione input
-- SQL injection protection (prepared statements)
-
-## 🚧 Prossimi Sviluppi
-
-- [ ] Calendario attività
-- [ ] Report avanzati
-- [ ] Export dati (CSV, PDF)
-- [ ] Email integration
+### v3.0
 - [ ] Multi-tenancy
-- [ ] Notifiche real-time
-- [ ] Dashboard personalizzabili
+- [ ] Marketplace integrazioni
+- [ ] API pubblica
 
-## 📄 Licenza
+---
 
-MIT
+## 🤝 Contributing
 
-## 👨‍💻 Autore
+Leggi [CONTRIBUTING.md](CONTRIBUTING.md) per le linee guida.
 
-Sviluppato con Claude Code
+```bash
+# Setup development
+npm run dev
+
+# Run tests
+npm test
+
+# Build production
+npm run build
+```
+
+---
+
+## 📄 License
+
+MIT © 2024 VAIB
+
+---
+
+<p align="center">
+  <strong>VAIB</strong> - Il CRM che si adatta parlandoci<br>
+  <a href="https://vaib.app">Website</a> · <a href="https://docs.vaib.app">Docs</a> · <a href="https://twitter.com/vaib_app">Twitter</a>
+</p>

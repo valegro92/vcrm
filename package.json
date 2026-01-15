@@ -1,7 +1,15 @@
 {
-  "name": "vcrm-ydea-style",
-  "version": "1.0.0",
+  "name": "vaib",
+  "version": "2.0.0",
+  "description": "VAIB - Il CRM che si adatta parlandoci. Per freelancer e partite IVA forfettarie.",
   "private": true,
+  "keywords": ["crm", "freelancer", "forfettario", "ai", "react", "nodejs"],
+  "author": "VAIB Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/valegro92/vcrm.git"
+  },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "date-fns": "^2.30.0",
