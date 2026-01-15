@@ -363,6 +363,70 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, sh
     }
   };
 
+  // Chat-based CRUD operations (no modal needed)
+  const handleChatAddContact = async (contactData) => {
+    try {
+      const data = {
+        ...contactData,
+        value: Number(contactData.value) || 0,
+        avatar: contactData.name ? contactData.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) : '??',
+        lastContact: contactData.lastContact || new Date().toISOString().split('T')[0]
+      };
+
+      if (isDemoMode) {
+        setContacts(prev => [...prev, { id: `demo-chat-${Date.now()}`, ...data }]);
+      } else {
+        const created = await api.createContact(data);
+        setContacts(prev => [...prev, created]);
+      }
+      return true;
+    } catch (error) {
+      console.error('Error creating contact from chat:', error);
+      return false;
+    }
+  };
+
+  const handleChatAddOpportunity = async (oppData) => {
+    try {
+      const data = {
+        ...oppData,
+        value: Number(oppData.value) || 0,
+        owner: oppData.owner || user.fullName || user.username
+      };
+
+      if (isDemoMode) {
+        setOpportunities(prev => [...prev, { id: `demo-chat-${Date.now()}`, ...data }]);
+      } else {
+        const created = await api.createOpportunity(data);
+        setOpportunities(prev => [...prev, created]);
+      }
+      return true;
+    } catch (error) {
+      console.error('Error creating opportunity from chat:', error);
+      return false;
+    }
+  };
+
+  const handleChatAddTask = async (taskData) => {
+    try {
+      const data = {
+        ...taskData,
+        completed: false
+      };
+
+      if (isDemoMode) {
+        setTasks(prev => [...prev, { id: `demo-chat-${Date.now()}`, ...data }]);
+      } else {
+        const created = await api.createTask(data);
+        setTasks(prev => [...prev, created]);
+      }
+      return true;
+    } catch (error) {
+      console.error('Error creating task from chat:', error);
+      return false;
+    }
+  };
+
   const handleDeleteContact = async (id) => {
     if (window.confirm('Sei sicuro di voler eliminare questo contatto?')) {
       if (isDemoMode) {
@@ -624,7 +688,12 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, sh
       />
 
       {/* AI Chatbot */}
-      <AiChat />
+      <AiChat
+        isDemoMode={isDemoMode}
+        onCreateContact={handleChatAddContact}
+        onCreateOpportunity={handleChatAddOpportunity}
+        onCreateTask={handleChatAddTask}
+      />
     </div>
   );
 }
