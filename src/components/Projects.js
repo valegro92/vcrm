@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { PageHeader, KPICard, KPISection } from './ui';
 import api from '../api/api';
+import { formatCurrency, formatDate } from '../utils/formatters';
 
 // Definizione colonne Kanban per progetti
 const PROJECT_COLUMNS = [
@@ -92,20 +93,6 @@ export default function Projects({ opportunities, tasks, invoices, contacts, ope
 
         return { active, inProgress, delivered, totalValue, overdue };
     }, [projects, projectsByColumn]);
-
-    const formatCurrency = (value) => {
-        const num = parseFloat(value) || 0;
-        if (num >= 1000) return `€${(num / 1000).toFixed(1)}K`;
-        return `€${num.toLocaleString('it-IT')}`;
-    };
-
-    const formatDate = (dateStr) => {
-        if (!dateStr) return '-';
-        return new Date(dateStr).toLocaleDateString('it-IT', {
-            day: 'numeric',
-            month: 'short'
-        });
-    };
 
     const toggleExpand = (projectId) => {
         setExpandedProject(expandedProject === projectId ? null : projectId);
@@ -338,13 +325,13 @@ export default function Projects({ opportunities, tasks, invoices, contacts, ope
                             {project.expectedInvoiceDate && (
                                 <div className="kanban-date">
                                     <FileText size={12} />
-                                    <span>Fatt: {formatDate(project.expectedInvoiceDate)}</span>
+                                    <span>Fatt: {formatDate(project.expectedInvoiceDate, 'monthDay')}</span>
                                 </div>
                             )}
                             {project.expectedPaymentDate && (
                                 <div className="kanban-date">
                                     <Euro size={12} />
-                                    <span>Inc: {formatDate(project.expectedPaymentDate)}</span>
+                                    <span>Inc: {formatDate(project.expectedPaymentDate, 'monthDay')}</span>
                                 </div>
                             )}
                         </div>
@@ -456,7 +443,7 @@ export default function Projects({ opportunities, tasks, invoices, contacts, ope
                                     {formatCurrency(project.value)}
                                 </div>
                                 <div className="archived-project-date">
-                                    {formatDate(project.closeDate)}
+                                    {formatDate(project.closeDate, 'monthDay')}
                                 </div>
                             </div>
                         ))}

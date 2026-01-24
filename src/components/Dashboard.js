@@ -5,11 +5,18 @@ import {
 } from 'recharts';
 import { Target, TrendingUp, Receipt, Wallet, AlertTriangle, Calendar, Edit3, FolderKanban, Package } from 'lucide-react';
 import api from '../api/api';
-
-const MONTH_NAMES = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+import { formatCurrency } from '../utils/formatters';
+import {
+    MONTH_NAMES_SHORT as MONTH_NAMES,
+    FORFETTARIO_LIMIT,
+    CURRENT_YEAR,
+    generateYearOptions,
+    getStageProbability
+} from '../constants/business';
+import { calculateForfettarioStats } from '../utils/invoiceCalculations';
 
 export default function Dashboard({ opportunities, tasks, contacts, invoices = [], setActiveView }) {
-    const [selectedYear, setSelectedYear] = useState(2026);
+    const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR);
     const [monthlyTargets, setMonthlyTargets] = useState(Array(12).fill(0).map((_, i) => ({ month: i, target: 0 })));
     const [showTargetModal, setShowTargetModal] = useState(false);
     const [editingTargets, setEditingTargets] = useState([]);
@@ -183,10 +190,10 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
         const ytdIncassatoReale = cumulativeData[referenceMonth]?.cumIncassatoReale || 0;
         const ytdTarget = cumulativeData[referenceMonth]?.cumTarget || 0;
 
-        // Calcolo % verso limite 85K forfettario (basato su incassato REALE)
-        const forfettarioLimit = 85000;
-        const forfettarioProgress = (ytdIncassatoReale / forfettarioLimit) * 100;
-        const forfettarioRemaining = forfettarioLimit - ytdIncassatoReale;
+        // Calcolo % verso limite forfettario (basato su incassato REALE)
+        const forfettarioStats = calculateForfettarioStats(invoices, selectedYear);
+        const forfettarioProgress = forfettarioStats.progressPercent;
+        const forfettarioRemaining = forfettarioStats.remaining;
 
         // === METRICHE PROGETTI (DELIVERY) ===
         // Progetti in lavorazione
@@ -231,12 +238,6 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
         };
     }, [opportunities, invoices, selectedYear, currentMonth, currentYear, monthlyTargets]);
 
-    const formatCurrency = (value) => {
-        if (value >= 1000000) return `€${(value / 1000000).toFixed(1)}M`;
-        if (value >= 1000) return `€${Math.round(value / 1000)}K`;
-        return `€${Math.round(value)}`;
-    };
-
     const formatTooltip = (value) => `€${value.toLocaleString('it-IT')}`;
 
     // Colori
@@ -261,10 +262,9 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                         onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                         className="year-selector"
                     >
-                        <option value="2024">2024</option>
-                        <option value="2025">2025</option>
-                        <option value="2026">2026</option>
-                        <option value="2027">2027</option>
+                        {generateYearOptions(-2, 2).map(year => (
+                            <option key={year} value={year}>{year}</option>
+                        ))}
                     </select>
                     <button
                         className="target-btn"
@@ -314,7 +314,7 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                     <div>
                         <strong>Attenzione Limite Forfettario!</strong>
                         <span>
-                            Hai incassato {formatCurrency(biData.ytdIncassatoReale)} su €85.000 ({biData.forfettarioProgress.toFixed(1)}%).
+                            Hai incassato {formatCurrency(biData.ytdIncassatoReale)} su {formatCurrency(FORFETTARIO_LIMIT)} ({biData.forfettarioProgress.toFixed(1)}%).
                             Rimangono {formatCurrency(biData.forfettarioRemaining)}.
                         </span>
                     </div>
@@ -435,8 +435,8 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                         <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
                         <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={formatCurrency} />
                         <Tooltip formatter={formatTooltip} />
-                        <ReferenceLine y={85000} stroke={colors.danger} strokeDasharray="5 5" label={{ value: 'Limite €85K', position: 'right', fill: colors.danger, fontSize: 12 }} />
-                        <ReferenceLine y={75000} stroke={colors.fatturatoReale} strokeDasharray="3 3" label={{ value: 'Soglia attenzione', position: 'right', fill: colors.fatturatoReale, fontSize: 11 }} />
+                        <ReferenceLine y={FORFETTARIO_LIMIT} stroke={colors.danger} strokeDasharray="5 5" label={{ value: `Limite €${FORFETTARIO_LIMIT/1000}K`, position: 'right', fill: colors.danger, fontSize: 12 }} />
+                        <ReferenceLine y={FORFETTARIO_LIMIT * 0.75} stroke={colors.fatturatoReale} strokeDasharray="3 3" label={{ value: 'Soglia attenzione', position: 'right', fill: colors.fatturatoReale, fontSize: 11 }} />
                         <Area type="monotone" dataKey="cumIncassatoReale" fill={colors.incassatoReale} fillOpacity={0.3} stroke={colors.incassatoReale} strokeWidth={3} name="Incassato Reale" />
                         <Line type="monotone" dataKey="cumIpotesiIncassato" stroke={colors.ipotesiIncassato} strokeWidth={2} strokeDasharray="5 5" dot={{ r: 3 }} name="Ipotesi Incassato" />
                         <Line type="monotone" dataKey="cumTarget" stroke={colors.target} strokeWidth={2} dot={{ r: 3 }} name="Target Cumulativo" />
