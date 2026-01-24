@@ -271,8 +271,8 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
                                         borderRadius: '20px',
                                         fontSize: '11px',
                                         fontWeight: 700,
-                                        background: getStatusColor(selectedContact.status).bg,
-                                        color: getStatusColor(selectedContact.status).color,
+                                        background: getContactStatusColor(selectedContact.status).bg,
+                                        color: getContactStatusColor(selectedContact.status).color,
                                         textTransform: 'uppercase'
                                     }}>
                                         {selectedContact.status || 'Lead'}

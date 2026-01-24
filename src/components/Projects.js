@@ -16,7 +16,7 @@ const PROJECT_COLUMNS = [
     { id: 'chiuso', title: 'Chiuso', icon: Lock, color: 'purple' }
 ];
 
-export default function Projects({ opportunities, tasks, invoices, contacts, openAddModal, handleToggleTask, refreshData }) {
+export default function Projects({ opportunities, tasks, invoices, contacts, openAddModal, handleToggleTask, refreshData, onCreateInvoice }) {
     const [expandedProject, setExpandedProject] = useState(null);
     const [showArchived, setShowArchived] = useState(false);
     const [draggedProject, setDraggedProject] = useState(null);
@@ -271,6 +271,17 @@ export default function Projects({ opportunities, tasks, invoices, contacts, ope
                             >
                                 <Plus size={12} /> Task
                             </button>
+                            {onCreateInvoice && (
+                                <button
+                                    className="kanban-action-btn invoice-action"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onCreateInvoice(project);
+                                    }}
+                                >
+                                    <Receipt size={12} /> Fattura
+                                </button>
+                            )}
                             <button
                                 className="kanban-action-btn"
                                 onClick={(e) => {

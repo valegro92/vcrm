@@ -19,9 +19,14 @@ import Tasks from './components/Tasks';
 import Projects from './components/Projects';
 import Invoices from './components/Invoices';
 import AddModal from './components/AddModal';
+import InvoiceModal from './components/InvoiceModal';
 import Settings from './components/Settings';
 import Calendar from './components/Calendar';
 import AiChat from './components/AiChat';
+
+// Utils
+import { calculateForfettarioStats } from './utils/invoiceCalculations';
+import { CURRENT_YEAR } from './constants/business';
 
 // UI Configuration Context
 import { UIConfigProvider, useUIConfig } from './context/UIConfigContext';
@@ -167,6 +172,11 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, sh
   // Onboarding state
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
+
+  // Invoice modal state
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [invoicePrefilledData, setInvoicePrefilledData] = useState(null);
+  const [editingInvoice, setEditingInvoice] = useState(null);
 
   // Check if onboarding is needed (only for NEW users who just registered)
   useEffect(() => {
@@ -499,6 +509,51 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, sh
     setShowAddModal(true);
   };
 
+  // Open invoice modal with optional prefilled data from opportunity
+  const handleCreateInvoice = (opportunity = null) => {
+    if (opportunity) {
+      setInvoicePrefilledData({
+        opportunityId: opportunity.id,
+        title: opportunity.title,
+        company: opportunity.company,
+        value: opportunity.value,
+        expectedInvoiceDate: opportunity.expectedInvoiceDate,
+        expectedPaymentDate: opportunity.expectedPaymentDate
+      });
+    } else {
+      setInvoicePrefilledData(null);
+    }
+    setEditingInvoice(null);
+    setShowInvoiceModal(true);
+  };
+
+  // Save invoice (create or update)
+  const handleSaveInvoice = async (invoiceData, invoiceId = null) => {
+    try {
+      if (isDemoMode) {
+        // Demo mode: update local state only
+        if (invoiceId) {
+          setInvoices(invoices.map(inv => inv.id === invoiceId ? { id: invoiceId, ...invoiceData } : inv));
+        } else {
+          setInvoices([...invoices, { id: `demo-invoice-${Date.now()}`, ...invoiceData }]);
+        }
+      } else {
+        if (invoiceId) {
+          const updated = await api.updateInvoice(invoiceId, invoiceData);
+          setInvoices(invoices.map(inv => inv.id === updated.id ? updated : inv));
+        } else {
+          const created = await api.createInvoice(invoiceData);
+          setInvoices([...invoices, created]);
+        }
+      }
+      setShowInvoiceModal(false);
+      setInvoicePrefilledData(null);
+      setEditingInvoice(null);
+    } catch (error) {
+      throw error; // Let InvoiceModal handle the error display
+    }
+  };
+
   // Bottom navigation items (mobile only)
   const bottomNavItems = [
     { id: 'dashboard', icon: TrendingUp, label: 'Home' },
@@ -586,6 +641,7 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, sh
               setOpportunities={setOpportunities}
               openAddModal={openAddModal}
               setNewItem={setNewItem}
+              onCreateInvoice={handleCreateInvoice}
             />
           )}
 
@@ -625,6 +681,7 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, sh
               openAddModal={openAddModal}
               handleToggleTask={handleToggleTask}
               refreshData={loadAllData}
+              onCreateInvoice={handleCreateInvoice}
             />
           )}
 
@@ -685,6 +742,21 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, sh
         handleAddItem={handleAddItem}
         contacts={contacts}
         opportunities={opportunities}
+      />
+
+      {/* Invoice Modal */}
+      <InvoiceModal
+        show={showInvoiceModal}
+        onClose={() => {
+          setShowInvoiceModal(false);
+          setInvoicePrefilledData(null);
+          setEditingInvoice(null);
+        }}
+        onSave={handleSaveInvoice}
+        editingInvoice={editingInvoice}
+        opportunities={opportunities}
+        prefilledData={invoicePrefilledData}
+        forfettarioStats={calculateForfettarioStats(invoices, CURRENT_YEAR)}
       />
 
       {/* AI Chatbot */}

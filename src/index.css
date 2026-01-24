@@ -2995,6 +2995,18 @@ body {
   border-color: var(--primary-300);
 }
 
+.opp-action-btn.invoice-btn {
+  background: var(--success-50);
+  border-color: var(--success-200);
+  color: var(--success-600);
+}
+
+.opp-action-btn.invoice-btn:hover {
+  background: var(--success-100);
+  border-color: var(--success-400);
+  color: var(--success-700);
+}
+
 /* Empty column message */
 .empty-column {
   padding: 20px;
@@ -3857,6 +3869,212 @@ body {
   padding: var(--space-4) var(--space-6);
   border-top: 1px solid var(--slate-100);
   background: var(--slate-50);
+}
+
+/* Invoice Modal - Searchable Select */
+.invoice-modal .searchable-select {
+  position: relative;
+}
+
+.invoice-modal .search-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--slate-200);
+  border-radius: var(--radius-lg);
+  background: white;
+  transition: all var(--transition-base);
+}
+
+.invoice-modal .search-input-wrapper:focus-within {
+  border-color: var(--primary-400);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+.invoice-modal .search-input-wrapper svg {
+  color: var(--slate-400);
+  flex-shrink: 0;
+}
+
+.invoice-modal .search-input-wrapper input {
+  flex: 1;
+  border: none;
+  padding: 0;
+  font-size: 15px;
+  outline: none;
+  background: transparent;
+}
+
+.invoice-modal .search-input-wrapper input:focus {
+  box-shadow: none;
+}
+
+.invoice-modal .selected-opportunity {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: var(--primary-50);
+  border: 2px solid var(--primary-200);
+  border-radius: var(--radius-lg);
+}
+
+.invoice-modal .selected-opportunity-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.invoice-modal .selected-opportunity-info svg {
+  color: var(--primary-500);
+}
+
+.invoice-modal .selected-opportunity-info div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.invoice-modal .selected-opportunity-info strong {
+  font-size: 14px;
+  color: var(--slate-800);
+}
+
+.invoice-modal .selected-opportunity-info span {
+  font-size: 12px;
+  color: var(--slate-500);
+}
+
+.invoice-modal .selected-opportunity .clear-btn {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--slate-200);
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--slate-600);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.invoice-modal .selected-opportunity .clear-btn:hover {
+  background: var(--slate-300);
+  color: var(--slate-800);
+}
+
+.invoice-modal .opportunity-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: var(--space-1);
+  background: white;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.invoice-modal .dropdown-empty {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--slate-500);
+  font-size: 14px;
+}
+
+.invoice-modal .dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  border-bottom: 1px solid var(--slate-100);
+}
+
+.invoice-modal .dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.invoice-modal .dropdown-item:hover {
+  background: var(--primary-50);
+}
+
+.invoice-modal .dropdown-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.invoice-modal .dropdown-item-main strong {
+  font-size: 14px;
+  color: var(--slate-800);
+}
+
+.invoice-modal .dropdown-item-company {
+  font-size: 12px;
+  color: var(--slate-500);
+}
+
+.invoice-modal .dropdown-item-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--success-600);
+}
+
+.invoice-modal .dropdown-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+}
+
+/* Form error message */
+.form-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--danger-50);
+  border: 1px solid var(--danger-200);
+  border-radius: var(--radius-lg);
+  color: var(--danger-700);
+  font-size: 14px;
+}
+
+.form-error svg {
+  color: var(--danger-500);
+  flex-shrink: 0;
+}
+
+/* Forfettario warning in invoice modal */
+.forfettario-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--warning-50);
+  border: 1px solid var(--warning-200);
+  border-radius: var(--radius-lg);
+  color: var(--warning-800);
+  font-size: 14px;
+}
+
+.forfettario-warning svg {
+  color: var(--warning-500);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Form group small text */
+.form-group small {
+  font-size: 12px;
+  color: var(--slate-500);
+  margin-top: var(--space-1);
 }
 
 /* =========================================
@@ -5450,6 +5668,18 @@ body {
   background: var(--primary-50);
   border-color: var(--primary-200);
   color: var(--primary-600);
+}
+
+.kanban-action-btn.invoice-action {
+  background: var(--success-50);
+  border-color: var(--success-200);
+  color: var(--success-600);
+}
+
+.kanban-action-btn.invoice-action:hover {
+  background: var(--success-100);
+  border-color: var(--success-400);
+  color: var(--success-700);
 }
 
 .kanban-section {
