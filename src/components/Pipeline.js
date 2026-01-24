@@ -4,6 +4,8 @@ import pipelineStages from '../constants/pipelineStages';
 import api from '../api/api';
 import { PageHeader, KPICard, KPISection } from './ui';
 import WonModal from './WonModal';
+import { formatCurrency, formatDate } from '../utils/formatters';
+import { CURRENT_YEAR, generateYearOptions, STAGE_PROBABILITIES } from '../constants/business';
 
 // Colori per gli header delle colonne pipeline
 const STAGE_COLORS = {
@@ -16,7 +18,7 @@ const STAGE_COLORS = {
 };
 
 export default function Pipeline({ opportunities, tasks, setOpportunities, openAddModal, setNewItem }) {
-    const [selectedYear, setSelectedYear] = useState('2026');
+    const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR.toString());
     const [draggedItem, setDraggedItem] = useState(null);
     const [mobileViewStage, setMobileViewStage] = useState(null); // For mobile accordion
     const [showWonModal, setShowWonModal] = useState(false);
@@ -30,15 +32,6 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
     const handleDragOver = (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-    };
-
-    const newProbabilities = {
-        'Lead': 10,
-        'In contatto': 30,
-        'Follow Up da fare': 50,
-        'Revisionare offerta': 75,
-        'Chiuso Vinto': 100,
-        'Chiuso Perso': 0
     };
 
     const handleDrop = async (e, newStage) => {
@@ -56,7 +49,7 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
                 const updated = await api.updateOpportunityStage(
                     draggedItem.id,
                     newStage,
-                    newProbabilities[newStage]
+                    STAGE_PROBABILITIES[newStage] || 30
                 );
                 setOpportunities(opportunities.map(opp =>
                     opp.id === updated.id ? updated : opp
@@ -121,21 +114,6 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
         };
     }, [filteredOpportunities]);
 
-    const formatCurrency = (value) => {
-        if (value >= 1000000) return `€${(value / 1000000).toFixed(1)}M`;
-        if (value >= 1000) return `€${(value / 1000).toFixed(0)}K`;
-        return `€${value?.toLocaleString('it-IT') || 0}`;
-    };
-
-    const formatDate = (dateStr) => {
-        if (!dateStr) return 'N/D';
-        return new Date(dateStr).toLocaleDateString('it-IT', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-        });
-    };
-
     // Donut chart data
     const donutData = useMemo(() => {
         const activeStages = pipelineStages.filter(s => !s.includes('Chiuso'));
@@ -166,9 +144,9 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
                     onChange={(e) => setSelectedYear(e.target.value)}
                 >
                     <option value="all">Tutti gli anni</option>
-                    <option value="2024">2024</option>
-                    <option value="2025">2025</option>
-                    <option value="2026">2026</option>
+                    {generateYearOptions(-2, 2).map(year => (
+                        <option key={year} value={year}>{year}</option>
+                    ))}
                 </select>
                 <button className="primary-btn" onClick={() => openAddModal('opportunity')}>
                     <Plus size={18} />

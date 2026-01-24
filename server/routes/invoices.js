@@ -111,7 +111,7 @@ router.get('/stats', async (req, res) => {
         acc.paidCount++;
       } else if (inv.status === 'da_emettere') {
         acc.toIssueCount++;
-      } else if (inv.status === 'emessa' || inv.status === 'da_pagare') {
+      } else if (inv.status === 'emessa') {
         if (due < today) {
           acc.overdueAmount += amount;
           acc.overdueCount++;

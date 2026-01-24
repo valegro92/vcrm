@@ -5,27 +5,16 @@ import {
 } from 'lucide-react';
 import api from '../api/api';
 import { PageHeader, KPICard, KPISection } from './ui';
-
-// Colonne Kanban per fatture
-const INVOICE_STAGES = ['da_emettere', 'emessa', 'pagata'];
-
-const STAGE_CONFIG = {
-  da_emettere: {
-    label: 'Da Emettere',
-    color: '#94a3b8',
-    icon: FileText
-  },
-  emessa: {
-    label: 'Emessa',
-    color: '#f59e0b',
-    icon: Clock
-  },
-  pagata: {
-    label: 'Incassata',
-    color: '#10b981',
-    icon: Check
-  }
-};
+import { formatCurrency, formatDate } from '../utils/formatters';
+import { CURRENT_YEAR, generateYearOptions, FORFETTARIO_LIMIT } from '../constants/business';
+import { INVOICE_STAGES, INVOICE_STATUS_CONFIG } from '../constants/invoiceStatuses';
+import {
+  calculateFatturato,
+  calculateIncassato,
+  calculateDaIncassare,
+  calculateForfettarioStats,
+  getInvoicesForYear
+} from '../utils/invoiceCalculations';
 
 export default function Invoices({ opportunities }) {
   const [invoices, setInvoices] = useState([]);
@@ -34,7 +23,7 @@ export default function Invoices({ opportunities }) {
   const [showModal, setShowModal] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [draggedItem, setDraggedItem] = useState(null);
-  const [selectedYear, setSelectedYear] = useState('2026'); // 'all' o anno specifico
+  const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR.toString());
   const [formData, setFormData] = useState({
     invoiceNumber: '',
     opportunityId: '',
@@ -208,66 +197,29 @@ export default function Invoices({ opportunities }) {
     setShowModal(true);
   };
 
-  const formatCurrency = (value) => {
-    const num = parseFloat(value) || 0;
-    if (num >= 1000) return `€${(num / 1000).toFixed(1)}K`;
-    return `€${num.toLocaleString('it-IT')}`;
-  };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return null;
-    return new Date(dateStr).toLocaleDateString('it-IT', {
-      day: '2-digit',
-      month: '2-digit',
-      year: '2-digit'
-    });
-  };
-
-  // Filtra fatture per anno (basato su issueDate o paidDate)
+  // Filtra fatture per anno (usando funzione centralizzata)
   const filteredInvoices = useMemo(() => {
-    if (selectedYear === 'all') return invoices;
-
-    const year = parseInt(selectedYear);
-    return invoices.filter(inv => {
-      // Per forfettario: l'anno che conta è quello di INCASSO
-      // Ma mostriamo tutte le fatture che hanno attività nell'anno selezionato
-      const issueYear = inv.issueDate ? new Date(inv.issueDate).getFullYear() : null;
-      const paidYear = inv.paidDate ? new Date(inv.paidDate).getFullYear() : null;
-
-      // Mostra se: emessa in quest'anno O incassata in quest'anno O non ancora emessa
-      return issueYear === year ||
-             paidYear === year ||
-             (!inv.issueDate && !inv.paidDate);
-    });
+    return getInvoicesForYear(invoices, selectedYear);
   }, [invoices, selectedYear]);
 
-  // Stats per anno selezionato
+  // Stats per anno selezionato (usando funzioni centralizzate)
   const yearStats = useMemo(() => {
-    const year = selectedYear === 'all' ? null : parseInt(selectedYear);
-
-    // Fatturato: somma fatture EMESSE nell'anno (basato su issueDate)
-    const fatturato = invoices
-      .filter(i => i.issueDate && (year === null || new Date(i.issueDate).getFullYear() === year))
-      .filter(i => i.status === 'emessa' || i.status === 'pagata')
-      .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
-
-    // Incassato: somma fatture PAGATE nell'anno (basato su paidDate) - QUESTO CONTA PER FORFETTARIO!
-    const incassato = invoices
-      .filter(i => i.paidDate && (year === null || new Date(i.paidDate).getFullYear() === year))
-      .filter(i => i.status === 'pagata')
-      .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
-
-    // Da incassare: fatture emesse ma non ancora pagate
-    const daIncassare = invoices
-      .filter(i => i.status === 'emessa')
-      .reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
-
-    return { fatturato, incassato, daIncassare };
+    const year = selectedYear === 'all' ? 'all' : parseInt(selectedYear);
+    return {
+      fatturato: calculateFatturato(invoices, year),
+      incassato: calculateIncassato(invoices, year),
+      daIncassare: calculateDaIncassare(invoices)
+    };
   }, [invoices, selectedYear]);
 
-  // Calcolo limite forfettario (85K)
-  const forfettarioProgress = (yearStats.incassato / 85000) * 100;
-  const forfettarioRemaining = 85000 - yearStats.incassato;
+  // Calcolo limite forfettario (usando funzione centralizzata)
+  const forfettarioStats = useMemo(() => {
+    if (selectedYear === 'all') return null;
+    return calculateForfettarioStats(invoices, parseInt(selectedYear));
+  }, [invoices, selectedYear]);
+
+  const forfettarioProgress = forfettarioStats?.progressPercent || 0;
+  const forfettarioRemaining = forfettarioStats?.remaining || FORFETTARIO_LIMIT;
 
   if (loading && invoices.length === 0) {
     return (
@@ -292,10 +244,9 @@ export default function Invoices({ opportunities }) {
           onChange={(e) => setSelectedYear(e.target.value)}
         >
           <option value="all">Tutte</option>
-          <option value="2024">2024</option>
-          <option value="2025">2025</option>
-          <option value="2026">2026</option>
-          <option value="2027">2027</option>
+          {generateYearOptions(-2, 2).map(year => (
+            <option key={year} value={year}>{year}</option>
+          ))}
         </select>
         <button className="primary-btn" onClick={openNewInvoice}>
           <Plus size={18} />
@@ -315,7 +266,7 @@ export default function Invoices({ opportunities }) {
         <KPICard
           title={`Incassato ${selectedYear === 'all' ? 'Totale' : selectedYear}`}
           value={formatCurrency(yearStats.incassato)}
-          subtitle={selectedYear !== 'all' ? `${forfettarioProgress.toFixed(0)}% del limite 85K` : 'Totale incassato'}
+          subtitle={selectedYear !== 'all' ? `${forfettarioProgress.toFixed(0)}% del limite ${formatCurrency(FORFETTARIO_LIMIT)}` : 'Totale incassato'}
           icon={<Wallet size={20} />}
           color="green"
         />
@@ -344,7 +295,7 @@ export default function Invoices({ opportunities }) {
           <div>
             <strong>Attenzione Limite Forfettario {selectedYear}!</strong>
             <span>
-              Incassato {formatCurrency(yearStats.incassato)} su €85.000 ({forfettarioProgress.toFixed(1)}%).
+              Incassato {formatCurrency(yearStats.incassato)} su {formatCurrency(FORFETTARIO_LIMIT)} ({forfettarioProgress.toFixed(1)}%).
               Rimangono {formatCurrency(forfettarioRemaining)}.
             </span>
           </div>
@@ -355,7 +306,7 @@ export default function Invoices({ opportunities }) {
       <div className="kanban-wrapper">
         <div className="kanban-board invoice-kanban">
           {INVOICE_STAGES.map((status) => {
-            const config = STAGE_CONFIG[status];
+            const config = INVOICE_STATUS_CONFIG[status];
             const stageInvoices = filteredInvoices.filter(i => i.status === status);
             const stageValue = stageInvoices.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
             const IconComponent = config.icon;
@@ -370,7 +321,7 @@ export default function Invoices({ opportunities }) {
                 {/* Header */}
                 <div className="column-header" style={{ background: config.color }}>
                   <h3>
-                    <IconComponent size={16} />
+                    {IconComponent && <IconComponent size={16} />}
                     {config.label}
                   </h3>
                   <span className="column-count">{stageInvoices.length}</span>
@@ -452,7 +403,7 @@ export default function Invoices({ opportunities }) {
 
                   {stageInvoices.length === 0 && (
                     <div className="empty-column">
-                      <IconComponent size={24} />
+                      {IconComponent && <IconComponent size={24} />}
                       <span>Nessuna fattura</span>
                     </div>
                   )}

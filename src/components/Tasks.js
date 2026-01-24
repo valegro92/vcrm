@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import { PageHeader, KPICard, KPISection } from './ui';
 import { downloadICS } from '../utils/icsGenerator';
+import { formatDateRelative, isOverdue, isToday } from '../utils/formatters';
+import { getTaskPriorityColor, getTaskTypeColor } from '../constants/business';
 
 export default function Tasks({ tasks, contacts, opportunities, openAddModal, handleDeleteTask, handleToggleTask }) {
     const [statusFilter, setStatusFilter] = useState('all');
@@ -55,45 +57,6 @@ export default function Tasks({ tasks, contacts, opportunities, openAddModal, ha
         return result.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
     }, [tasks, searchTerm, statusFilter, priorityFilter, opportunityFilter]);
 
-    const getPriorityStyle = (priority) => {
-        switch (priority?.toLowerCase()) {
-            case 'alta': return { bg: '#fee2e2', color: '#dc2626', border: '#fecaca' };
-            case 'media': return { bg: '#fef3c7', color: '#d97706', border: '#fde68a' };
-            default: return { bg: '#d1fae5', color: '#059669', border: '#a7f3d0' };
-        }
-    };
-
-    const getTypeStyle = (type) => {
-        switch (type?.toLowerCase()) {
-            case 'chiamata': return { bg: '#dbeafe', color: '#2563eb', border: '#bfdbfe' };
-            case 'meeting': return { bg: '#ede9fe', color: '#7c3aed', border: '#ddd6fe' };
-            case 'email': return { bg: '#cffafe', color: '#0891b2', border: '#a5f3fc' };
-            default: return { bg: '#f1f5f9', color: '#475569', border: '#e2e8f0' };
-        }
-    };
-
-    const isOverdue = (dueDate) => {
-        if (!dueDate) return false;
-        return new Date(dueDate) < new Date() && new Date(dueDate).toDateString() !== new Date().toDateString();
-    };
-
-    const isToday = (dueDate) => {
-        if (!dueDate) return false;
-        return new Date(dueDate).toDateString() === new Date().toDateString();
-    };
-
-    const formatDate = (date) => {
-        if (!date) return 'Nessuna scadenza';
-        const d = new Date(date);
-        const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        if (d.toDateString() === today.toDateString()) return 'Oggi';
-        if (d.toDateString() === tomorrow.toDateString()) return 'Domani';
-        return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
-    };
-
     const getContactName = (contactId) => {
         const contact = contacts.find(c => c.id === contactId);
         return contact?.name || null;
@@ -107,10 +70,10 @@ export default function Tasks({ tasks, contacts, opportunities, openAddModal, ha
     const stats = useMemo(() => {
         const completed = tasks.filter(t => t.status === 'Completata').length;
         const pending = tasks.length - completed;
-        const overdue = tasks.filter(t => isOverdue(t.dueDate) && t.status !== 'Completata').length;
-        const today = tasks.filter(t => isToday(t.dueDate) && t.status !== 'Completata').length;
+        const overdueCount = tasks.filter(t => isOverdue(t.dueDate) && t.status !== 'Completata').length;
+        const todayCount = tasks.filter(t => isToday(t.dueDate) && t.status !== 'Completata').length;
         const linked = tasks.filter(t => t.opportunityId).length;
-        return { completed, pending, overdue, today, linked };
+        return { completed, pending, overdue: overdueCount, today: todayCount, linked };
     }, [tasks]);
 
     return (
@@ -235,18 +198,18 @@ export default function Tasks({ tasks, contacts, opportunities, openAddModal, ha
             ) : (
                 <div className="tasks-list">
                     {filteredTasks.map(task => {
-                        const priorityStyle = getPriorityStyle(task.priority);
-                        const typeStyle = getTypeStyle(task.type);
+                        const priorityStyle = getTaskPriorityColor(task.priority);
+                        const typeStyle = getTaskTypeColor(task.type);
                         const isCompleted = task.status === 'Completata';
-                        const overdue = isOverdue(task.dueDate) && !isCompleted;
-                        const todayTask = isToday(task.dueDate);
+                        const taskIsOverdue = isOverdue(task.dueDate) && !isCompleted;
+                        const taskIsToday = isToday(task.dueDate);
                         const opportunity = getOpportunity(task.opportunityId);
                         const contactName = getContactName(task.contactId);
 
                         return (
                             <div
                                 key={task.id}
-                                className={`task-card ${overdue ? 'overdue' : ''} ${isCompleted ? 'completed' : ''} ${opportunity ? 'has-opportunity' : ''}`}
+                                className={`task-card ${taskIsOverdue ? 'overdue' : ''} ${isCompleted ? 'completed' : ''} ${opportunity ? 'has-opportunity' : ''}`}
                             >
                                 {/* Left: Checkbox */}
                                 <button
@@ -317,10 +280,10 @@ export default function Tasks({ tasks, contacts, opportunities, openAddModal, ha
                                         )}
 
                                         {/* Due Date */}
-                                        <span className={`meta-item due-date ${overdue ? 'overdue' : ''} ${todayTask ? 'today' : ''}`}>
+                                        <span className={`meta-item due-date ${taskIsOverdue ? 'overdue' : ''} ${taskIsToday ? 'today' : ''}`}>
                                             <Calendar size={14} />
-                                            {formatDate(task.dueDate)}
-                                            {overdue && <span className="overdue-badge">SCADUTA</span>}
+                                            {formatDateRelative(task.dueDate)}
+                                            {taskIsOverdue && <span className="overdue-badge">SCADUTA</span>}
                                         </span>
                                     </div>
                                 </div>

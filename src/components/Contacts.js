@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, Building2, Mail, Phone, Edit2, Trash2, X, Users, MapPin, Euro } from 'lucide-react';
 import { PageHeader, SearchFilter, KPICard, KPISection } from './ui';
+import { formatCurrency, getInitials } from '../utils/formatters';
+import { getContactStatusColor, CONTACT_STATUSES } from '../constants/business';
 
 export default function Contacts({ contacts, openAddModal, handleDeleteContact }) {
     const [statusFilter, setStatusFilter] = useState('all');
@@ -35,10 +37,9 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
         return { total: contacts.length, totalValue, clienti, prospects, leads };
     }, [contacts]);
 
-    const statuses = ['Lead', 'Prospect', 'Cliente'];
     const filters = [
         { value: 'all', label: 'Tutti' },
-        ...statuses.map(s => ({ value: s, label: s }))
+        ...CONTACT_STATUSES.map(s => ({ value: s, label: s }))
     ];
 
     const getAvatarGradient = (name) => {
@@ -52,28 +53,6 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
         ];
         const index = (name?.charCodeAt(0) || 0) % gradients.length;
         return gradients[index];
-    };
-
-    const getInitials = (name) => {
-        if (!name) return '??';
-        const parts = name.split(' ');
-        if (parts.length >= 2) {
-            return (parts[0][0] + parts[1][0]).toUpperCase();
-        }
-        return name.substring(0, 2).toUpperCase();
-    };
-
-    const getStatusColor = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'cliente': return { bg: 'linear-gradient(135deg, #d1fae5, #a7f3d0)', color: '#065f46' };
-            case 'prospect': return { bg: 'linear-gradient(135deg, #fef3c7, #fde68a)', color: '#92400e' };
-            default: return { bg: 'linear-gradient(135deg, #e0e7ff, #c7d2fe)', color: '#3730a3' };
-        }
-    };
-
-    const formatCurrency = (value) => {
-        if (value >= 1000) return `€${(value / 1000).toFixed(0)}K`;
-        return `€${value?.toLocaleString() || 0}`;
     };
 
     return (
@@ -142,7 +121,7 @@ export default function Contacts({ contacts, openAddModal, handleDeleteContact }
             ) : (
                 <div className="cards-grid">
                     {filteredContacts.map(contact => {
-                        const statusStyle = getStatusColor(contact.status);
+                        const statusStyle = getContactStatusColor(contact.status);
                         return (
                             <div
                                 key={contact.id}
