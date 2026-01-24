@@ -30,6 +30,7 @@ import { CURRENT_YEAR } from './constants/business';
 
 // UI Configuration Context
 import { UIConfigProvider, useUIConfig } from './context/UIConfigContext';
+import { ToastProvider, useToast } from './context/ToastContext';
 
 // Icons for Bottom Navigation
 import { TrendingUp, Target, Users, Euro, CheckSquare } from 'lucide-react';
@@ -134,22 +135,27 @@ export default function VAIBApp() {
   }
 
   return (
-    <UIConfigProvider isAuthenticated={isAuthenticated} isDemoMode={isDemoMode}>
-      <VAIBContent
-        user={user}
-        isNewUser={isNewUser}
-        onLoginSuccess={handleLoginSuccess}
-        onLogout={handleLogout}
-        isDemoMode={isDemoMode}
-        showTour={showTour}
-        onCloseTour={() => setShowTour(false)}
-      />
-    </UIConfigProvider>
+    <ToastProvider>
+      <UIConfigProvider isAuthenticated={isAuthenticated} isDemoMode={isDemoMode}>
+        <VAIBContent
+          user={user}
+          isNewUser={isNewUser}
+          onLoginSuccess={handleLoginSuccess}
+          onLogout={handleLogout}
+          isDemoMode={isDemoMode}
+          showTour={showTour}
+          onCloseTour={() => setShowTour(false)}
+        />
+      </UIConfigProvider>
+    </ToastProvider>
   );
 }
 
 // Inner component with all VAIB functionality
 function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, showTour, onCloseTour }) {
+  // Toast notifications
+  const toast = useToast();
+
   // Initialize with demo data if in demo mode
   const initialDemoData = isDemoMode ? getAllDemoData() : null;
 
@@ -368,8 +374,12 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, sh
       setShowAddModal(false);
       setNewItem({});
       setIsEditing(false);
+
+      // Success toast
+      const typeLabels = { contact: 'Contatto', opportunity: 'Opportunità', task: 'Attività' };
+      toast.success(`${typeLabels[modalType] || 'Elemento'} ${isEditing ? 'aggiornato' : 'creato'} con successo`);
     } catch (error) {
-      alert('Errore: ' + error.message);
+      toast.error(error.message || 'Si è verificato un errore');
     }
   };
 
@@ -441,13 +451,15 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, sh
     if (window.confirm('Sei sicuro di voler eliminare questo contatto?')) {
       if (isDemoMode) {
         setContacts(contacts.filter(c => c.id !== id));
+        toast.success('Contatto eliminato');
         return;
       }
       try {
         await api.deleteContact(id);
         setContacts(contacts.filter(c => c.id !== id));
+        toast.success('Contatto eliminato');
       } catch (error) {
-        alert('Errore: ' + error.message);
+        toast.error(error.message || 'Errore durante l\'eliminazione');
       }
     }
   };
@@ -456,13 +468,15 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, sh
     if (window.confirm('Sei sicuro di voler eliminare questa opportunità?')) {
       if (isDemoMode) {
         setOpportunities(opportunities.filter(o => o.id !== id));
+        toast.success('Opportunità eliminata');
         return;
       }
       try {
         await api.deleteOpportunity(id);
         setOpportunities(opportunities.filter(o => o.id !== id));
+        toast.success('Opportunità eliminata');
       } catch (error) {
-        alert('Errore: ' + error.message);
+        toast.error(error.message || 'Errore durante l\'eliminazione');
       }
     }
   };
@@ -471,27 +485,32 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, sh
     if (window.confirm('Sei sicuro di voler eliminare questa attività?')) {
       if (isDemoMode) {
         setTasks(tasks.filter(t => t.id !== id));
+        toast.success('Attività eliminata');
         return;
       }
       try {
         await api.deleteTask(id);
         setTasks(tasks.filter(t => t.id !== id));
+        toast.success('Attività eliminata');
       } catch (error) {
-        alert('Errore: ' + error.message);
+        toast.error(error.message || 'Errore durante l\'eliminazione');
       }
     }
   };
 
   const handleToggleTask = async (id) => {
     if (isDemoMode) {
+      const task = tasks.find(t => t.id === id);
       setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+      toast.success(task?.completed ? 'Attività riaperta' : 'Attività completata');
       return;
     }
     try {
       const updated = await api.toggleTask(id);
       setTasks(tasks.map(t => t.id === updated.id ? updated : t));
+      toast.success(updated.completed ? 'Attività completata' : 'Attività riaperta');
     } catch (error) {
-      alert('Errore: ' + error.message);
+      toast.error(error.message || 'Errore durante l\'aggiornamento');
     }
   };
 

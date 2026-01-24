@@ -4,6 +4,7 @@ import {
   Clock, Edit2, Trash2, Receipt, Building, X, Euro, Wallet
 } from 'lucide-react';
 import api from '../api/api';
+import { useToast } from '../context/ToastContext';
 import { PageHeader, KPICard, KPISection } from './ui';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { CURRENT_YEAR, generateYearOptions, FORFETTARIO_LIMIT } from '../constants/business';
@@ -24,6 +25,7 @@ export default function Invoices({ opportunities }) {
   const [editingInvoice, setEditingInvoice] = useState(null);
   const [draggedItem, setDraggedItem] = useState(null);
   const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR.toString());
+  const toast = useToast();
   const [formData, setFormData] = useState({
     invoiceNumber: '',
     opportunityId: '',
@@ -102,8 +104,9 @@ export default function Invoices({ opportunities }) {
 
       await api.updateInvoiceStatus(draggedItem.id, newStatus, issueDate, paidDate);
       loadData();
+      toast.success('Stato fattura aggiornato');
     } catch (error) {
-      alert('Errore: ' + error.message);
+      toast.error(error.message || 'Errore nell\'aggiornamento');
     }
     setDraggedItem(null);
   };
@@ -116,8 +119,9 @@ export default function Invoices({ opportunities }) {
       const today = new Date().toISOString().split('T')[0];
       await api.updateInvoiceStatus(invoice.id, 'pagata', null, today);
       loadData();
+      toast.success('Fattura segnata come pagata');
     } catch (error) {
-      alert('Errore: ' + error.message);
+      toast.error(error.message || 'Errore nel pagamento');
     }
   };
 
@@ -145,8 +149,9 @@ export default function Invoices({ opportunities }) {
       setEditingInvoice(null);
       resetForm();
       loadData();
+      toast.success(editingInvoice ? 'Fattura aggiornata' : 'Fattura creata');
     } catch (error) {
-      alert(`Errore: ${error.message}`);
+      toast.error(error.message || 'Errore nel salvataggio');
     }
   };
 
@@ -171,8 +176,9 @@ export default function Invoices({ opportunities }) {
       try {
         await api.deleteInvoice(id);
         loadData();
+        toast.success('Fattura eliminata');
       } catch (error) {
-        alert('Errore: ' + error.message);
+        toast.error(error.message || 'Errore nell\'eliminazione');
       }
     }
   };
