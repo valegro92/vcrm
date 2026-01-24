@@ -7449,3 +7449,555 @@ body {
     color: var(--slate-200);
   }
 }
+
+/* =========================================
+   Toast Notifications System
+   ========================================= */
+.toast-container {
+  position: fixed;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 400px;
+  pointer-events: none;
+}
+
+@media (max-width: 480px) {
+  .toast-container {
+    top: auto;
+    bottom: calc(80px + var(--space-4));
+    right: var(--space-3);
+    left: var(--space-3);
+    max-width: none;
+  }
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: white;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl), 0 0 40px rgba(0, 0, 0, 0.1);
+  pointer-events: auto;
+  border-left: 4px solid;
+  backdrop-filter: blur(8px);
+}
+
+.toast-enter {
+  animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toast-exit {
+  animation: toastSlideOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%) scale(0.9);
+  }
+}
+
+@media (max-width: 480px) {
+  @keyframes toastSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes toastSlideOut {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(20px) scale(0.95);
+    }
+  }
+}
+
+.toast-success {
+  border-left-color: var(--success-500);
+  background: linear-gradient(135deg, white, var(--success-50));
+}
+
+.toast-success .toast-icon {
+  color: var(--success-500);
+}
+
+.toast-error {
+  border-left-color: var(--danger-500);
+  background: linear-gradient(135deg, white, var(--danger-50));
+}
+
+.toast-error .toast-icon {
+  color: var(--danger-500);
+}
+
+.toast-warning {
+  border-left-color: var(--warning-500);
+  background: linear-gradient(135deg, white, var(--warning-50));
+}
+
+.toast-warning .toast-icon {
+  color: var(--warning-500);
+}
+
+.toast-info {
+  border-left-color: var(--primary-500);
+  background: linear-gradient(135deg, white, var(--primary-50));
+}
+
+.toast-info .toast-icon {
+  color: var(--primary-500);
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--slate-900);
+  margin-bottom: 2px;
+}
+
+.toast-message {
+  font-size: 13px;
+  color: var(--slate-600);
+  line-height: 1.4;
+}
+
+.toast-action {
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary-600);
+  background: var(--primary-50);
+  border: 1px solid var(--primary-200);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.toast-action:hover {
+  background: var(--primary-100);
+  border-color: var(--primary-300);
+}
+
+.toast-close {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--slate-400);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.toast-close:hover {
+  background: var(--slate-100);
+  color: var(--slate-600);
+}
+
+/* =========================================
+   Enhanced Empty States
+   ========================================= */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
+  background: linear-gradient(180deg, var(--slate-50), transparent);
+  border-radius: var(--radius-2xl);
+  margin: var(--space-6) 0;
+  animation: emptyStateFadeIn 0.5s ease-out;
+}
+
+@keyframes emptyStateFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.empty-state svg {
+  color: var(--slate-300);
+  margin-bottom: var(--space-4);
+  animation: emptyStateIconFloat 3s ease-in-out infinite;
+}
+
+@keyframes emptyStateIconFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.empty-state p {
+  font-size: 16px;
+  color: var(--slate-500);
+  margin-bottom: var(--space-6);
+  max-width: 300px;
+}
+
+.empty-state .primary-btn {
+  animation: emptyStatePulse 2s ease-in-out infinite;
+}
+
+@keyframes emptyStatePulse {
+  0%, 100% {
+    box-shadow: var(--shadow-md);
+  }
+  50% {
+    box-shadow: var(--shadow-lg), 0 0 20px rgba(99, 102, 241, 0.3);
+  }
+}
+
+/* Enhanced empty column state */
+.empty-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  color: var(--slate-400);
+  font-size: 13px;
+  background: var(--slate-50);
+  border-radius: var(--radius-lg);
+  margin: var(--space-2);
+  border: 2px dashed var(--slate-200);
+  transition: all var(--transition-base);
+}
+
+.empty-column svg {
+  margin-bottom: var(--space-2);
+  opacity: 0.5;
+}
+
+.kanban-column:hover .empty-column {
+  border-color: var(--primary-200);
+  background: var(--primary-50);
+  color: var(--primary-500);
+}
+
+/* =========================================
+   Enhanced Animations & Transitions
+   ========================================= */
+
+/* Smooth page transitions */
+.page-container {
+  animation: pageEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Card hover animations */
+.task-card,
+.contact-card,
+.opp-card,
+.project-kanban-card,
+.invoice-card {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.task-card:hover,
+.contact-card:hover,
+.opp-card:hover,
+.project-kanban-card:hover,
+.invoice-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Staggered list animations */
+.tasks-list .task-card,
+.contacts-grid .contact-card,
+.column-content .opp-card {
+  animation: listItemEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.tasks-list .task-card:nth-child(1) { animation-delay: 0.05s; }
+.tasks-list .task-card:nth-child(2) { animation-delay: 0.1s; }
+.tasks-list .task-card:nth-child(3) { animation-delay: 0.15s; }
+.tasks-list .task-card:nth-child(4) { animation-delay: 0.2s; }
+.tasks-list .task-card:nth-child(5) { animation-delay: 0.25s; }
+
+.contacts-grid .contact-card:nth-child(1) { animation-delay: 0.05s; }
+.contacts-grid .contact-card:nth-child(2) { animation-delay: 0.1s; }
+.contacts-grid .contact-card:nth-child(3) { animation-delay: 0.15s; }
+.contacts-grid .contact-card:nth-child(4) { animation-delay: 0.2s; }
+.contacts-grid .contact-card:nth-child(5) { animation-delay: 0.25s; }
+.contacts-grid .contact-card:nth-child(6) { animation-delay: 0.3s; }
+
+@keyframes listItemEnter {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Button press effect */
+.primary-btn:active,
+.secondary-btn:active,
+.action-btn:active {
+  transform: scale(0.97);
+}
+
+/* Checkbox animation */
+.task-checkbox {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.task-checkbox.checked {
+  animation: checkBounce 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes checkBounce {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.2); }
+  60% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+/* KPI card animations */
+.kpi-card {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Modal animations - enhanced */
+.modal-overlay {
+  animation: modalOverlayIn 0.2s ease-out;
+}
+
+.modal {
+  animation: modalContentIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalContentIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Drag and drop visual feedback */
+.opp-card[draggable="true"]:active,
+.project-kanban-card[draggable="true"]:active {
+  cursor: grabbing;
+  transform: scale(1.02) rotate(1deg);
+  box-shadow: var(--shadow-xl);
+  z-index: 100;
+}
+
+/* Filter tag animations */
+.filter-tag {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.filter-tag:hover {
+  transform: translateY(-1px);
+}
+
+.filter-tag.active {
+  animation: filterTagActivate 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes filterTagActivate {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* =========================================
+   Enhanced Search & Filters
+   ========================================= */
+.search-box {
+  position: relative;
+}
+
+.search-box input {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.search-box input:focus {
+  transform: scale(1.01);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), var(--shadow-md);
+}
+
+.search-box::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary-500), var(--violet-500));
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateX(-50%);
+  border-radius: 2px;
+}
+
+.search-box:focus-within::after {
+  width: calc(100% - 24px);
+}
+
+/* Filter row enhancements */
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.filter-select {
+  appearance: none;
+  padding: var(--space-2) var(--space-8) var(--space-2) var(--space-3);
+  background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") no-repeat right 12px center;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-lg);
+  font-size: 13px;
+  color: var(--slate-700);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.filter-select:hover {
+  border-color: var(--primary-300);
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--primary-400);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Dark mode toast adjustments */
+[data-theme="dark"] .toast {
+  background: var(--slate-800);
+  border-color: var(--slate-700);
+}
+
+[data-theme="dark"] .toast-title {
+  color: var(--slate-100);
+}
+
+[data-theme="dark"] .toast-message {
+  color: var(--slate-400);
+}
+
+[data-theme="dark"] .toast-close:hover {
+  background: var(--slate-700);
+  color: var(--slate-300);
+}
+
+[data-theme="dark"] .toast-success {
+  background: linear-gradient(135deg, var(--slate-800), rgba(16, 185, 129, 0.1));
+}
+
+[data-theme="dark"] .toast-error {
+  background: linear-gradient(135deg, var(--slate-800), rgba(239, 68, 68, 0.1));
+}
+
+[data-theme="dark"] .toast-warning {
+  background: linear-gradient(135deg, var(--slate-800), rgba(245, 158, 11, 0.1));
+}
+
+[data-theme="dark"] .toast-info {
+  background: linear-gradient(135deg, var(--slate-800), rgba(99, 102, 241, 0.1));
+}
+
+[data-theme="dark"] .empty-state {
+  background: linear-gradient(180deg, var(--slate-800), transparent);
+}
+
+[data-theme="dark"] .empty-column {
+  background: var(--slate-800);
+  border-color: var(--slate-700);
+}
+
+[data-theme="dark"] .kanban-column:hover .empty-column {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: var(--primary-700);
+}

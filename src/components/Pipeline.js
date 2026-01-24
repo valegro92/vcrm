@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Plus, Eye, CheckSquare, Target, Euro, TrendingUp, Layers, Receipt } from 'lucide-react';
 import pipelineStages from '../constants/pipelineStages';
 import api from '../api/api';
+import { useToast } from '../context/ToastContext';
 import { PageHeader, KPICard, KPISection } from './ui';
 import WonModal from './WonModal';
 import { formatCurrency, formatDate } from '../utils/formatters';
@@ -23,6 +24,7 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
     const [mobileViewStage, setMobileViewStage] = useState(null); // For mobile accordion
     const [showWonModal, setShowWonModal] = useState(false);
     const [pendingWonOpportunity, setPendingWonOpportunity] = useState(null);
+    const toast = useToast();
 
     const handleDragStart = (e, opportunity) => {
         setDraggedItem(opportunity);
@@ -55,7 +57,7 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
                     opp.id === updated.id ? updated : opp
                 ));
             } catch (error) {
-                alert('Errore: ' + error.message);
+                toast.error(error.message || 'Errore durante lo spostamento');
             }
         }
         setDraggedItem(null);
@@ -77,8 +79,9 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
             ));
             setShowWonModal(false);
             setPendingWonOpportunity(null);
+            toast.success('Opportunità chiusa come vinta!');
         } catch (error) {
-            alert('Errore: ' + error.message);
+            toast.error(error.message || 'Errore durante la conferma');
         }
     };
 

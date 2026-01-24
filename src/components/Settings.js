@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { User, Lock, Bell, Palette, Database, Shield, Save, Check, Download, AlertTriangle, RotateCcw, Wand2, Send, Loader2, Sparkles } from 'lucide-react';
 import api from '../api/api';
 import { useUIConfig } from '../context/UIConfigContext';
+import { useToast } from '../context/ToastContext';
 
 export default function Settings({ user, contacts, opportunities, tasks, onUserUpdate, currentTheme, onThemeChange }) {
   const [activeTab, setActiveTab] = useState('profile');
@@ -10,6 +11,7 @@ export default function Settings({ user, contacts, opportunities, tasks, onUserU
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
   const [resetting, setResetting] = useState(false);
+  const toast = useToast();
 
   // UI Config for reset functionality
   const { config, resetConfig, isDefault, updateTheme, reloadConfig } = useUIConfig();
@@ -762,7 +764,7 @@ export default function Settings({ user, contacts, opportunities, tasks, onUserU
                 <div className="danger-zone">
                   <h4><AlertTriangle size={18} /> Zona Pericolosa</h4>
                   <p>Queste azioni sono irreversibili. Procedi con cautela.</p>
-                  <button className="btn-danger" onClick={() => alert('Funzione disabilitata per sicurezza')}>Elimina tutti i dati</button>
+                  <button className="btn-danger" onClick={() => toast.warning('Funzione disabilitata per sicurezza')}>Elimina tutti i dati</button>
                 </div>
               </div>
             </>

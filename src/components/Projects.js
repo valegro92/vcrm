@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { PageHeader, KPICard, KPISection } from './ui';
 import api from '../api/api';
+import { useToast } from '../context/ToastContext';
 import { formatCurrency, formatDate } from '../utils/formatters';
 
 // Definizione colonne Kanban per progetti
@@ -21,6 +22,7 @@ export default function Projects({ opportunities, tasks, invoices, contacts, ope
     const [showArchived, setShowArchived] = useState(false);
     const [draggedProject, setDraggedProject] = useState(null);
     const [dragOverColumn, setDragOverColumn] = useState(null);
+    const toast = useToast();
 
     // Progetti = Opportunità vinte (Chiuso Vinto)
     const projects = useMemo(() => {
@@ -131,9 +133,10 @@ export default function Projects({ opportunities, tasks, invoices, contacts, ope
             if (refreshData) {
                 refreshData();
             }
+            toast.success('Stato progetto aggiornato');
         } catch (error) {
             console.error('Failed to update project status:', error);
-            alert('Errore nell\'aggiornamento dello stato del progetto');
+            toast.error('Errore nell\'aggiornamento dello stato del progetto');
         }
     };
 
@@ -169,9 +172,10 @@ export default function Projects({ opportunities, tasks, invoices, contacts, ope
             if (refreshData) {
                 refreshData();
             }
+            toast.success('Progetto avanzato');
         } catch (error) {
             console.error('Failed to promote project:', error);
-            alert('Errore nell\'avanzamento del progetto');
+            toast.error('Errore nell\'avanzamento del progetto');
         }
     };
 

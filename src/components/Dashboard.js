@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import { Target, TrendingUp, Receipt, Wallet, AlertTriangle, Calendar, Edit3, FolderKanban, Package } from 'lucide-react';
 import api from '../api/api';
+import { useToast } from '../context/ToastContext';
 import { formatCurrency } from '../utils/formatters';
 import {
     MONTH_NAMES_SHORT as MONTH_NAMES,
@@ -23,6 +24,7 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
     const [isSavingTarget, setIsSavingTarget] = useState(false);
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
+    const toast = useToast();
 
     // Carica target mensili dal database
     useEffect(() => {
@@ -48,8 +50,9 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
             await api.saveAllTargets(selectedYear, editingTargets);
             setMonthlyTargets(editingTargets.map(t => ({ ...t })));
             setShowTargetModal(false);
+            toast.success('Target salvati con successo');
         } catch (error) {
-            alert('Errore nel salvataggio dei target: ' + error.message);
+            toast.error(error.message || 'Errore nel salvataggio dei target');
         } finally {
             setIsSavingTarget(false);
         }
