@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Eye, CheckSquare, Target, Euro, TrendingUp, Layers } from 'lucide-react';
+import { Plus, Eye, CheckSquare, Target, Euro, TrendingUp, Layers, Receipt } from 'lucide-react';
 import pipelineStages from '../constants/pipelineStages';
 import api from '../api/api';
 import { PageHeader, KPICard, KPISection } from './ui';
@@ -17,7 +17,7 @@ const STAGE_COLORS = {
     'Chiuso Perso': '#f87171'    // Rosso Chiaro
 };
 
-export default function Pipeline({ opportunities, tasks, setOpportunities, openAddModal, setNewItem }) {
+export default function Pipeline({ opportunities, tasks, setOpportunities, openAddModal, setNewItem, onCreateInvoice }) {
     const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR.toString());
     const [draggedItem, setDraggedItem] = useState(null);
     const [mobileViewStage, setMobileViewStage] = useState(null); // For mobile accordion
@@ -257,6 +257,19 @@ export default function Pipeline({ opportunities, tasks, setOpportunities, openA
                                             )}
 
                                             <div className="opp-card-actions">
+                                                {/* Crea Fattura - solo per opportunità vinte */}
+                                                {opp.stage === 'Chiuso Vinto' && onCreateInvoice && (
+                                                    <button
+                                                        className="opp-action-btn invoice-btn"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            onCreateInvoice(opp);
+                                                        }}
+                                                        title="Crea Fattura"
+                                                    >
+                                                        <Receipt size={16} />
+                                                    </button>
+                                                )}
                                                 <button
                                                     className="opp-action-btn"
                                                     onClick={(e) => {
