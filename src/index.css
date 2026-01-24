@@ -761,6 +761,33 @@ body {
   color: var(--amber-600);
 }
 
+.search-result-icon.invoice {
+  background: var(--teal-100);
+  color: var(--teal-600);
+}
+
+/* Keyboard shortcut badge */
+.search-shortcut {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--slate-400);
+  background: var(--slate-100);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-md);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .search-shortcut {
+  background: var(--slate-700);
+  border-color: var(--slate-600);
+  color: var(--slate-400);
+}
+
 .search-result-content {
   flex: 1;
   min-width: 0;

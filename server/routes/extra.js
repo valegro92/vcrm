@@ -93,28 +93,37 @@ router.get('/search', auth, async (req, res) => {
   const query = req.query.q || '';
 
   if (query.length < 2) {
-    return res.json({ contacts: [], opportunities: [], tasks: [] });
+    return res.json({ contacts: [], opportunities: [], tasks: [], invoices: [] });
   }
 
   const searchTerm = `%${query}%`;
 
   try {
+    // Search contacts: name, company, email, phone
     const contacts = await getAll(
-      'SELECT * FROM contacts WHERE name LIKE ? OR company LIKE ? OR email LIKE ? LIMIT 10',
+      'SELECT * FROM contacts WHERE name LIKE ? OR company LIKE ? OR email LIKE ? OR phone LIKE ? LIMIT 10',
+      [searchTerm, searchTerm, searchTerm, searchTerm]
+    );
+
+    // Search opportunities: title, company, description
+    const opportunities = await getAll(
+      'SELECT * FROM opportunities WHERE title LIKE ? OR company LIKE ? OR description LIKE ? LIMIT 10',
       [searchTerm, searchTerm, searchTerm]
     );
 
-    const opportunities = await getAll(
-      'SELECT * FROM opportunities WHERE title LIKE ? OR company LIKE ? LIMIT 10',
-      [searchTerm, searchTerm]
-    );
-
+    // Search tasks: title, description
     const tasks = await getAll(
       'SELECT * FROM tasks WHERE title LIKE ? OR description LIKE ? LIMIT 10',
       [searchTerm, searchTerm]
     );
 
-    res.json({ contacts, opportunities, tasks });
+    // Search invoices: number, clientName, description
+    const invoices = await getAll(
+      'SELECT * FROM invoices WHERE number LIKE ? OR "clientName" LIKE ? OR description LIKE ? LIMIT 10',
+      [searchTerm, searchTerm, searchTerm]
+    );
+
+    res.json({ contacts, opportunities, tasks, invoices });
   } catch (err) {
     console.error('Search error:', err);
     res.status(500).json({ error: 'Search error' });

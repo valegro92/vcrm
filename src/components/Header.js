@@ -1,16 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, Bell, X, User, Briefcase, CheckSquare, Clock, AlertCircle, Check, Menu, Plus } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Search, Bell, X, User, Briefcase, CheckSquare, Clock, AlertCircle, Check, Menu, Plus, FileText, Command } from 'lucide-react';
 import api from '../api/api';
+import { formatCurrency } from '../utils/formatters';
 
 export default function Header({ activeView, searchQuery, setSearchQuery, user, setActiveView, onMenuClick, openAddModal }) {
     const [showSearchResults, setShowSearchResults] = useState(false);
-    const [searchResults, setSearchResults] = useState({ contacts: [], opportunities: [], tasks: [] });
+    const [searchResults, setSearchResults] = useState({ contacts: [], opportunities: [], tasks: [], invoices: [] });
     const [searching, setSearching] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [showQuickAdd, setShowQuickAdd] = useState(false);
     const searchRef = useRef(null);
+    const searchInputRef = useRef(null);
     const notifRef = useRef(null);
     const quickAddRef = useRef(null);
 
@@ -38,6 +40,25 @@ export default function Header({ activeView, searchQuery, setSearchQuery, user, 
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // Keyboard shortcut: Cmd/Ctrl + K to focus search
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // Cmd+K (Mac) or Ctrl+K (Windows/Linux)
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                searchInputRef.current?.focus();
+                setShowSearchResults(true);
+            }
+            // Escape to close search
+            if (e.key === 'Escape' && showSearchResults) {
+                setShowSearchResults(false);
+                searchInputRef.current?.blur();
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [showSearchResults]);
+
     // Search debounce
     useEffect(() => {
         if (searchQuery.length >= 2) {
@@ -46,7 +67,7 @@ export default function Header({ activeView, searchQuery, setSearchQuery, user, 
             }, 300);
             return () => clearTimeout(timer);
         } else {
-            setSearchResults({ contacts: [], opportunities: [], tasks: [] });
+            setSearchResults({ contacts: [], opportunities: [], tasks: [], invoices: [] });
             setShowSearchResults(false);
         }
     }, [searchQuery]);
@@ -83,6 +104,8 @@ export default function Header({ activeView, searchQuery, setSearchQuery, user, 
             setActiveView('opportunities');
         } else if (type === 'task') {
             setActiveView('tasks');
+        } else if (type === 'invoice') {
+            setActiveView('invoices');
         }
     };
 
@@ -106,7 +129,7 @@ export default function Header({ activeView, searchQuery, setSearchQuery, user, 
         } catch (err) { }
     };
 
-    const totalResults = searchResults.contacts.length + searchResults.opportunities.length + searchResults.tasks.length;
+    const totalResults = searchResults.contacts.length + searchResults.opportunities.length + searchResults.tasks.length + searchResults.invoices.length;
 
     const getPageTitle = () => {
         switch (activeView) {
@@ -136,14 +159,17 @@ export default function Header({ activeView, searchQuery, setSearchQuery, user, 
                 <div className="search-box">
                     <Search size={18} />
                     <input
+                        ref={searchInputRef}
                         type="text"
-                        placeholder="Cerca contatti, opportunità..."
+                        placeholder="Cerca contatti, fatture, progetti..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onFocus={() => searchQuery.length >= 2 && setShowSearchResults(true)}
                     />
-                    {searchQuery && (
+                    {searchQuery ? (
                         <X size={16} className="search-clear" onClick={() => { setSearchQuery(''); setShowSearchResults(false); }} />
+                    ) : (
+                        <kbd className="search-shortcut">⌘K</kbd>
                     )}
                 </div>
 
@@ -192,6 +218,20 @@ export default function Header({ activeView, searchQuery, setSearchQuery, user, 
                                                 <div className="search-result-content">
                                                     <div className="search-result-title">{task.title}</div>
                                                     <div className="search-result-meta">{task.type} • {task.priority}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {searchResults.invoices.length > 0 && (
+                                    <div className="search-section">
+                                        <div className="search-section-title">Fatture ({searchResults.invoices.length})</div>
+                                        {searchResults.invoices.map(invoice => (
+                                            <div key={invoice.id} className="search-result-item" onClick={() => handleResultClick('invoice', invoice)}>
+                                                <div className="search-result-icon invoice"><FileText size={18} /></div>
+                                                <div className="search-result-content">
+                                                    <div className="search-result-title">{invoice.number || 'Bozza'} - {invoice.clientName}</div>
+                                                    <div className="search-result-meta">{formatCurrency(invoice.amount)} • {invoice.status}</div>
                                                 </div>
                                             </div>
                                         ))}
