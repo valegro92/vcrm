@@ -477,6 +477,9 @@ body {
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  overflow-x: hidden;
+  max-width: calc(100vw - var(--sidebar-width));
+  box-sizing: border-box;
 }
 
 @media (max-width: 768px) {
@@ -1196,9 +1199,23 @@ body {
 /* --- Unified KPI Section --- */
 .unified-kpi-section {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: var(--space-4);
   margin-bottom: var(--space-5);
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 1200px) {
+  .unified-kpi-section {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .unified-kpi-section {
+    grid-template-columns: 1fr;
+  }
 }
 
 .unified-kpi-card {
@@ -2719,20 +2736,58 @@ body {
 /* Kanban Board - Fixed Height with Internal Scroll */
 .kanban-wrapper {
   margin-top: var(--space-1);
+  position: relative;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Scroll hint gradient on right edge */
+.kanban-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 100%;
+  background: linear-gradient(to left, var(--slate-100), transparent);
+  pointer-events: none;
+  opacity: 0.8;
+  z-index: 5;
 }
 
 .kanban-board {
   display: flex;
-  gap: var(--space-4);
+  gap: var(--space-3);
   overflow-x: auto;
   overflow-y: hidden;
-  padding: var(--space-2) var(--space-4) var(--space-4);
+  padding: var(--space-2) var(--space-2) var(--space-4);
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  scroll-snap-type: none;
+  scroll-snap-type: x mandatory;
   height: 65vh;
   min-height: 500px;
   flex-shrink: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Visible scrollbar for kanban */
+.kanban-board::-webkit-scrollbar {
+  height: 8px;
+}
+
+.kanban-board::-webkit-scrollbar-track {
+  background: var(--slate-100);
+  border-radius: var(--radius-full);
+}
+
+.kanban-board::-webkit-scrollbar-thumb {
+  background: var(--slate-300);
+  border-radius: var(--radius-full);
+}
+
+.kanban-board::-webkit-scrollbar-thumb:hover {
+  background: var(--slate-400);
 }
 
 /* Mobile: Stack columns vertically as accordion */
@@ -2816,14 +2871,13 @@ body {
 /* Kanban Column - Premium Design */
 .kanban-column {
   background: var(--bg-card);
-  /* Semantic variable for Dark Mode */
-  border-radius: var(--radius-2xl);
+  border-radius: var(--radius-xl);
   display: flex;
   flex-direction: column;
-  min-width: 300px;
-  max-width: 400px;
+  min-width: 260px;
+  width: 280px;
+  max-width: 320px;
   height: 100%;
-  /* Fill the board height */
   box-shadow: var(--shadow-card);
   border: 1px solid var(--border-color-soft);
   flex-shrink: 0;
@@ -2836,11 +2890,21 @@ body {
   border-color: var(--primary-200);
 }
 
-/* Larger screens */
-@media (min-width: 1400px) {
+/* Larger screens - slightly wider columns */
+@media (min-width: 1600px) {
   .kanban-column {
-    min-width: 340px;
-    max-width: 450px;
+    min-width: 280px;
+    width: 300px;
+    max-width: 340px;
+  }
+}
+
+/* Medium screens - compact columns */
+@media (max-width: 1200px) {
+  .kanban-column {
+    min-width: 240px;
+    width: 260px;
+    max-width: 280px;
   }
 }
 
@@ -7736,6 +7800,16 @@ body {
 /* Smooth page transitions */
 .page-container {
   animation: pageEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: var(--space-4) var(--space-6);
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .page-container {
+    padding: var(--space-3) var(--space-4);
+  }
 }
 
 @keyframes pageEnter {
