@@ -657,6 +657,7 @@ function VAIBContent({ user, isNewUser, onLoginSuccess, onLogout, isDemoMode, sh
             <Pipeline
               opportunities={opportunities}
               tasks={tasks}
+              invoices={invoices}
               setOpportunities={setOpportunities}
               openAddModal={openAddModal}
               setNewItem={setNewItem}

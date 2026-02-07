@@ -4784,6 +4784,366 @@ body {
 }
 
 /* =========================================
+   Business Health Section
+   ========================================= */
+.bh-section {
+  background: var(--card-bg);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
+}
+
+.bh-section-header {
+  margin-bottom: var(--space-4);
+}
+
+.bh-section-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+}
+
+.bh-section-header p {
+  font-size: 14px;
+  color: var(--slate-500);
+  margin: 0;
+}
+
+.bh-flow {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.bh-flow-arrow {
+  display: flex;
+  align-items: center;
+  color: var(--slate-300);
+  flex-shrink: 0;
+}
+
+.bh-card {
+  flex: 1;
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-xl);
+  border: 2px solid transparent;
+  transition: all 0.2s;
+  min-width: 0;
+}
+
+.bh-card.health-green {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #86efac;
+}
+
+.bh-card.health-yellow {
+  background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+  border-color: #fde047;
+}
+
+.bh-card.health-orange {
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border-color: #fdba74;
+}
+
+.bh-card.health-red {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #fca5a5;
+}
+
+.bh-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--slate-600);
+}
+
+.bh-card.health-green .bh-card-icon { color: #16a34a; }
+.bh-card.health-yellow .bh-card-icon { color: #ca8a04; }
+.bh-card.health-orange .bh-card-icon { color: #ea580c; }
+.bh-card.health-red .bh-card-icon { color: #dc2626; }
+
+.bh-card-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.bh-card-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--slate-500);
+}
+
+.bh-card-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.bh-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 4px 0;
+}
+
+.bh-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+.bh-card.health-green .bh-progress-fill { background: #22c55e; }
+.bh-card.health-yellow .bh-progress-fill { background: #eab308; }
+.bh-card.health-orange .bh-progress-fill { background: #f97316; }
+.bh-card.health-red .bh-progress-fill { background: #ef4444; }
+
+.bh-card-detail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.bh-card-percent {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.bh-card-target {
+  color: var(--slate-400);
+}
+
+.bh-card-delta {
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.bh-card-delta.positive {
+  color: #16a34a;
+}
+
+.bh-card-delta.negative {
+  color: #dc2626;
+}
+
+/* Bottom row mini cards */
+.bh-bottom-row {
+  display: flex;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-light);
+}
+
+.bh-mini-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--slate-50);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--slate-600);
+  flex-wrap: wrap;
+}
+
+.bh-mini-card.warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.bh-mini-card.danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.bh-mini-label {
+  color: var(--slate-500);
+  font-size: 12px;
+}
+
+.bh-mini-value {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.bh-mini-card.warning .bh-mini-value { color: #92400e; }
+.bh-mini-card.danger .bh-mini-value { color: #991b1b; }
+
+.bh-mini-sub {
+  font-size: 11px;
+  color: var(--slate-400);
+  width: 100%;
+}
+
+/* Responsive BH */
+@media (max-width: 900px) {
+  .bh-flow {
+    flex-direction: column;
+  }
+
+  .bh-flow-arrow {
+    justify-content: center;
+    transform: rotate(90deg);
+  }
+
+  .bh-bottom-row {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 600px) {
+  .bh-card-value {
+    font-size: 20px;
+  }
+
+  .bh-card-icon {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* =========================================
+   Won Card Styles (Pipeline)
+   ========================================= */
+.won-card {
+  border-left-width: 4px !important;
+  border-left-style: solid !important;
+}
+
+.won-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  margin: 6px 0;
+  width: fit-content;
+}
+
+/* Workflow progress steps */
+.won-workflow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 6px 0;
+  padding: 6px 0;
+}
+
+.won-step {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--slate-100);
+  color: var(--slate-400);
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.won-step.done {
+  background: #d1fae5;
+  color: #16a34a;
+}
+
+.won-step-line {
+  flex: 1;
+  height: 2px;
+  background: var(--slate-200);
+  min-width: 12px;
+}
+
+.won-step.done + .won-step-line {
+  background: #86efac;
+}
+
+/* Won summary bar at top of column */
+.won-summary-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: var(--slate-50);
+  border-bottom: 1px solid var(--slate-100);
+}
+
+.won-summary-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 0;
+}
+
+.won-summary-item.urgent {
+  color: #dc2626;
+}
+
+.won-summary-item.da-fatturare {
+  color: #6366f1;
+}
+
+.won-summary-item.fatturata {
+  color: #d97706;
+}
+
+.won-summary-item.incassata {
+  color: #059669;
+}
+
+.won-summary-value {
+  margin-left: auto;
+  font-weight: 700;
+}
+
+/* Forecast overdue */
+.forecast-item.overdue {
+  background: #fee2e2 !important;
+  border-color: #fecaca !important;
+}
+
+.forecast-item.overdue .forecast-label {
+  color: #dc2626 !important;
+}
+
+.forecast-item.overdue .forecast-date {
+  color: #dc2626 !important;
+  font-weight: 600;
+}
+
+/* Won column wider */
+.won-column {
+  min-width: 300px;
+}
+
+/* =========================================
    Monthly Targets Modal
    ========================================= */
 .monthly-targets-modal {
