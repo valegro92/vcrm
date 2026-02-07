@@ -1,27 +1,16 @@
 const db = require('./db');
 
-const createTables = () => {
-  return new Promise(async (resolve, reject) => {
-    const isPostgres = db.type === 'postgres';
+const createTables = async () => {
+  const isPostgres = db.type === 'postgres';
 
-    try {
-      if (isPostgres) {
-        // PostgreSQL schema
-        await createPostgresTables();
-      } else {
-        // SQLite schema  
-        createSQLiteTables(resolve, reject);
-      }
-
-      if (isPostgres) {
-        console.log('All PostgreSQL tables created successfully');
-        resolve();
-      }
-    } catch (err) {
-      console.error('Error creating tables:', err);
-      reject(err);
-    }
-  });
+  if (isPostgres) {
+    await createPostgresTables();
+    console.log('All PostgreSQL tables created successfully');
+  } else {
+    return new Promise((resolve, reject) => {
+      createSQLiteTables(resolve, reject);
+    });
+  }
 };
 
 const createPostgresTables = async () => {

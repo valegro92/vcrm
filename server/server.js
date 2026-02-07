@@ -1,10 +1,11 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
+const fs = require('fs');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-const bodyParser = require('body-parser');
 
 const authRoutes = require('./routes/auth');
 const contactsRoutes = require('./routes/contacts');
@@ -41,9 +42,11 @@ app.use(helmet({
 // Compression
 app.use(compression());
 
-// CORS Configuration - Temporarily permissive for debugging
+// CORS Configuration
 const corsOptions = {
-  origin: true, // Allow all origins temporarily
+  origin: NODE_ENV === 'production'
+    ? process.env.CORS_ORIGIN || true
+    : true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -73,9 +76,9 @@ app.use('/api/', limiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
-// Body Parser
-app.use(bodyParser.json({ limit: '10mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
+// Body Parser (Express built-in)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Request logging in development
 if (NODE_ENV === 'development') {
@@ -133,9 +136,7 @@ app.use('/api/*', (req, res) => {
 });
 
 // Serve static files from React build
-const path = require('path');
 const buildPath = path.join(__dirname, '../build');
-const fs = require('fs');
 
 // Check if build directory exists
 if (fs.existsSync(buildPath)) {
@@ -197,14 +198,8 @@ const initializeDatabaseIfNeeded = async () => {
     await createTables();
 
     // Check if admin user exists
-    let adminExists = false;
-    if (db.type === 'postgres') {
-      const result = await getOne("SELECT id FROM users WHERE username = 'admin'");
-      adminExists = !!result;
-    } else {
-      const result = await getOne("SELECT id FROM users WHERE username = 'admin'");
-      adminExists = !!result;
-    }
+    const result = await getOne("SELECT id FROM users WHERE username = 'admin'");
+    const adminExists = !!result;
 
     if (!adminExists) {
       console.log('Creating default admin user...');
@@ -237,19 +232,6 @@ const initializeDatabaseIfNeeded = async () => {
   }
 };
 
-
-// Serve Static Assets in Production
-if (process.env.NODE_ENV === 'production') {
-  const path = require('path');
-  // Serve static files from the React app build directory
-  app.use(express.static(path.join(__dirname, '../build')));
-
-  // The "catchall" handler: for any request that doesn't
-  // match one above, send back React's index.html file.
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../build/index.html'));
-  });
-}
 
 // Start Server
 initializeDatabaseIfNeeded().then(() => {

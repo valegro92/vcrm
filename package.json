@@ -36,7 +36,7 @@
     "server:dev": "cd server && npm run dev",
     "server:init": "cd server && npm run init-db",
     "install:server": "cd server && npm install",
-    "start:prod": "NODE_ENV=production cd server && node server.js"
+    "start:prod": "cd server && NODE_ENV=production node server.js"
   },
   "eslintConfig": {
     "extends": [
