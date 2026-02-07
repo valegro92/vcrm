@@ -5128,6 +5128,348 @@ body {
 }
 
 /* =========================================
+   Annual Summary Section (Dashboard BI)
+   ========================================= */
+.bi-annual-section {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--slate-100);
+}
+
+.bi-annual-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.annual-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.annual-card {
+  background: var(--slate-50);
+  border-radius: 10px;
+  padding: 14px;
+  border-left: 4px solid transparent;
+}
+
+.ac-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border-left: none;
+  margin-bottom: 10px;
+}
+
+.ac-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg);
+  flex-shrink: 0;
+}
+
+.ac-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ac-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--slate-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ac-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.ac-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ac-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--slate-200);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ac-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+.ac-pct {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 36px;
+  text-align: right;
+}
+
+.ac-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ac-target {
+  font-size: 12px;
+  color: var(--slate-500);
+}
+
+.ac-delta {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ac-delta.positive { color: #16a34a; }
+.ac-delta.negative { color: #dc2626; }
+
+.annual-conversion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--slate-50);
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+
+.conv-step {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.conv-step.projection {
+  border-left: 2px solid var(--slate-200);
+  padding-left: 12px;
+}
+
+.conv-label {
+  font-size: 11px;
+  color: var(--slate-500);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.conv-rate {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.conv-gap {
+  font-size: 12px;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.conv-arrow {
+  color: var(--slate-300);
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .annual-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .annual-conversion {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .conv-arrow {
+    transform: rotate(90deg);
+    align-self: center;
+  }
+}
+
+/* =========================================
+   Monthly Detail Table (Dashboard BI)
+   ========================================= */
+.bi-monthly-section {
+  background: var(--card-bg);
+  border-radius: 12px;
+  border: 1px solid var(--slate-100);
+  overflow: hidden;
+}
+
+.bi-monthly-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.bi-monthly-header:hover {
+  background: var(--slate-50);
+}
+
+.bi-monthly-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.chevron-toggle {
+  transition: transform 0.2s;
+  color: var(--slate-400);
+}
+
+.chevron-toggle.open {
+  transform: rotate(180deg);
+}
+
+.bi-monthly-wrapper {
+  overflow-x: auto;
+  padding: 0 4px 16px 4px;
+}
+
+.bi-monthly-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 700px;
+}
+
+.bi-monthly-table th,
+.bi-monthly-table td {
+  padding: 8px 10px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.bi-monthly-table .th-month,
+.bi-monthly-table .td-month {
+  text-align: left;
+  font-weight: 700;
+  position: sticky;
+  left: 0;
+  background: var(--card-bg);
+  z-index: 1;
+}
+
+.bi-monthly-table .th-group {
+  text-align: center;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 10px 10px 4px;
+  border-bottom: 2px solid transparent;
+}
+
+.bi-monthly-table .th-group.th-ordinato { color: #3b82f6; border-bottom-color: #3b82f6; }
+.bi-monthly-table .th-group.th-fatturato { color: #f59e0b; border-bottom-color: #f59e0b; }
+.bi-monthly-table .th-group.th-incassato { color: #10b981; border-bottom-color: #10b981; }
+
+.bi-monthly-table .th-sub {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--slate-500);
+  padding: 4px 10px 8px;
+}
+
+.bi-monthly-table .th-sub.th-ordinato { background: rgba(59, 130, 246, 0.04); }
+.bi-monthly-table .th-sub.th-fatturato { background: rgba(245, 158, 11, 0.04); }
+.bi-monthly-table .th-sub.th-incassato { background: rgba(16, 185, 129, 0.04); }
+
+.bi-monthly-table tbody tr {
+  border-bottom: 1px solid var(--slate-50);
+  transition: background 0.1s;
+}
+
+.bi-monthly-table tbody tr:hover {
+  background: var(--slate-50);
+}
+
+.bi-monthly-table .td-num {
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.bi-monthly-table .td-ord { background: rgba(59, 130, 246, 0.02); }
+.bi-monthly-table .td-fat { background: rgba(245, 158, 11, 0.02); }
+.bi-monthly-table .td-inc { background: rgba(16, 185, 129, 0.02); }
+
+.bi-monthly-table .td-delta.pos { color: #16a34a; font-weight: 600; }
+.bi-monthly-table .td-delta.neg { color: #dc2626; font-weight: 600; }
+
+.bi-monthly-table .row-current {
+  background: rgba(59, 130, 246, 0.06) !important;
+}
+
+.bi-monthly-table .row-current .td-month {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.06);
+}
+
+.bi-monthly-table .row-future {
+  opacity: 0.45;
+}
+
+.bi-monthly-table tfoot .row-total {
+  border-top: 2px solid var(--slate-200);
+  font-weight: 700;
+}
+
+.bi-monthly-table tfoot .row-total td {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  padding-top: 12px;
+}
+
+@media (max-width: 768px) {
+  .bi-monthly-table {
+    font-size: 11px;
+  }
+
+  .bi-monthly-table th,
+  .bi-monthly-table td {
+    padding: 6px 6px;
+  }
+}
+
+/* =========================================
    Won Card Styles (Pipeline)
    ========================================= */
 .won-card {

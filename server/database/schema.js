@@ -185,6 +185,19 @@ const createPostgresTables = async () => {
   // Add target_type column if missing (migration for existing databases)
   await client.query(`ALTER TABLE monthly_targets ADD COLUMN IF NOT EXISTS target_type VARCHAR(20) DEFAULT 'ordinato'`).catch(() => {});
 
+  // Migrate UNIQUE constraint to include target_type (for databases created before this change)
+  // Drop all old unique constraints and recreate with the correct 4-column definition
+  await client.query(`
+    DO $$
+    DECLARE r RECORD;
+    BEGIN
+      FOR r IN (SELECT conname FROM pg_constraint WHERE conrelid = 'monthly_targets'::regclass AND contype = 'u')
+      LOOP EXECUTE format('ALTER TABLE monthly_targets DROP CONSTRAINT %I', r.conname);
+      END LOOP;
+    END $$;
+  `).catch(() => {});
+  await client.query(`ALTER TABLE monthly_targets ADD CONSTRAINT mt_year_month_type_user_unique UNIQUE(year, month, target_type, "userId")`).catch(() => {});
+
   // UI Configs table (Schema-driven UI per utente)
   await client.query(`
     CREATE TABLE IF NOT EXISTS ui_configs (
