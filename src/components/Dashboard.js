@@ -3,7 +3,7 @@ import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     Line, ReferenceLine, ComposedChart, Area
 } from 'recharts';
-import { Target, TrendingUp, Receipt, Wallet, AlertTriangle, Calendar, FolderKanban, Package, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Target, TrendingUp, Receipt, Wallet, AlertTriangle, Calendar, FolderKanban, Package, ArrowRight, CheckCircle2, ChevronDown } from 'lucide-react';
 import api from '../api/api';
 import { useToast } from '../context/ToastContext';
 import { formatCurrency } from '../utils/formatters';
@@ -32,6 +32,7 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
     });
     const [activeTargetTab, setActiveTargetTab] = useState('ordinato');
     const [isSavingTarget, setIsSavingTarget] = useState(false);
+    const [showMonthlyTable, setShowMonthlyTable] = useState(true);
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
     const toast = useToast();
@@ -542,6 +543,86 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                 </div>
             </div>
 
+            {/* === RIEPILOGO ANNUALE === */}
+            <div className="bi-annual-section">
+                <h3><TrendingUp size={18} /> Riepilogo Annuale {selectedYear}</h3>
+                <div className="annual-summary-grid">
+                    {[
+                        { label: 'Ordinato', ytd: biData.ytdOrdinato, ytdTarget: biData.ytdTargetOrdinato, annualTarget: annualTargets.ordinato, color: colors.ordinato, icon: TrendingUp },
+                        { label: 'Fatturato', ytd: biData.ytdFatturatoReale, ytdTarget: biData.ytdTargetFatturato, annualTarget: annualTargets.fatturato, color: colors.fatturatoReale, icon: Receipt },
+                        { label: 'Incassato', ytd: biData.ytdIncassatoReale, ytdTarget: biData.ytdTargetIncassato, annualTarget: annualTargets.incassato, color: colors.incassatoReale, icon: Wallet }
+                    ].map(item => {
+                        const Icon = item.icon;
+                        const annualPct = item.annualTarget > 0 ? (item.ytd / item.annualTarget * 100) : 0;
+                        const ytdDelta = item.ytd - item.ytdTarget;
+                        const isCurrentYear = selectedYear === currentYear;
+                        return (
+                            <div key={item.label} className="annual-card">
+                                <div className="ac-top" style={{ borderLeftColor: item.color }}>
+                                    <div className="ac-icon" style={{ color: item.color }}><Icon size={18} /></div>
+                                    <div className="ac-info">
+                                        <span className="ac-label">{item.label} {isCurrentYear ? 'YTD' : selectedYear}</span>
+                                        <span className="ac-value">{formatCurrency(item.ytd, { compact: false })}</span>
+                                    </div>
+                                </div>
+                                {item.annualTarget > 0 && (
+                                    <>
+                                        <div className="ac-progress">
+                                            <div className="ac-bar">
+                                                <div className="ac-fill" style={{ width: `${Math.min(100, annualPct)}%`, background: item.color }} />
+                                            </div>
+                                            <span className="ac-pct">{annualPct.toFixed(0)}%</span>
+                                        </div>
+                                        <div className="ac-details">
+                                            <span className="ac-target">Target annuo: {formatCurrency(item.annualTarget)}</span>
+                                            {isCurrentYear && (
+                                                <span className={`ac-delta ${ytdDelta >= 0 ? 'positive' : 'negative'}`}>
+                                                    vs target ad oggi: {ytdDelta >= 0 ? '+' : ''}{formatCurrency(ytdDelta)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+                <div className="annual-conversion">
+                    <div className="conv-step">
+                        <span className="conv-label">Conversione Ord → Fatt</span>
+                        <span className="conv-rate">
+                            {biData.ytdOrdinato > 0
+                                ? `${(biData.ytdFatturatoReale / biData.ytdOrdinato * 100).toFixed(0)}%`
+                                : 'N/D'}
+                        </span>
+                        {biData.gapOrdinatoVsFatturato > 0 && (
+                            <span className="conv-gap">Da fatturare: {formatCurrency(biData.gapOrdinatoVsFatturato)}</span>
+                        )}
+                    </div>
+                    <div className="conv-arrow"><ArrowRight size={16} /></div>
+                    <div className="conv-step">
+                        <span className="conv-label">Conversione Fatt → Inc</span>
+                        <span className="conv-rate">
+                            {biData.ytdFatturatoReale > 0
+                                ? `${(biData.ytdIncassatoReale / biData.ytdFatturatoReale * 100).toFixed(0)}%`
+                                : 'N/D'}
+                        </span>
+                        {biData.gapFatturatoVsIncassato > 0 && (
+                            <span className="conv-gap">Da incassare: {formatCurrency(biData.gapFatturatoVsIncassato)}</span>
+                        )}
+                    </div>
+                    {selectedYear === currentYear && (
+                        <>
+                            <div className="conv-arrow"><ArrowRight size={16} /></div>
+                            <div className="conv-step projection">
+                                <span className="conv-label">Proiezione Fine Anno</span>
+                                <span className="conv-rate">{formatCurrency(biData.projectedOrdinato)}</span>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+
             {/* GRAFICO 1: Ordinato vs Target Ordinato */}
             <div className="bi-chart-card">
                 <div className="bi-chart-header">
@@ -619,6 +700,84 @@ export default function Dashboard({ opportunities, tasks, contacts, invoices = [
                         <Line type="monotone" dataKey="cumTargetIncassato" stroke={colors.target} strokeWidth={2} dot={{ r: 3 }} name="Target Incassato" />
                     </ComposedChart>
                 </ResponsiveContainer>
+            </div>
+
+            {/* === DETTAGLIO MENSILE === */}
+            <div className="bi-monthly-section">
+                <div className="bi-monthly-header" onClick={() => setShowMonthlyTable(!showMonthlyTable)}>
+                    <h3><Calendar size={18} /> Dettaglio Mensile {selectedYear}</h3>
+                    <ChevronDown size={18} className={`chevron-toggle ${showMonthlyTable ? 'open' : ''}`} />
+                </div>
+                {showMonthlyTable && (
+                    <div className="bi-monthly-wrapper">
+                        <table className="bi-monthly-table">
+                            <thead>
+                                <tr>
+                                    <th rowSpan="2" className="th-month">Mese</th>
+                                    <th colSpan="3" className="th-group th-ordinato">Ordinato</th>
+                                    <th colSpan="3" className="th-group th-fatturato">Fatturato</th>
+                                    <th colSpan="3" className="th-group th-incassato">Incassato</th>
+                                </tr>
+                                <tr>
+                                    <th className="th-sub th-ordinato">Target</th>
+                                    <th className="th-sub th-ordinato">Reale</th>
+                                    <th className="th-sub th-ordinato">&Delta;</th>
+                                    <th className="th-sub th-fatturato">Target</th>
+                                    <th className="th-sub th-fatturato">Reale</th>
+                                    <th className="th-sub th-fatturato">&Delta;</th>
+                                    <th className="th-sub th-incassato">Target</th>
+                                    <th className="th-sub th-incassato">Reale</th>
+                                    <th className="th-sub th-incassato">&Delta;</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {biData.monthlyData.map((m, i) => {
+                                    const dOrd = m.ordinato - m.targetOrdinato;
+                                    const dFatt = m.fatturatoReale - m.targetFatturato;
+                                    const dInc = m.incassatoReale - m.targetIncassato;
+                                    const fmt = (v) => {
+                                        const n = parseFloat(v) || 0;
+                                        return n === 0 ? '-' : formatCurrency(n);
+                                    };
+                                    return (
+                                        <tr key={i} className={`${m.isCurrent ? 'row-current' : ''} ${m.isFuture ? 'row-future' : ''}`}>
+                                            <td className="td-month">{m.month}{m.isCurrent ? ' \u25CF' : ''}</td>
+                                            <td className="td-num td-ord">{fmt(m.targetOrdinato)}</td>
+                                            <td className="td-num td-ord">{fmt(m.ordinato)}</td>
+                                            <td className={`td-num td-ord td-delta ${dOrd > 0 ? 'pos' : dOrd < 0 ? 'neg' : ''}`}>{fmt(dOrd)}</td>
+                                            <td className="td-num td-fat">{fmt(m.targetFatturato)}</td>
+                                            <td className="td-num td-fat">{fmt(m.fatturatoReale)}</td>
+                                            <td className={`td-num td-fat td-delta ${dFatt > 0 ? 'pos' : dFatt < 0 ? 'neg' : ''}`}>{fmt(dFatt)}</td>
+                                            <td className="td-num td-inc">{fmt(m.targetIncassato)}</td>
+                                            <td className="td-num td-inc">{fmt(m.incassatoReale)}</td>
+                                            <td className={`td-num td-inc td-delta ${dInc > 0 ? 'pos' : dInc < 0 ? 'neg' : ''}`}>{fmt(dInc)}</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                            <tfoot>
+                                <tr className="row-total">
+                                    <td className="td-month">{selectedYear === currentYear ? 'YTD' : 'TOTALE'}</td>
+                                    <td className="td-num td-ord">{formatCurrency(annualTargets.ordinato)}</td>
+                                    <td className="td-num td-ord">{formatCurrency(biData.ytdOrdinato)}</td>
+                                    <td className={`td-num td-ord td-delta ${biData.ytdOrdinato - annualTargets.ordinato >= 0 ? 'pos' : 'neg'}`}>
+                                        {formatCurrency(biData.ytdOrdinato - annualTargets.ordinato)}
+                                    </td>
+                                    <td className="td-num td-fat">{formatCurrency(annualTargets.fatturato)}</td>
+                                    <td className="td-num td-fat">{formatCurrency(biData.ytdFatturatoReale)}</td>
+                                    <td className={`td-num td-fat td-delta ${biData.ytdFatturatoReale - annualTargets.fatturato >= 0 ? 'pos' : 'neg'}`}>
+                                        {formatCurrency(biData.ytdFatturatoReale - annualTargets.fatturato)}
+                                    </td>
+                                    <td className="td-num td-inc">{formatCurrency(annualTargets.incassato)}</td>
+                                    <td className="td-num td-inc">{formatCurrency(biData.ytdIncassatoReale)}</td>
+                                    <td className={`td-num td-inc td-delta ${biData.ytdIncassatoReale - annualTargets.incassato >= 0 ? 'pos' : 'neg'}`}>
+                                        {formatCurrency(biData.ytdIncassatoReale - annualTargets.incassato)}
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                )}
             </div>
 
             {/* Modal Target Mensili con 3 tabs */}

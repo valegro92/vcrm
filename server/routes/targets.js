@@ -125,16 +125,17 @@ router.post('/batch', authMiddleware, async (req, res) => {
   try {
     if (byType) {
       // New format: { ordinato: [...], fatturato: [...], incassato: [...] }
+      // Delete ALL existing targets for this year first to avoid UNIQUE constraint issues
+      // (handles both old 3-column and new 4-column UNIQUE constraints)
+      await runQuery(
+        'DELETE FROM monthly_targets WHERE year = ? AND ("userId" = ? OR "userId" IS NULL)',
+        [year, req.userId]
+      );
+
+      // Insert all types
       for (const type of VALID_TARGET_TYPES) {
         if (!byType[type]) continue;
 
-        // Delete existing targets for this year and type
-        await runQuery(
-          'DELETE FROM monthly_targets WHERE year = ? AND target_type = ? AND ("userId" = ? OR "userId" IS NULL)',
-          [year, type, req.userId]
-        );
-
-        // Insert new targets
         for (const t of byType[type]) {
           if (t.target > 0) {
             await runQuery(
