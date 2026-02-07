@@ -469,7 +469,7 @@ const api = {
     return handleResponse(response);
   },
 
-  // Targets (Target mensili)
+  // Targets (Target mensili per ordinato/fatturato/incassato)
   getMonthlyTargets: async (year) => {
     const response = await fetch(`${API_URL}/targets/${year}`, {
       headers: {
@@ -488,26 +488,27 @@ const api = {
     return handleResponse(response);
   },
 
-  saveMonthlyTarget: async (year, month, target) => {
+  saveMonthlyTarget: async (year, month, target, target_type = 'ordinato') => {
     const response = await fetch(`${API_URL}/targets`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${getAuthToken()}`
       },
-      body: JSON.stringify({ year, month, target })
+      body: JSON.stringify({ year, month, target, target_type })
     });
     return handleResponse(response);
   },
 
-  saveAllTargets: async (year, targets) => {
+  saveAllTargets: async (year, targets, byType = null) => {
+    const body = byType ? { year, byType } : { year, targets };
     const response = await fetch(`${API_URL}/targets/batch`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${getAuthToken()}`
       },
-      body: JSON.stringify({ year, targets })
+      body: JSON.stringify(body)
     });
     return handleResponse(response);
   },

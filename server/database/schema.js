@@ -168,19 +168,22 @@ const createPostgresTables = async () => {
     )
   `);
 
-  // Monthly targets table (Target mensili per fatturato)
+  // Monthly targets table (Target mensili per ordinato/fatturato/incassato)
   await client.query(`
     CREATE TABLE IF NOT EXISTS monthly_targets (
       id SERIAL PRIMARY KEY,
       year INTEGER NOT NULL,
       month INTEGER NOT NULL,
       target DECIMAL(10, 2) NOT NULL DEFAULT 0,
+      target_type VARCHAR(20) DEFAULT 'ordinato',
       "userId" INTEGER REFERENCES users(id) ON DELETE SET NULL,
       "createdAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      UNIQUE(year, month, "userId")
+      UNIQUE(year, month, target_type, "userId")
     )
   `);
+  // Add target_type column if missing (migration for existing databases)
+  await client.query(`ALTER TABLE monthly_targets ADD COLUMN IF NOT EXISTS target_type VARCHAR(20) DEFAULT 'ordinato'`).catch(() => {});
 
   // UI Configs table (Schema-driven UI per utente)
   await client.query(`
@@ -362,20 +365,23 @@ const createSQLiteTables = (resolve, reject) => {
       )
     `);
 
-    // Monthly targets table (Target mensili per fatturato)
+    // Monthly targets table (Target mensili per ordinato/fatturato/incassato)
     db.run(`
       CREATE TABLE IF NOT EXISTS monthly_targets (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         year INTEGER NOT NULL,
         month INTEGER NOT NULL,
         target REAL NOT NULL DEFAULT 0,
+        target_type TEXT DEFAULT 'ordinato',
         userId INTEGER,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL,
-        UNIQUE(year, month, userId)
+        UNIQUE(year, month, target_type, userId)
       )
     `);
+    // Add target_type column if missing (migration for existing databases)
+    db.run(`ALTER TABLE monthly_targets ADD COLUMN target_type TEXT DEFAULT 'ordinato'`, (err) => {});
 
     // UI Configs table (Schema-driven UI per utente)
     db.run(`

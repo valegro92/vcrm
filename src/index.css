@@ -4773,6 +4773,108 @@ body {
   color: var(--primary-600);
 }
 
+/* Target Modal 3-type */
+.targets-3type {
+  max-width: 680px;
+}
+
+.target-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.target-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  background: var(--slate-50);
+  border: 2px solid var(--slate-200);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+  color: var(--slate-500);
+}
+
+.target-tab:hover {
+  background: white;
+  border-color: var(--slate-300);
+}
+
+.target-tab.active {
+  background: white;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+.target-tab-label {
+  font-weight: 600;
+}
+
+.target-tab-total {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.target-copy-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.target-copy-row span {
+  color: var(--slate-500);
+  font-size: 13px;
+}
+
+.target-copy-btn {
+  padding: 4px 10px;
+  background: var(--slate-50);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--slate-600);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.target-copy-btn:hover {
+  background: var(--primary-50);
+  border-color: var(--primary-200);
+  color: var(--primary-600);
+}
+
+.bh-card.health-neutral {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-color: #e2e8f0;
+}
+
+.bh-card.health-neutral .bh-card-icon { color: var(--slate-400); }
+
+.bh-card-no-target {
+  font-size: 13px;
+  color: var(--primary-500);
+  cursor: pointer;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.bh-card-no-target:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .target-tabs {
+    flex-direction: column;
+  }
+}
+
 .bi-kpi-label {
   display: flex;
   align-items: center;
